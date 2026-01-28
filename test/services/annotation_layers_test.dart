@@ -70,7 +70,10 @@ void main() {
 
       for (final color in colors) {
         expect(color.toARGB32(), isA<int>());
-        expect((color.a * 255.0).round().clamp(0, 255), greaterThanOrEqualTo(0));
+        expect(
+          (color.a * 255.0).round().clamp(0, 255),
+          greaterThanOrEqualTo(0),
+        );
         expect((color.a * 255.0).round().clamp(0, 255), lessThanOrEqualTo(255));
       }
     });
