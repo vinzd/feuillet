@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
 import '../models/database.dart';
@@ -38,7 +39,9 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
       // Use bytes on web, file path on native
       final Future<PdfDocument> pdfDocument;
       if (doc.pdfBytes != null) {
-        pdfDocument = PdfDocument.openData(doc.pdfBytes!);
+        // Copy bytes to avoid detached ArrayBuffer issue on web
+        final bytesCopy = Uint8List.fromList(doc.pdfBytes!);
+        pdfDocument = PdfDocument.openData(bytesCopy);
       } else {
         pdfDocument = PdfDocument.openFile(doc.filePath);
       }
