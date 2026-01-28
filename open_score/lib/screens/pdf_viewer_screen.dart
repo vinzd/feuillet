@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdfx/pdfx.dart';
@@ -68,9 +69,18 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
         _currentPage = _settings!.currentPage + 1; // Convert to 1-based
       }
 
-      // Initialize PDF controller
+      // Initialize PDF controller - use bytes on web, file path on native
+      final Future<PdfDocument> pdfDocument;
+      if (widget.document.pdfBytes != null) {
+        // Web platform: Load from bytes
+        pdfDocument = PdfDocument.openData(widget.document.pdfBytes!);
+      } else {
+        // Native platform: Load from file path
+        pdfDocument = PdfDocument.openFile(widget.document.filePath);
+      }
+
       _pdfController = PdfController(
-        document: PdfDocument.openFile(widget.document.filePath),
+        document: pdfDocument,
         initialPage: _currentPage - 1,
       );
 

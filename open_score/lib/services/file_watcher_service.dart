@@ -34,6 +34,12 @@ class FileWatcherService {
   ///
   /// This should be called when the app starts and resumed from background
   Future<void> startWatching() async {
+    // Skip on web platform (for development iteration only)
+    if (kIsWeb) {
+      debugPrint('FileWatcherService: Skipping on web platform');
+      return;
+    }
+
     if (_isWatching) {
       debugPrint('FileWatcherService: Already watching');
       return;
@@ -170,6 +176,11 @@ class FileWatcherService {
 
   /// Get the PDF directory path
   Future<String> getPdfDirectoryPath() async {
+    // Return a placeholder path on web (for development iteration only)
+    if (kIsWeb) {
+      return '/web_placeholder/pdfs';
+    }
+
     if (_pdfDirectoryPath != null) {
       return _pdfDirectoryPath!;
     }
@@ -188,6 +199,11 @@ class FileWatcherService {
 
   /// Get the database directory path (for Syncthing configuration)
   Future<String> getDatabaseDirectoryPath() async {
+    // Return a placeholder path on web (for development iteration only)
+    if (kIsWeb) {
+      return '/web_placeholder';
+    }
+
     final appDocDir = await getApplicationDocumentsDirectory();
     return p.join(appDocDir.path, 'open_score');
   }
