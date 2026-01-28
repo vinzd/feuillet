@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
-import '../models/view_mode.dart';
 import '../services/annotation_service.dart';
 import 'cached_pdf_page.dart';
 import 'drawing_canvas.dart';
@@ -8,14 +7,12 @@ import 'drawing_canvas.dart';
 /// A widget that displays two PDF pages side by side.
 ///
 /// This widget is used in booklet and continuous double page view modes.
-/// It allows selecting which page is active for annotation editing.
+/// Both pages can be annotated simultaneously when annotation mode is enabled.
 class TwoPagePdfView extends StatelessWidget {
   const TwoPagePdfView({
     required this.document,
     required this.leftPageNumber,
     this.rightPageNumber,
-    required this.activePageSide,
-    required this.onPageSideSelected,
     this.leftPageAnnotations = const [],
     this.rightPageAnnotations = const [],
     this.isAnnotationMode = false,
@@ -36,12 +33,6 @@ class TwoPagePdfView extends StatelessWidget {
 
   /// The page number for the right side (1-indexed), null if only one page
   final int? rightPageNumber;
-
-  /// Which page is currently active for editing
-  final PageSide activePageSide;
-
-  /// Callback when a page side is tapped to select it
-  final void Function(PageSide side) onPageSideSelected;
 
   /// Annotations for the left page
   final List<DrawingStroke> leftPageAnnotations;
@@ -78,8 +69,6 @@ class TwoPagePdfView extends StatelessWidget {
           child: _PageContainer(
             document: document,
             pageNumber: leftPageNumber,
-            isActive: activePageSide == PageSide.left,
-            onTap: () => onPageSideSelected(PageSide.left),
             annotations: leftPageAnnotations,
             isAnnotationMode: isAnnotationMode,
             selectedLayerId: selectedLayerId,
@@ -95,8 +84,6 @@ class TwoPagePdfView extends StatelessWidget {
               ? _PageContainer(
                   document: document,
                   pageNumber: rightPageNumber!,
-                  isActive: activePageSide == PageSide.right,
-                  onTap: () => onPageSideSelected(PageSide.right),
                   annotations: rightPageAnnotations,
                   isAnnotationMode: isAnnotationMode,
                   selectedLayerId: selectedLayerId,
@@ -117,13 +104,11 @@ class TwoPagePdfView extends StatelessWidget {
   }
 }
 
-/// Internal widget for a single page container with selection indicator
+/// Internal widget for a single page container
 class _PageContainer extends StatelessWidget {
   const _PageContainer({
     required this.document,
     required this.pageNumber,
-    required this.isActive,
-    required this.onTap,
     required this.annotations,
     required this.isAnnotationMode,
     this.selectedLayerId,
@@ -136,8 +121,6 @@ class _PageContainer extends StatelessWidget {
 
   final PdfDocument document;
   final int pageNumber;
-  final bool isActive;
-  final VoidCallback onTap;
   final List<DrawingStroke> annotations;
   final bool isAnnotationMode;
   final int? selectedLayerId;
@@ -149,8 +132,7 @@ class _PageContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isEditable = isAnnotationMode && isActive && selectedLayerId != null;
+    final isEditable = isAnnotationMode && selectedLayerId != null;
 
     Widget? annotationOverlay;
     if (selectedLayerId != null) {
@@ -166,22 +148,13 @@ class _PageContainer extends StatelessWidget {
       );
     }
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isActive ? theme.colorScheme.primary : Colors.transparent,
-            width: 3,
-          ),
-        ),
-        child: CachedPdfPage(
-          document: document,
-          pageNumber: pageNumber,
-          backgroundDecoration: backgroundDecoration,
-          annotationOverlay: annotationOverlay,
-        ),
+    return Container(
+      margin: const EdgeInsets.all(2),
+      child: CachedPdfPage(
+        document: document,
+        pageNumber: pageNumber,
+        backgroundDecoration: backgroundDecoration,
+        annotationOverlay: annotationOverlay,
       ),
     );
   }
