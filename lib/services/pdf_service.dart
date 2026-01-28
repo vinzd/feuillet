@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:watcher/watcher.dart';
 import '../models/database.dart';
@@ -368,6 +369,115 @@ class PdfService {
       debugPrint('PdfService: Deleted PDF: ${doc.name}');
     } catch (e) {
       debugPrint('PdfService: Error deleting PDF: $e');
+    }
+  }
+
+  /// Get the thumbnail cache directory path
+  Future<String> _getThumbnailCachePath() async {
+    final appDir = await getApplicationSupportDirectory();
+    final cacheDir = Directory(p.join(appDir.path, 'thumbnails'));
+    if (!await cacheDir.exists()) {
+      await cacheDir.create(recursive: true);
+    }
+    return cacheDir.path;
+  }
+
+  /// Get the thumbnail file path for a document
+  Future<String> _getThumbnailPath(int documentId) async {
+    final cachePath = await _getThumbnailCachePath();
+    return p.join(cachePath, 'thumb_$documentId.png');
+  }
+
+  /// Generate a thumbnail for a PDF document
+  /// Returns the thumbnail as bytes, or null if generation fails
+  Future<Uint8List?> generateThumbnail(Document document) async {
+    try {
+      // Check if thumbnail already exists in cache (native platforms only)
+      File? thumbFile;
+      if (!kIsWeb) {
+        final thumbPath = await _getThumbnailPath(document.id);
+        thumbFile = File(thumbPath);
+        if (await thumbFile.exists()) {
+          return await thumbFile.readAsBytes();
+        }
+      }
+
+      // Open the PDF
+      final PdfDocument pdfDoc;
+      if (document.pdfBytes != null) {
+        pdfDoc = await PdfDocument.openData(
+          Uint8List.fromList(document.pdfBytes!),
+        );
+      } else {
+        final file = File(document.filePath);
+        if (!await file.exists()) {
+          debugPrint('PdfService: PDF file not found: ${document.filePath}');
+          return null;
+        }
+        pdfDoc = await PdfDocument.openFile(document.filePath);
+      }
+
+      // Get the first page
+      final page = await pdfDoc.getPage(1);
+
+      // Render the page at a reasonable thumbnail size
+      const double thumbnailWidth = 300;
+      final scale = thumbnailWidth / page.width;
+      final pageImage = await page.render(
+        width: thumbnailWidth,
+        height: page.height * scale,
+        format: PdfPageImageFormat.png,
+        backgroundColor: '#FFFFFF',
+      );
+
+      await page.close();
+      await pdfDoc.close();
+
+      if (pageImage == null) {
+        debugPrint('PdfService: Failed to render page for thumbnail');
+        return null;
+      }
+
+      // Cache the thumbnail on native platforms
+      if (!kIsWeb && thumbFile != null) {
+        await thumbFile.writeAsBytes(pageImage.bytes);
+      }
+
+      return pageImage.bytes;
+    } catch (e) {
+      debugPrint('PdfService: Error generating thumbnail: $e');
+      return null;
+    }
+  }
+
+  /// Get a cached thumbnail if available, otherwise return null
+  Future<Uint8List?> getCachedThumbnail(int documentId) async {
+    if (kIsWeb) return null;
+
+    try {
+      final thumbPath = await _getThumbnailPath(documentId);
+      final thumbFile = File(thumbPath);
+      if (await thumbFile.exists()) {
+        return await thumbFile.readAsBytes();
+      }
+    } catch (e) {
+      debugPrint('PdfService: Error reading cached thumbnail: $e');
+    }
+    return null;
+  }
+
+  /// Delete the cached thumbnail for a document
+  Future<void> deleteCachedThumbnail(int documentId) async {
+    if (kIsWeb) return;
+
+    try {
+      final thumbPath = await _getThumbnailPath(documentId);
+      final thumbFile = File(thumbPath);
+      if (await thumbFile.exists()) {
+        await thumbFile.delete();
+      }
+    } catch (e) {
+      debugPrint('PdfService: Error deleting cached thumbnail: $e');
     }
   }
 

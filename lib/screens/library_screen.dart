@@ -239,23 +239,98 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 }
 
 /// List tile widget for list view
-class PdfListTile extends StatelessWidget {
+class PdfListTile extends StatefulWidget {
   final Document document;
   final VoidCallback onTap;
 
   const PdfListTile({super.key, required this.document, required this.onTap});
 
   @override
+  State<PdfListTile> createState() => _PdfListTileState();
+}
+
+class _PdfListTileState extends State<PdfListTile> {
+  Uint8List? _thumbnailBytes;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadThumbnail();
+  }
+
+  @override
+  void didUpdateWidget(PdfListTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.document.id != widget.document.id) {
+      _loadThumbnail();
+    }
+  }
+
+  Future<void> _loadThumbnail() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final bytes = await PdfService.instance.generateThumbnail(
+        widget.document,
+      );
+      if (mounted) {
+        setState(() {
+          _thumbnailBytes = bytes;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Widget _buildLeadingWidget() {
+    if (_isLoading) {
+      return const SizedBox(
+        width: 40,
+        height: 56,
+        child: Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      );
+    }
+
+    if (_thumbnailBytes == null) {
+      return const Icon(Icons.picture_as_pdf, size: 40);
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(4),
+      child: Image.memory(
+        _thumbnailBytes!,
+        width: 40,
+        height: 56,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.picture_as_pdf, size: 40);
+        },
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        leading: const Icon(Icons.picture_as_pdf, size: 40),
-        title: Text(document.name),
+        leading: _buildLeadingWidget(),
+        title: Text(widget.document.name),
         subtitle: Text(
-          '${document.pageCount} pages • ${_formatFileSize(document.fileSize)}',
+          '${widget.document.pageCount} pages • ${_formatFileSize(widget.document.fileSize)}',
         ),
         trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
+        onTap: widget.onTap,
       ),
     );
   }
