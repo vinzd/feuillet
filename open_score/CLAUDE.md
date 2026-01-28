@@ -8,7 +8,30 @@ Open Score is a forScore clone built with Flutter - a PDF sheet music reader wit
 
 ## Essential Commands
 
+**Quick Start:** Use the Makefile for common tasks:
+```bash
+make setup          # Setup project from scratch
+make run-web        # Fast development iteration (web)
+make run-macos      # Run on macOS
+make build-web      # Build for web deployment
+make test           # Run all tests
+make help           # See all available commands
+```
+
 ### Development Setup
+
+#### Using Makefile (Recommended)
+```bash
+# Complete setup from scratch
+make setup
+
+# Run on different platforms
+make run-web        # Chrome (fastest hot reload)
+make run-macos      # macOS native
+make run-android    # Android emulator
+```
+
+#### Manual Setup
 ```bash
 # Install dependencies
 flutter pub get
@@ -16,34 +39,69 @@ flutter pub get
 # Generate database code (required after schema changes)
 dart run build_runner build --delete-conflicting-outputs
 
+# Compile web worker (web platform only)
+dart compile js -O4 web/drift_worker.dart -o web/drift_worker.js
+
 # Run the app
-flutter run -d macos    # or android, ios
+flutter run -d macos    # or android, ios, chrome
+```
+
+### Web Platform Support
+
+The app supports web for **fast development iteration only**. Web has limited functionality:
+- ✅ PDF import and display (stores PDFs as bytes in IndexedDB)
+- ✅ Annotations, layers, set lists
+- ✅ Full database persistence
+- ❌ File system watching (Syncthing integration)
+- ❌ Directory scanning
+
+**Required web files:**
+- `web/drift_worker.dart` - Source (tracked in git)
+- `web/drift_worker.js` - Compiled (auto-generated, ignored)
+- `web/sqlite3.wasm` - SQLite engine (tracked in git, downloaded from releases)
+- `web/index.html` - PDF.js CDN setup (tracked in git)
+
+```bash
+# Build and serve web version
+make build-web
+make serve-web      # http://localhost:8080
+
+# Or use hot reload
+make run-web        # flutter run -d chrome
 ```
 
 ### Testing
 ```bash
-# Run all tests
+# Using Makefile
+make test                # Run all tests
+make test-coverage       # With coverage report
+make analyze             # Run flutter analyze
+
+# Manual commands
 flutter test
-
-# Run specific test file
 flutter test test/services/annotation_service_test.dart
-
-# Run with coverage
 flutter test --coverage
-
-# Run integration tests (requires device/emulator)
 flutter test integration_test/app_test.dart -d macos
 ```
 
 ### Code Quality
 ```bash
-# Check for issues
-flutter analyze
+# Using Makefile
+make analyze        # Check for issues
+make format         # Format all Dart code
 
 # Build for release
-flutter build apk --release      # Android
-flutter build macos --release    # macOS
-flutter build ios --release      # iOS
+make build-web          # Web
+make build-macos        # macOS
+make build-android      # Android APK
+make build-all          # All platforms
+
+# Manual commands
+flutter analyze
+dart format lib/ test/
+flutter build apk --release
+flutter build macos --release
+flutter build ios --release
 ```
 
 ## Architecture

@@ -43,3 +43,60 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Open Score specific - Local data directory
+open_score/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+
+# Syncthing temporary files
+.syncthing.*
+~syncthing~*
+*.tmp
+.~*
+
+# Test coverage
+coverage/
+lcov.info
+
+# Web build artifacts - compiled drift worker
+web/drift_worker.js
+web/drift_worker.js.deps
+web/drift_worker.js.map
+web/serve.py
+
+# macOS specific
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Linux specific
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Windows specific
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk

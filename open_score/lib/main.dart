@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'screens/home_screen.dart';
@@ -7,11 +8,14 @@ import 'services/pdf_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize file watcher for Syncthing support
-  await FileWatcherService.instance.startWatching();
+  // Skip file system operations on web (for development iteration only)
+  if (!kIsWeb) {
+    // Initialize file watcher for Syncthing support
+    await FileWatcherService.instance.startWatching();
 
-  // Initialize PDF service
-  PdfService.instance;
+    // Initialize PDF service
+    PdfService.instance;
+  }
 
   runApp(
     const ProviderScope(
@@ -75,6 +79,9 @@ class _AppLifecycleManagerState extends State<AppLifecycleManager>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Skip file system operations on web
+    if (kIsWeb) return;
+
     switch (state) {
       case AppLifecycleState.resumed:
         // Restart file watching when app comes to foreground

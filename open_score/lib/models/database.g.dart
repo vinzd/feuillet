@@ -46,6 +46,17 @@ class $DocumentsTable extends Documents
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _pdfBytesMeta = const VerificationMeta(
+    'pdfBytes',
+  );
+  @override
+  late final GeneratedColumn<Uint8List> pdfBytes = GeneratedColumn<Uint8List>(
+    'pdf_bytes',
+    aliasedName,
+    true,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _dateAddedMeta = const VerificationMeta(
     'dateAdded',
   );
@@ -108,6 +119,7 @@ class $DocumentsTable extends Documents
     id,
     name,
     filePath,
+    pdfBytes,
     dateAdded,
     lastOpened,
     lastModified,
@@ -144,6 +156,12 @@ class $DocumentsTable extends Documents
       );
     } else if (isInserting) {
       context.missing(_filePathMeta);
+    }
+    if (data.containsKey('pdf_bytes')) {
+      context.handle(
+        _pdfBytesMeta,
+        pdfBytes.isAcceptableOrUnknown(data['pdf_bytes']!, _pdfBytesMeta),
+      );
     }
     if (data.containsKey('date_added')) {
       context.handle(
@@ -203,6 +221,10 @@ class $DocumentsTable extends Documents
         DriftSqlType.string,
         data['${effectivePrefix}file_path'],
       )!,
+      pdfBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}pdf_bytes'],
+      ),
       dateAdded: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}date_added'],
@@ -236,6 +258,7 @@ class Document extends DataClass implements Insertable<Document> {
   final int id;
   final String name;
   final String filePath;
+  final Uint8List? pdfBytes;
   final DateTime dateAdded;
   final DateTime? lastOpened;
   final DateTime lastModified;
@@ -245,6 +268,7 @@ class Document extends DataClass implements Insertable<Document> {
     required this.id,
     required this.name,
     required this.filePath,
+    this.pdfBytes,
     required this.dateAdded,
     this.lastOpened,
     required this.lastModified,
@@ -257,6 +281,9 @@ class Document extends DataClass implements Insertable<Document> {
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
     map['file_path'] = Variable<String>(filePath);
+    if (!nullToAbsent || pdfBytes != null) {
+      map['pdf_bytes'] = Variable<Uint8List>(pdfBytes);
+    }
     map['date_added'] = Variable<DateTime>(dateAdded);
     if (!nullToAbsent || lastOpened != null) {
       map['last_opened'] = Variable<DateTime>(lastOpened);
@@ -272,6 +299,9 @@ class Document extends DataClass implements Insertable<Document> {
       id: Value(id),
       name: Value(name),
       filePath: Value(filePath),
+      pdfBytes: pdfBytes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pdfBytes),
       dateAdded: Value(dateAdded),
       lastOpened: lastOpened == null && nullToAbsent
           ? const Value.absent()
@@ -291,6 +321,7 @@ class Document extends DataClass implements Insertable<Document> {
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       filePath: serializer.fromJson<String>(json['filePath']),
+      pdfBytes: serializer.fromJson<Uint8List?>(json['pdfBytes']),
       dateAdded: serializer.fromJson<DateTime>(json['dateAdded']),
       lastOpened: serializer.fromJson<DateTime?>(json['lastOpened']),
       lastModified: serializer.fromJson<DateTime>(json['lastModified']),
@@ -305,6 +336,7 @@ class Document extends DataClass implements Insertable<Document> {
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'filePath': serializer.toJson<String>(filePath),
+      'pdfBytes': serializer.toJson<Uint8List?>(pdfBytes),
       'dateAdded': serializer.toJson<DateTime>(dateAdded),
       'lastOpened': serializer.toJson<DateTime?>(lastOpened),
       'lastModified': serializer.toJson<DateTime>(lastModified),
@@ -317,6 +349,7 @@ class Document extends DataClass implements Insertable<Document> {
     int? id,
     String? name,
     String? filePath,
+    Value<Uint8List?> pdfBytes = const Value.absent(),
     DateTime? dateAdded,
     Value<DateTime?> lastOpened = const Value.absent(),
     DateTime? lastModified,
@@ -326,6 +359,7 @@ class Document extends DataClass implements Insertable<Document> {
     id: id ?? this.id,
     name: name ?? this.name,
     filePath: filePath ?? this.filePath,
+    pdfBytes: pdfBytes.present ? pdfBytes.value : this.pdfBytes,
     dateAdded: dateAdded ?? this.dateAdded,
     lastOpened: lastOpened.present ? lastOpened.value : this.lastOpened,
     lastModified: lastModified ?? this.lastModified,
@@ -337,6 +371,7 @@ class Document extends DataClass implements Insertable<Document> {
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       filePath: data.filePath.present ? data.filePath.value : this.filePath,
+      pdfBytes: data.pdfBytes.present ? data.pdfBytes.value : this.pdfBytes,
       dateAdded: data.dateAdded.present ? data.dateAdded.value : this.dateAdded,
       lastOpened: data.lastOpened.present
           ? data.lastOpened.value
@@ -355,6 +390,7 @@ class Document extends DataClass implements Insertable<Document> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('filePath: $filePath, ')
+          ..write('pdfBytes: $pdfBytes, ')
           ..write('dateAdded: $dateAdded, ')
           ..write('lastOpened: $lastOpened, ')
           ..write('lastModified: $lastModified, ')
@@ -369,6 +405,7 @@ class Document extends DataClass implements Insertable<Document> {
     id,
     name,
     filePath,
+    $driftBlobEquality.hash(pdfBytes),
     dateAdded,
     lastOpened,
     lastModified,
@@ -382,6 +419,7 @@ class Document extends DataClass implements Insertable<Document> {
           other.id == this.id &&
           other.name == this.name &&
           other.filePath == this.filePath &&
+          $driftBlobEquality.equals(other.pdfBytes, this.pdfBytes) &&
           other.dateAdded == this.dateAdded &&
           other.lastOpened == this.lastOpened &&
           other.lastModified == this.lastModified &&
@@ -393,6 +431,7 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
   final Value<int> id;
   final Value<String> name;
   final Value<String> filePath;
+  final Value<Uint8List?> pdfBytes;
   final Value<DateTime> dateAdded;
   final Value<DateTime?> lastOpened;
   final Value<DateTime> lastModified;
@@ -402,6 +441,7 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.filePath = const Value.absent(),
+    this.pdfBytes = const Value.absent(),
     this.dateAdded = const Value.absent(),
     this.lastOpened = const Value.absent(),
     this.lastModified = const Value.absent(),
@@ -412,6 +452,7 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
     this.id = const Value.absent(),
     required String name,
     required String filePath,
+    this.pdfBytes = const Value.absent(),
     this.dateAdded = const Value.absent(),
     this.lastOpened = const Value.absent(),
     required DateTime lastModified,
@@ -425,6 +466,7 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
     Expression<int>? id,
     Expression<String>? name,
     Expression<String>? filePath,
+    Expression<Uint8List>? pdfBytes,
     Expression<DateTime>? dateAdded,
     Expression<DateTime>? lastOpened,
     Expression<DateTime>? lastModified,
@@ -435,6 +477,7 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (filePath != null) 'file_path': filePath,
+      if (pdfBytes != null) 'pdf_bytes': pdfBytes,
       if (dateAdded != null) 'date_added': dateAdded,
       if (lastOpened != null) 'last_opened': lastOpened,
       if (lastModified != null) 'last_modified': lastModified,
@@ -447,6 +490,7 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
     Value<int>? id,
     Value<String>? name,
     Value<String>? filePath,
+    Value<Uint8List?>? pdfBytes,
     Value<DateTime>? dateAdded,
     Value<DateTime?>? lastOpened,
     Value<DateTime>? lastModified,
@@ -457,6 +501,7 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
       id: id ?? this.id,
       name: name ?? this.name,
       filePath: filePath ?? this.filePath,
+      pdfBytes: pdfBytes ?? this.pdfBytes,
       dateAdded: dateAdded ?? this.dateAdded,
       lastOpened: lastOpened ?? this.lastOpened,
       lastModified: lastModified ?? this.lastModified,
@@ -476,6 +521,9 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
     }
     if (filePath.present) {
       map['file_path'] = Variable<String>(filePath.value);
+    }
+    if (pdfBytes.present) {
+      map['pdf_bytes'] = Variable<Uint8List>(pdfBytes.value);
     }
     if (dateAdded.present) {
       map['date_added'] = Variable<DateTime>(dateAdded.value);
@@ -501,6 +549,7 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('filePath: $filePath, ')
+          ..write('pdfBytes: $pdfBytes, ')
           ..write('dateAdded: $dateAdded, ')
           ..write('lastOpened: $lastOpened, ')
           ..write('lastModified: $lastModified, ')
@@ -2618,6 +2667,7 @@ typedef $$DocumentsTableCreateCompanionBuilder =
       Value<int> id,
       required String name,
       required String filePath,
+      Value<Uint8List?> pdfBytes,
       Value<DateTime> dateAdded,
       Value<DateTime?> lastOpened,
       required DateTime lastModified,
@@ -2629,6 +2679,7 @@ typedef $$DocumentsTableUpdateCompanionBuilder =
       Value<int> id,
       Value<String> name,
       Value<String> filePath,
+      Value<Uint8List?> pdfBytes,
       Value<DateTime> dateAdded,
       Value<DateTime?> lastOpened,
       Value<DateTime> lastModified,
@@ -2729,6 +2780,11 @@ class $$DocumentsTableFilterComposer
 
   ColumnFilters<String> get filePath => $composableBuilder(
     column: $table.filePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get pdfBytes => $composableBuilder(
+    column: $table.pdfBytes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2857,6 +2913,11 @@ class $$DocumentsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<Uint8List> get pdfBytes => $composableBuilder(
+    column: $table.pdfBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get dateAdded => $composableBuilder(
     column: $table.dateAdded,
     builder: (column) => ColumnOrderings(column),
@@ -2900,6 +2961,9 @@ class $$DocumentsTableAnnotationComposer
 
   GeneratedColumn<String> get filePath =>
       $composableBuilder(column: $table.filePath, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get pdfBytes =>
+      $composableBuilder(column: $table.pdfBytes, builder: (column) => column);
 
   GeneratedColumn<DateTime> get dateAdded =>
       $composableBuilder(column: $table.dateAdded, builder: (column) => column);
@@ -3031,6 +3095,7 @@ class $$DocumentsTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> filePath = const Value.absent(),
+                Value<Uint8List?> pdfBytes = const Value.absent(),
                 Value<DateTime> dateAdded = const Value.absent(),
                 Value<DateTime?> lastOpened = const Value.absent(),
                 Value<DateTime> lastModified = const Value.absent(),
@@ -3040,6 +3105,7 @@ class $$DocumentsTableTableManager
                 id: id,
                 name: name,
                 filePath: filePath,
+                pdfBytes: pdfBytes,
                 dateAdded: dateAdded,
                 lastOpened: lastOpened,
                 lastModified: lastModified,
@@ -3051,6 +3117,7 @@ class $$DocumentsTableTableManager
                 Value<int> id = const Value.absent(),
                 required String name,
                 required String filePath,
+                Value<Uint8List?> pdfBytes = const Value.absent(),
                 Value<DateTime> dateAdded = const Value.absent(),
                 Value<DateTime?> lastOpened = const Value.absent(),
                 required DateTime lastModified,
@@ -3060,6 +3127,7 @@ class $$DocumentsTableTableManager
                 id: id,
                 name: name,
                 filePath: filePath,
+                pdfBytes: pdfBytes,
                 dateAdded: dateAdded,
                 lastOpened: lastOpened,
                 lastModified: lastModified,

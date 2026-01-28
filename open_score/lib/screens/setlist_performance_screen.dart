@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
 import '../models/database.dart';
@@ -33,9 +34,16 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
   Future<void> _initializePdfControllers() async {
     for (int i = 0; i < widget.documents.length; i++) {
       final doc = widget.documents[i];
-      _pdfControllers[i] = PdfController(
-        document: PdfDocument.openFile(doc.filePath),
-      );
+
+      // Use bytes on web, file path on native
+      final Future<PdfDocument> pdfDocument;
+      if (doc.pdfBytes != null) {
+        pdfDocument = PdfDocument.openData(doc.pdfBytes!);
+      } else {
+        pdfDocument = PdfDocument.openFile(doc.filePath);
+      }
+
+      _pdfControllers[i] = PdfController(document: pdfDocument);
     }
     setState(() {});
   }

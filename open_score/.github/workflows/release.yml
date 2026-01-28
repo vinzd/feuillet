@@ -1,0 +1,149 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Open Score v${{ steps.get_version.outputs.version }}
+          body: |
+            ## Open Score v${{ steps.get_version.outputs.version }}
+
+            ### Downloads
+            - **Android**: `app-release.apk`
+            - **macOS**: `OpenScore-macOS.zip`
+            - **iOS**: `OpenScore-iOS.zip` (requires signing)
+            - **Web**: `OpenScore-Web.zip`
+
+            ### Installation
+            - **Android**: Download and install the APK
+            - **macOS**: Download, unzip, and drag to Applications
+            - **iOS**: Requires Xcode to sign before installing
+            - **Web**: Unzip and serve with any web server
+
+            ### Changes
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details.
+          draft: false
+          prerelease: false
+
+  build-and-upload:
+    name: Build and Upload Assets
+    needs: create-release
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: android
+            build-cmd: flutter build apk --release
+            artifact-path: build/app/outputs/flutter-apk/app-release.apk
+            artifact-name: app-release.apk
+            content-type: application/vnd.android.package-archive
+
+          - os: macos-latest
+            platform: macos
+            build-cmd: flutter build macos --release
+            artifact-path: OpenScore-macOS.zip
+            artifact-name: OpenScore-macOS.zip
+            content-type: application/zip
+
+          - os: macos-latest
+            platform: ios
+            build-cmd: flutter build ios --release --no-codesign
+            artifact-path: OpenScore-iOS.zip
+            artifact-name: OpenScore-iOS.zip
+            content-type: application/zip
+
+          - os: ubuntu-latest
+            platform: web
+            build-cmd: flutter build web --release
+            artifact-path: OpenScore-Web.zip
+            artifact-name: OpenScore-Web.zip
+            content-type: application/zip
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java (Android only)
+        if: matrix.platform == 'android'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.1'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate database code
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Compile drift worker (web only)
+        if: matrix.platform == 'web'
+        run: dart compile js -O4 web/drift_worker.dart -o web/drift_worker.js
+
+      - name: Build ${{ matrix.platform }}
+        run: ${{ matrix.build-cmd }}
+
+      - name: Prepare macOS artifact
+        if: matrix.platform == 'macos'
+        run: |
+          cd build/macos/Build/Products/Release
+          zip -r "$GITHUB_WORKSPACE/OpenScore-macOS.zip" open_score.app
+
+      - name: Prepare iOS artifact
+        if: matrix.platform == 'ios'
+        run: |
+          cd build/ios/iphoneos
+          zip -r "$GITHUB_WORKSPACE/OpenScore-iOS.zip" Runner.app
+
+      - name: Prepare web artifact
+        if: matrix.platform == 'web'
+        run: |
+          cp -f web/sqlite3.wasm web/drift_worker.js build/web/
+          cd build
+          zip -r ../OpenScore-Web.zip web/
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ${{ matrix.artifact-path }}
+          asset_name: ${{ matrix.artifact-name }}
+          asset_content_type: ${{ matrix.content-type }}

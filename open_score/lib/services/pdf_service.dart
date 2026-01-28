@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:drift/drift.dart' as drift;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -23,6 +24,12 @@ class PdfService {
 
   /// Initialize the service and set up file watchers
   void _initialize() {
+    // Skip file watching on web (for development iteration only)
+    if (kIsWeb) {
+      debugPrint('PdfService: Skipping file watcher on web platform');
+      return;
+    }
+
     // Listen to PDF directory changes from Syncthing
     _pdfChangesSubscription = FileWatcherService.instance.pdfChanges.listen(
       _handlePdfDirectoryChange,
@@ -140,17 +147,71 @@ class PdfService {
         type: FileType.custom,
         allowedExtensions: ['pdf'],
         allowMultiple: false,
+        withData: kIsWeb, // Load bytes on web
       );
 
-      if (result == null || result.files.isEmpty || result.files.first.path == null) {
+      if (result == null || result.files.isEmpty) {
         return null;
       }
 
-      final sourcePath = result.files.first.path!;
-      final destPath = await _copyToPdfDirectory(sourcePath);
+      final file = result.files.first;
+
+      // On web, use bytes-based approach
+      if (kIsWeb) {
+        if (file.bytes == null) {
+          debugPrint('PdfService: No bytes available for web import');
+          return null;
+        }
+        return await _addPdfFromBytes(file.name, file.bytes!);
+      }
+
+      // On native platforms, use file path approach
+      if (file.path == null) {
+        return null;
+      }
+
+      final destPath = await _copyToPdfDirectory(file.path!);
       return await addPdfToLibrary(destPath);
     } catch (e) {
       debugPrint('PdfService: Error importing PDF: $e');
+      return null;
+    }
+  }
+
+  /// Add a PDF from bytes (web platform)
+  Future<String?> _addPdfFromBytes(String fileName, List<int> bytes) async {
+    try {
+      final nameWithoutExt = p.basenameWithoutExtension(fileName);
+      final pageCount = await _getPdfPageCountFromBytes(bytes);
+
+      // Insert into database with bytes
+      final documentId = await _database.insertDocument(
+        DocumentsCompanion(
+          name: drift.Value(nameWithoutExt),
+          filePath: drift.Value('web://$fileName'), // Placeholder path for web
+          pdfBytes: drift.Value(bytes as Uint8List),
+          lastModified: drift.Value(DateTime.now()),
+          fileSize: drift.Value(bytes.length),
+          pageCount: drift.Value(pageCount),
+        ),
+      );
+
+      // Create default settings
+      await _database.insertOrUpdateDocumentSettings(
+        DocumentSettingsCompanion(
+          documentId: drift.Value(documentId),
+          zoomLevel: const drift.Value(1.0),
+          brightness: const drift.Value(0.0),
+          contrast: const drift.Value(1.0),
+          currentPage: const drift.Value(0),
+        ),
+      );
+
+      debugPrint('PdfService: Added PDF from bytes: $nameWithoutExt (ID: $documentId)');
+      return 'web://$fileName';
+    } catch (e, stackTrace) {
+      debugPrint('PdfService: Error adding PDF from bytes: $e');
+      debugPrint(stackTrace.toString());
       return null;
     }
   }
@@ -164,6 +225,19 @@ class PdfService {
       return pageCount;
     } catch (e) {
       debugPrint('PdfService: Could not read PDF page count: $e');
+      return 0;
+    }
+  }
+
+  /// Get the page count of a PDF from bytes (web platform)
+  Future<int> _getPdfPageCountFromBytes(List<int> bytes) async {
+    try {
+      final document = await PdfDocument.openData(Uint8List.fromList(bytes));
+      final pageCount = document.pagesCount;
+      await document.close();
+      return pageCount;
+    } catch (e) {
+      debugPrint('PdfService: Could not read PDF page count from bytes: $e');
       return 0;
     }
   }
@@ -215,6 +289,12 @@ class PdfService {
   /// Scan the PDF directory and sync with database
   /// Useful for initial load or manual sync
   Future<void> scanAndSyncLibrary() async {
+    // Skip on web (for development iteration only)
+    if (kIsWeb) {
+      debugPrint('PdfService: Skipping library scan on web platform');
+      return;
+    }
+
     try {
       debugPrint('PdfService: Scanning PDF directory...');
 
