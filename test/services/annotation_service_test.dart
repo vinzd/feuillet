@@ -27,7 +27,7 @@ void main() {
       final json = {
         'points': [
           {'x': 10.0, 'y': 20.0},
-          {'x': 30.0, 'y': 40.0}
+          {'x': 30.0, 'y': 40.0},
         ],
         'color': Colors.red.toARGB32(),
         'thickness': 5.0,

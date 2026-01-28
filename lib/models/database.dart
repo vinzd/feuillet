@@ -44,8 +44,11 @@ class AnnotationLayers extends Table {
 // Annotations - stores drawing data for each layer
 class Annotations extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get layerId => integer()
-      .references(AnnotationLayers, #id, onDelete: KeyAction.cascade)();
+  IntColumn get layerId => integer().references(
+    AnnotationLayers,
+    #id,
+    onDelete: KeyAction.cascade,
+  )();
   IntColumn get pageNumber => integer()();
   TextColumn get type =>
       text()(); // 'pen', 'highlighter', 'eraser', 'text', etc.
@@ -76,14 +79,16 @@ class SetListItems extends Table {
 }
 
 // Database implementation
-@DriftDatabase(tables: [
-  Documents,
-  DocumentSettings,
-  AnnotationLayers,
-  Annotations,
-  SetLists,
-  SetListItems,
-])
+@DriftDatabase(
+  tables: [
+    Documents,
+    DocumentSettings,
+    AnnotationLayers,
+    Annotations,
+    SetLists,
+    SetListItems,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
@@ -138,13 +143,14 @@ class AppDatabase extends _$AppDatabase {
 
   // Document settings operations
   Future<DocumentSetting?> getDocumentSettings(int documentId) {
-    return (select(documentSettings)
-          ..where((s) => s.documentId.equals(documentId)))
-        .getSingleOrNull();
+    return (select(
+      documentSettings,
+    )..where((s) => s.documentId.equals(documentId))).getSingleOrNull();
   }
 
   Future<int> insertOrUpdateDocumentSettings(
-      DocumentSettingsCompanion settings) {
+    DocumentSettingsCompanion settings,
+  ) {
     return into(documentSettings).insertOnConflictUpdate(settings);
   }
 
@@ -174,9 +180,9 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<List<Annotation>> getAnnotations(int layerId, int pageNumber) {
-    return (select(annotations)
-          ..where((a) =>
-              a.layerId.equals(layerId) & a.pageNumber.equals(pageNumber)))
+    return (select(annotations)..where(
+          (a) => a.layerId.equals(layerId) & a.pageNumber.equals(pageNumber),
+        ))
         .get();
   }
 
@@ -244,8 +250,6 @@ QueryExecutor _openConnection() {
       sqlite3Wasm: Uri.parse('sqlite3.wasm'),
       driftWorker: Uri.parse('drift_worker.js'),
     ),
-    native: DriftNativeOptions(
-      shareAcrossIsolates: false,
-    ),
+    native: DriftNativeOptions(shareAcrossIsolates: false),
   );
 }

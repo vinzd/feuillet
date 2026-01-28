@@ -6,11 +6,7 @@ class PdfCard extends StatelessWidget {
   final Document document;
   final VoidCallback onTap;
 
-  const PdfCard({
-    super.key,
-    required this.document,
-    required this.onTap,
-  });
+  const PdfCard({super.key, required this.document, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -25,10 +21,7 @@ class PdfCard extends StatelessWidget {
             Expanded(
               child: Container(
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: const Icon(
-                  Icons.picture_as_pdf,
-                  size: 64,
-                ),
+                child: const Icon(Icons.picture_as_pdf, size: 64),
               ),
             ),
 
@@ -48,12 +41,10 @@ class PdfCard extends StatelessWidget {
                   Text(
                     '${document.pageCount} pages',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.color
-                              ?.withOpacity(0.6),
-                        ),
+                      color: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.color?.withOpacity(0.6),
+                    ),
                   ),
                 ],
               ),

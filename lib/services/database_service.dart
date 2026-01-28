@@ -29,19 +29,20 @@ class DatabaseService {
   /// Initialize the service and set up file watchers
   void _initialize() {
     // Listen to database file changes from Syncthing
-    _databaseChangesSubscription =
-        FileWatcherService.instance.databaseChanges.listen(
-      _handleDatabaseChange,
-      onError: (error) {
-        debugPrint('DatabaseService: Error in database watcher: $error');
-      },
-    );
+    _databaseChangesSubscription = FileWatcherService.instance.databaseChanges
+        .listen(
+          _handleDatabaseChange,
+          onError: (error) {
+            debugPrint('DatabaseService: Error in database watcher: $error');
+          },
+        );
   }
 
   /// Handle database file changes detected by file watcher
   void _handleDatabaseChange(event) {
     debugPrint(
-        'DatabaseService: Database changed externally, preparing to reload');
+      'DatabaseService: Database changed externally, preparing to reload',
+    );
 
     // Debounce multiple rapid changes (common with Syncthing)
     _debounceReload();

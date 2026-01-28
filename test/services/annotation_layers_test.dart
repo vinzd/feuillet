@@ -4,11 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('Annotation Layers', () {
     test('layer creation with unique IDs', () {
-      final layers = <int, String>{
-        1: 'Layer 1',
-        2: 'Layer 2',
-        3: 'Layer 3',
-      };
+      final layers = <int, String>{1: 'Layer 1', 2: 'Layer 2', 3: 'Layer 3'};
 
       expect(layers.keys.toSet().length, 3);
       expect(layers.containsKey(1), isTrue);
@@ -16,11 +12,7 @@ void main() {
     });
 
     test('layer visibility state', () {
-      final layerVisibility = <int, bool>{
-        1: true,
-        2: false,
-        3: true,
-      };
+      final layerVisibility = <int, bool>{1: true, 2: false, 3: true};
 
       expect(layerVisibility[1], isTrue);
       expect(layerVisibility[2], isFalse);
@@ -74,12 +66,7 @@ void main() {
     });
 
     test('color values', () {
-      final colors = [
-        Colors.black,
-        Colors.red,
-        Colors.blue,
-        Colors.green,
-      ];
+      final colors = [Colors.black, Colors.red, Colors.blue, Colors.green];
 
       for (final color in colors) {
         expect(color.toARGB32(), isA<int>());
@@ -110,10 +97,7 @@ void main() {
     });
 
     test('minimum two points for valid stroke', () {
-      final validStroke = [
-        const Offset(10.0, 20.0),
-        const Offset(30.0, 40.0),
-      ];
+      final validStroke = [const Offset(10.0, 20.0), const Offset(30.0, 40.0)];
 
       expect(validStroke.length, greaterThanOrEqualTo(2));
     });

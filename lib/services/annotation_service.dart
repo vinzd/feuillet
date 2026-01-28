@@ -30,11 +30,11 @@ class DrawingStroke {
   });
 
   Map<String, dynamic> toJson() => {
-        'points': points.map((p) => {'x': p.dx, 'y': p.dy}).toList(),
-        'color': color.toARGB32(),
-        'thickness': thickness,
-        'type': type.toString(),
-      };
+    'points': points.map((p) => {'x': p.dx, 'y': p.dy}).toList(),
+    'color': color.toARGB32(),
+    'thickness': thickness,
+    'type': type.toString(),
+  };
 
   factory DrawingStroke.fromJson(Map<String, dynamic> json) {
     return DrawingStroke(
@@ -105,7 +105,9 @@ class AnnotationService {
 
   /// Get annotations for a specific layer and page
   Future<List<DrawingStroke>> getAnnotations(
-      int layerId, int pageNumber) async {
+    int layerId,
+    int pageNumber,
+  ) async {
     final annotations = await _database.getAnnotations(layerId, pageNumber);
 
     return annotations

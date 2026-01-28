@@ -24,10 +24,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfCard(
-              document: testDocument,
-              onTap: () {},
-            ),
+            body: PdfCard(document: testDocument, onTap: () {}),
           ),
         ),
       );
@@ -39,10 +36,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfCard(
-              document: testDocument,
-              onTap: () {},
-            ),
+            body: PdfCard(document: testDocument, onTap: () {}),
           ),
         ),
       );
@@ -72,8 +66,9 @@ void main() {
       expect(tapped, isTrue);
     });
 
-    testWidgets('renders with different page counts',
-        (WidgetTester tester) async {
+    testWidgets('renders with different page counts', (
+      WidgetTester tester,
+    ) async {
       final documents = [
         testDocument.copyWith(pageCount: 1),
         testDocument.copyWith(pageCount: 10),
@@ -84,10 +79,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
-              body: PdfCard(
-                document: doc,
-                onTap: () {},
-              ),
+              body: PdfCard(document: doc, onTap: () {}),
             ),
           ),
         );

@@ -76,9 +76,9 @@ class SetListService {
     for (int i = 0; i < itemIds.length; i++) {
       final items = await getSetListItems(setListId);
       final item = items.cast<SetListItem?>().firstWhere(
-            (it) => it?.id == itemIds[i],
-            orElse: () => null,
-          );
+        (it) => it?.id == itemIds[i],
+        orElse: () => null,
+      );
 
       if (item != null) {
         // Note: We need to add an update method to the database

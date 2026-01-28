@@ -117,8 +117,10 @@ void main() {
       var uniqueName = newFilename;
       while (existingFiles.contains(uniqueName)) {
         counter++;
-        final nameWithoutExt =
-            newFilename.substring(0, newFilename.lastIndexOf('.'));
+        final nameWithoutExt = newFilename.substring(
+          0,
+          newFilename.lastIndexOf('.'),
+        );
         final ext = newFilename.substring(newFilename.lastIndexOf('.'));
         uniqueName = '$nameWithoutExt ($counter)$ext';
       }

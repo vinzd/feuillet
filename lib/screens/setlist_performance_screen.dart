@@ -173,14 +173,16 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
                         IconButton(
                           icon: const Icon(Icons.skip_previous, size: 36),
                           color: Colors.white,
-                          onPressed:
-                              _currentIndex > 0 ? _previousDocument : null,
+                          onPressed: _currentIndex > 0
+                              ? _previousDocument
+                              : null,
                         ),
                         IconButton(
                           icon: const Icon(Icons.chevron_left, size: 48),
                           color: Colors.white,
-                          onPressed:
-                              _currentIndex > 0 ? _previousDocument : null,
+                          onPressed: _currentIndex > 0
+                              ? _previousDocument
+                              : null,
                         ),
                         Container(
                           width: 80,
@@ -266,8 +268,9 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
                       doc.name,
                       style: TextStyle(
                         color: isCurrent ? Colors.blue : Colors.white,
-                        fontWeight:
-                            isCurrent ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isCurrent
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                     subtitle: Text(

@@ -42,7 +42,8 @@ class PdfService {
   /// Handle PDF directory changes detected by file watcher
   Future<void> _handlePdfDirectoryChange(WatchEvent event) async {
     debugPrint(
-        'PdfService: PDF directory changed: ${event.type} - ${event.path}');
+      'PdfService: PDF directory changed: ${event.type} - ${event.path}',
+    );
 
     switch (event.type) {
       case ChangeType.ADD:
@@ -81,9 +82,9 @@ class PdfService {
   Future<Document?> _findDocumentByPath(String filePath) async {
     final docs = await _database.getAllDocuments();
     return docs.cast<Document?>().firstWhere(
-          (d) => d?.filePath == filePath,
-          orElse: () => null,
-        );
+      (d) => d?.filePath == filePath,
+      orElse: () => null,
+    );
   }
 
   /// Handle a PDF file removed by Syncthing
@@ -107,10 +108,9 @@ class PdfService {
         final file = File(filePath);
         final stat = await file.stat();
 
-        await _database.updateDocument(doc.copyWith(
-          lastModified: stat.modified,
-          fileSize: stat.size,
-        ));
+        await _database.updateDocument(
+          doc.copyWith(lastModified: stat.modified, fileSize: stat.size),
+        );
         debugPrint('PdfService: Updated PDF metadata: $filePath');
       }
     } catch (e) {
@@ -209,7 +209,8 @@ class PdfService {
       );
 
       debugPrint(
-          'PdfService: Added PDF from bytes: $nameWithoutExt (ID: $documentId)');
+        'PdfService: Added PDF from bytes: $nameWithoutExt (ID: $documentId)',
+      );
       return 'web://$fileName';
     } catch (e, stackTrace) {
       debugPrint('PdfService: Error adding PDF from bytes: $e');
@@ -280,7 +281,8 @@ class PdfService {
       );
 
       debugPrint(
-          'PdfService: Added PDF to library: $fileName (ID: $documentId)');
+        'PdfService: Added PDF to library: $fileName (ID: $documentId)',
+      );
       return filePath;
     } catch (e, stackTrace) {
       debugPrint('PdfService: Error adding PDF to library: $e');
@@ -301,8 +303,8 @@ class PdfService {
     try {
       debugPrint('PdfService: Scanning PDF directory...');
 
-      final pdfDirPath =
-          await FileWatcherService.instance.getPdfDirectoryPath();
+      final pdfDirPath = await FileWatcherService.instance
+          .getPdfDirectoryPath();
       final pdfDir = Directory(pdfDirPath);
 
       if (!await pdfDir.exists()) {
@@ -313,9 +315,11 @@ class PdfService {
       // Get all PDF files in directory
       final pdfFiles = await pdfDir
           .list()
-          .where((entity) =>
-              entity is File &&
-              p.extension(entity.path).toLowerCase() == '.pdf')
+          .where(
+            (entity) =>
+                entity is File &&
+                p.extension(entity.path).toLowerCase() == '.pdf',
+          )
           .cast<File>()
           .toList();
 
@@ -336,7 +340,8 @@ class PdfService {
         if (!filePaths.contains(doc.filePath)) {
           await _database.deleteDocument(doc.id);
           debugPrint(
-              'PdfService: Removed missing PDF from database: ${doc.name}');
+            'PdfService: Removed missing PDF from database: ${doc.name}',
+          );
         }
       }
 

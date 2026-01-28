@@ -17,11 +17,7 @@ void main() async {
     PdfService.instance;
   }
 
-  runApp(
-    const ProviderScope(
-      child: OpenScoreApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: OpenScoreApp()));
 }
 
 class OpenScoreApp extends StatelessWidget {
@@ -54,10 +50,7 @@ class OpenScoreApp extends StatelessWidget {
 class AppLifecycleManager extends StatefulWidget {
   final Widget child;
 
-  const AppLifecycleManager({
-    super.key,
-    required this.child,
-  });
+  const AppLifecycleManager({super.key, required this.child});
 
   @override
   State<AppLifecycleManager> createState() => _AppLifecycleManagerState();

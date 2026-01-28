@@ -17,10 +17,7 @@ import '../widgets/pdf_bottom_controls.dart';
 class PdfViewerScreen extends ConsumerStatefulWidget {
   final Document document;
 
-  const PdfViewerScreen({
-    super.key,
-    required this.document,
-  });
+  const PdfViewerScreen({super.key, required this.document});
 
   @override
   ConsumerState<PdfViewerScreen> createState() => _PdfViewerScreenState();
@@ -101,8 +98,10 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     _layers = await _annotationService.getLayers(widget.document.id);
     if (_layers.isEmpty) {
       // Create default layer
-      final layerId =
-          await _annotationService.createLayer(widget.document.id, 'Layer 1');
+      final layerId = await _annotationService.createLayer(
+        widget.document.id,
+        'Layer 1',
+      );
       _layers = await _annotationService.getLayers(widget.document.id);
       _selectedLayerId = layerId;
     } else {
@@ -206,7 +205,8 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                 actions: [
                   IconButton(
                     icon: Icon(
-                        _annotationMode ? Icons.edit : Icons.edit_outlined),
+                      _annotationMode ? Icons.edit : Icons.edit_outlined,
+                    ),
                     onPressed: () {
                       setState(() => _annotationMode = !_annotationMode);
                     },
@@ -274,15 +274,15 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                 zoomLevel: _zoomLevel,
                 onPreviousPage: _currentPage > 1
                     ? () => _pdfController.previousPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        )
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      )
                     : null,
                 onNextPage: _currentPage < widget.document.pageCount
                     ? () => _pdfController.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        )
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      )
                     : null,
                 onZoomChanged: (value) => setState(() => _zoomLevel = value),
                 onZoomChangeEnd: (value) => _saveSettings(),

@@ -9,10 +9,7 @@ import 'pdf_viewer_screen.dart';
 class SetListDetailScreen extends StatefulWidget {
   final int setListId;
 
-  const SetListDetailScreen({
-    super.key,
-    required this.setListId,
-  });
+  const SetListDetailScreen({super.key, required this.setListId});
 
   @override
   State<SetListDetailScreen> createState() => _SetListDetailScreenState();
@@ -46,14 +43,16 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
   Future<void> _addDocuments() async {
     final allDocuments = await _database.getAllDocuments();
     final currentDocIds = _documents.map((d) => d.id).toSet();
-    final availableDocs =
-        allDocuments.where((d) => !currentDocIds.contains(d.id)).toList();
+    final availableDocs = allDocuments
+        .where((d) => !currentDocIds.contains(d.id))
+        .toList();
 
     if (availableDocs.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('All documents are already in this set list')),
+            content: Text('All documents are already in this set list'),
+          ),
         );
       }
       return;
@@ -102,7 +101,8 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
     if (_documents.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Add documents to start performance mode')),
+          content: Text('Add documents to start performance mode'),
+        ),
       );
       return;
     }
@@ -192,9 +192,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
                       return Card(
                         key: ValueKey(doc.id),
                         child: ListTile(
-                          leading: CircleAvatar(
-                            child: Text('${index + 1}'),
-                          ),
+                          leading: CircleAvatar(child: Text('${index + 1}')),
                           title: Text(doc.name),
                           subtitle: Text('${doc.pageCount} pages'),
                           trailing: Row(
@@ -214,8 +212,10 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
                                 tooltip: 'View',
                               ),
                               IconButton(
-                                icon:
-                                    const Icon(Icons.delete, color: Colors.red),
+                                icon: const Icon(
+                                  Icons.delete,
+                                  color: Colors.red,
+                                ),
                                 onPressed: () => _removeDocument(item.id),
                                 tooltip: 'Remove',
                               ),

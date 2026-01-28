@@ -51,8 +51,10 @@ class _LayerPanelState extends State<LayerPanel> {
     );
 
     if (name != null && name.isNotEmpty) {
-      final layerId =
-          await _annotationService.createLayer(widget.documentId, name);
+      final layerId = await _annotationService.createLayer(
+        widget.documentId,
+        name,
+      );
       await _loadLayers();
       widget.onLayerSelected(layerId);
       widget.onLayersChanged();
@@ -114,10 +116,7 @@ class _LayerPanelState extends State<LayerPanel> {
               children: [
                 const Text(
                   'Layers',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
                 IconButton(
@@ -211,8 +210,10 @@ class _LayerPanelState extends State<LayerPanel> {
                             children: [
                               Icon(Icons.delete, color: Colors.red),
                               SizedBox(width: 8),
-                              Text('Delete',
-                                  style: TextStyle(color: Colors.red)),
+                              Text(
+                                'Delete',
+                                style: TextStyle(color: Colors.red),
+                              ),
                             ],
                           ),
                         ),

@@ -102,9 +102,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Delete'),
           ),
         ],
@@ -119,9 +117,9 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
   Future<void> _duplicateSetList(SetList setList) async {
     await _setListService.duplicateSetList(setList.id);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Set list duplicated')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Set list duplicated')));
     }
   }
 
@@ -130,9 +128,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
     final setListsAsync = ref.watch(setListsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Set Lists'),
-      ),
+      appBar: AppBar(title: const Text('Set Lists')),
       body: setListsAsync.when(
         data: (setLists) {
           if (setLists.isEmpty) {
@@ -168,11 +164,10 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
               final setList = setLists[index];
               return Card(
                 child: ListTile(
-                  leading: const CircleAvatar(
-                    child: Icon(Icons.queue_music),
-                  ),
+                  leading: const CircleAvatar(child: Icon(Icons.queue_music)),
                   title: Text(setList.name),
-                  subtitle: setList.description != null &&
+                  subtitle:
+                      setList.description != null &&
                           setList.description!.isNotEmpty
                       ? Text(
                           setList.description!,

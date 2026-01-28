@@ -133,10 +133,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           const Icon(Icons.error_outline, size: 48, color: Colors.red),
           const SizedBox(height: 16),
           Text('Error loading library: $error'),
-          ElevatedButton(
-            onPressed: _syncLibrary,
-            child: const Text('Retry'),
-          ),
+          ElevatedButton(onPressed: _syncLibrary, child: const Text('Retry')),
         ],
       ),
     );
@@ -227,11 +224,7 @@ class PdfListTile extends StatelessWidget {
   final Document document;
   final VoidCallback onTap;
 
-  const PdfListTile({
-    super.key,
-    required this.document,
-    required this.onTap,
-  });
+  const PdfListTile({super.key, required this.document, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

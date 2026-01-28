@@ -11,11 +11,7 @@ void main() {
   // triggering background services.
   testWidgets('App launches successfully', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(
-      const ProviderScope(
-        child: OpenScoreApp(),
-      ),
-    );
+    await tester.pumpWidget(const ProviderScope(child: OpenScoreApp()));
 
     // Verify that app launches and shows navigation
     expect(find.text('Library'), findsOneWidget);

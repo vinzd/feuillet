@@ -33,8 +33,9 @@ void main() {
 
       final searchTerm = 'beethoven';
       final filtered = documents
-          .where((doc) =>
-              (doc['name'] as String).toLowerCase().contains(searchTerm))
+          .where(
+            (doc) => (doc['name'] as String).toLowerCase().contains(searchTerm),
+          )
           .toList();
 
       expect(filtered.length, 2);
@@ -74,8 +75,10 @@ void main() {
         {'pageCount': 15},
       ];
 
-      final totalPages =
-          documents.fold<int>(0, (sum, doc) => sum + (doc['pageCount'] as int));
+      final totalPages = documents.fold<int>(
+        0,
+        (sum, doc) => sum + (doc['pageCount'] as int),
+      );
 
       expect(totalPages, 45);
     });
@@ -95,8 +98,10 @@ void main() {
         {'name': 'Doc3', 'dateAdded': DateTime(2024, 1, 2)},
       ];
 
-      documents.sort((a, b) =>
-          (b['dateAdded'] as DateTime).compareTo(a['dateAdded'] as DateTime));
+      documents.sort(
+        (a, b) =>
+            (b['dateAdded'] as DateTime).compareTo(a['dateAdded'] as DateTime),
+      );
 
       expect(documents[0]['name'], 'Doc2');
     });
@@ -109,7 +114,8 @@ void main() {
       ];
 
       documents.sort(
-          (a, b) => (b['openCount'] as int).compareTo(a['openCount'] as int));
+        (a, b) => (b['openCount'] as int).compareTo(a['openCount'] as int),
+      );
 
       expect(documents[0]['name'], 'Doc2');
       expect(documents[0]['openCount'], 15);
@@ -125,8 +131,9 @@ void main() {
       ];
 
       // Sort by order
-      setlistItems
-          .sort((a, b) => (a['order'] as int).compareTo(b['order'] as int));
+      setlistItems.sort(
+        (a, b) => (a['order'] as int).compareTo(b['order'] as int),
+      );
 
       expect(setlistItems[0]['documentId'], 1);
       expect(setlistItems[1]['documentId'], 3);
@@ -138,24 +145,26 @@ void main() {
         {
           'id': 1,
           'name': 'Concert A',
-          'documentIds': [1, 2, 3]
+          'documentIds': [1, 2, 3],
         },
         {
           'id': 2,
           'name': 'Concert B',
-          'documentIds': [2, 4, 5]
+          'documentIds': [2, 4, 5],
         },
         {
           'id': 3,
           'name': 'Concert C',
-          'documentIds': [6, 7, 8]
+          'documentIds': [6, 7, 8],
         },
       ];
 
       final documentId = 2;
       final containing = setlists
-          .where((setlist) =>
-              (setlist['documentIds'] as List<int>).contains(documentId))
+          .where(
+            (setlist) =>
+                (setlist['documentIds'] as List<int>).contains(documentId),
+          )
           .toList();
 
       expect(containing.length, 2);
@@ -184,8 +193,9 @@ void main() {
       ];
 
       final pageNumber = 0;
-      final pageAnnotations =
-          annotations.where((a) => a['pageNumber'] == pageNumber).toList();
+      final pageAnnotations = annotations
+          .where((a) => a['pageNumber'] == pageNumber)
+          .toList();
 
       expect(pageAnnotations.length, 2);
     });
@@ -198,8 +208,9 @@ void main() {
       ];
 
       final layerId = 1;
-      final layerAnnotations =
-          annotations.where((a) => a['layerId'] == layerId).toList();
+      final layerAnnotations = annotations
+          .where((a) => a['layerId'] == layerId)
+          .toList();
 
       expect(layerAnnotations.length, 2);
     });
