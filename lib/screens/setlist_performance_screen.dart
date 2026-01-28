@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
 import '../models/database.dart';
@@ -122,7 +121,7 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
               left: 0,
               right: 0,
               child: AppBar(
-                backgroundColor: Colors.black.withOpacity(0.7),
+                backgroundColor: Colors.black.withValues(alpha: 0.7),
                 title: Text(
                   widget.documents[_currentIndex].name,
                   style: const TextStyle(color: Colors.white),
@@ -145,7 +144,7 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
               left: 0,
               right: 0,
               child: Container(
-                color: Colors.black.withOpacity(0.7),
+                color: Colors.black.withValues(alpha: 0.7),
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

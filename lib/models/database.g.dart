@@ -2,7 +2,7 @@
 
 part of 'database.dart';
 
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, unused_element
 class $DocumentsTable extends Documents
     with TableInfo<$DocumentsTable, Document> {
   @override

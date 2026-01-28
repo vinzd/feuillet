@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:watcher/watcher.dart';
 import '../models/database.dart';
 import 'file_watcher_service.dart';
 
@@ -39,7 +40,7 @@ class DatabaseService {
   }
 
   /// Handle database file changes detected by file watcher
-  void _handleDatabaseChange(event) {
+  void _handleDatabaseChange(WatchEvent event) {
     debugPrint(
       'DatabaseService: Database changed externally, preparing to reload',
     );

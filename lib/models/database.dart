@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
+// ignore_for_file: unused_element
 part 'database.g.dart';
 
 // Documents table - stores PDF metadata

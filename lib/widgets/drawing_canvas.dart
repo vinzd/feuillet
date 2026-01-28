@@ -150,7 +150,7 @@ class DrawingPainter extends CustomPainter {
         paint.color = stroke.color;
         break;
       case AnnotationType.highlighter:
-        paint.color = stroke.color.withOpacity(0.4);
+        paint.color = stroke.color.withValues(alpha: 0.4);
         paint.strokeWidth = stroke.thickness * 2;
         break;
       case AnnotationType.eraser:
