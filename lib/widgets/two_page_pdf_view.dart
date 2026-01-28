@@ -74,7 +74,6 @@ class TwoPagePdfView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        // Left page
         Expanded(
           child: _PageContainer(
             document: document,
@@ -91,7 +90,6 @@ class TwoPagePdfView extends StatelessWidget {
             backgroundDecoration: backgroundDecoration,
           ),
         ),
-        // Right page (or empty space if no right page)
         Expanded(
           child: rightPageNumber != null
               ? _PageContainer(
@@ -109,8 +107,9 @@ class TwoPagePdfView extends StatelessWidget {
                   backgroundDecoration: backgroundDecoration,
                 )
               : Container(
-                  decoration: backgroundDecoration,
-                  color: backgroundDecoration == null ? Colors.black : null,
+                  decoration:
+                      backgroundDecoration ??
+                      const BoxDecoration(color: Colors.black),
                 ),
         ),
       ],
@@ -153,7 +152,6 @@ class _PageContainer extends StatelessWidget {
     final theme = Theme.of(context);
     final isEditable = isAnnotationMode && isActive && selectedLayerId != null;
 
-    // Build annotation overlay widget
     Widget? annotationOverlay;
     if (selectedLayerId != null) {
       annotationOverlay = DrawingCanvas(
@@ -178,8 +176,6 @@ class _PageContainer extends StatelessWidget {
             width: 3,
           ),
         ),
-        // Use CachedPdfPage with annotationOverlay - the FittedBox inside
-        // ensures PDF and annotations scale together consistently
         child: CachedPdfPage(
           document: document,
           pageNumber: pageNumber,

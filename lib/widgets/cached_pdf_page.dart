@@ -111,58 +111,41 @@ class _CachedPdfPageState extends State<CachedPdfPage> {
 
   @override
   Widget build(BuildContext context) {
+    return Container(
+      decoration: widget.backgroundDecoration,
+      child: Center(child: _buildContent()),
+    );
+  }
+
+  Widget _buildContent() {
     if (_isLoading) {
-      return Container(
-        decoration: widget.backgroundDecoration,
-        child: const Center(child: CircularProgressIndicator()),
-      );
+      return const CircularProgressIndicator();
     }
 
     if (_error != null) {
-      return Container(
-        decoration: widget.backgroundDecoration,
-        child: Center(child: Text('Error: $_error')),
-      );
+      return Text('Error: $_error');
     }
 
     if (_pageImage == null) {
-      return Container(
-        decoration: widget.backgroundDecoration,
-        child: const Center(child: Text('Failed to render page')),
-      );
+      return const Text('Failed to render page');
     }
 
-    // If no annotation overlay, use simple image display
     if (widget.annotationOverlay == null) {
-      return Container(
-        decoration: widget.backgroundDecoration,
-        child: Center(child: Image.memory(_pageImage!.bytes, fit: widget.fit)),
-      );
+      return Image.memory(_pageImage!.bytes, fit: widget.fit);
     }
 
     // With annotation overlay: use FittedBox to scale PDF and annotations together
-    // This ensures consistent coordinate systems across different view modes
-    return Container(
-      decoration: widget.backgroundDecoration,
-      child: Center(
-        child: FittedBox(
-          fit: BoxFit.contain,
-          child: SizedBox(
-            width: _pageImage!.width.toDouble(),
-            height: _pageImage!.height.toDouble(),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // PDF image at natural size
-                Image.memory(
-                  _pageImage!.bytes,
-                  fit: BoxFit.fill, // Fills the SizedBox exactly
-                ),
-                // Annotation overlay fills the same space
-                widget.annotationOverlay!,
-              ],
-            ),
-          ),
+    return FittedBox(
+      fit: BoxFit.contain,
+      child: SizedBox(
+        width: _pageImage!.width.toDouble(),
+        height: _pageImage!.height.toDouble(),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.memory(_pageImage!.bytes, fit: BoxFit.fill),
+            widget.annotationOverlay!,
+          ],
         ),
       ),
     );

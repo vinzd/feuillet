@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// PDF view modes for displaying pages
 enum PdfViewMode {
   /// Single page at a time (default)
@@ -18,6 +20,18 @@ enum PdfViewMode {
         return 'Booklet';
       case PdfViewMode.continuousDouble:
         return 'Continuous Double';
+    }
+  }
+
+  /// Icon for the view mode selector
+  IconData get icon {
+    switch (this) {
+      case PdfViewMode.single:
+        return Icons.article;
+      case PdfViewMode.booklet:
+        return Icons.menu_book;
+      case PdfViewMode.continuousDouble:
+        return Icons.auto_stories;
     }
   }
 

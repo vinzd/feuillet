@@ -58,6 +58,13 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   Map<int, List<DrawingStroke>> _pageAnnotations = {};
   Map<int, List<DrawingStroke>> _rightPageAnnotations = {};
 
+  /// Flatten annotations from all layers into a single list
+  List<DrawingStroke> _flattenAnnotations(
+    Map<int, List<DrawingStroke>> annotations,
+  ) {
+    return annotations.values.expand((strokes) => strokes).toList();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -125,34 +132,25 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   }
 
   Future<void> _loadPageAnnotations() async {
+    final spread = _getCurrentSpread();
+
     // Load annotations from all visible layers for left page
-    final allAnnotations = await _annotationService.getAllPageAnnotations(
+    final leftAnnotations = await _annotationService.getAllPageAnnotations(
       widget.document.id,
-      _currentPage - 1,
+      spread.leftPage - 1,
     );
 
     // Load annotations for right page in two-page mode
     Map<int, List<DrawingStroke>> rightAnnotations = {};
-    if (_viewMode.isTwoPage) {
-      final spread = PageSpreadCalculator.getPagesForSpread(
-        _viewMode,
-        PageSpreadCalculator.getSpreadForPage(
-          _viewMode,
-          _currentPage,
-          widget.document.pageCount,
-        ),
-        widget.document.pageCount,
+    if (spread.rightPage != null) {
+      rightAnnotations = await _annotationService.getAllPageAnnotations(
+        widget.document.id,
+        spread.rightPage! - 1,
       );
-      if (spread.rightPage != null) {
-        rightAnnotations = await _annotationService.getAllPageAnnotations(
-          widget.document.id,
-          spread.rightPage! - 1,
-        );
-      }
     }
 
     setState(() {
-      _pageAnnotations = allAnnotations;
+      _pageAnnotations = leftAnnotations;
       _rightPageAnnotations = rightAnnotations;
     });
   }
@@ -387,17 +385,6 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     return currentSpread < totalSpreads - 1;
   }
 
-  IconData _getViewModeIcon(PdfViewMode mode) {
-    switch (mode) {
-      case PdfViewMode.single:
-        return Icons.article;
-      case PdfViewMode.booklet:
-        return Icons.menu_book;
-      case PdfViewMode.continuousDouble:
-        return Icons.auto_stories;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -452,7 +439,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                   backgroundColor: Colors.black.withValues(alpha: 0.7),
                   actions: [
                     PopupMenuButton<PdfViewMode>(
-                      icon: Icon(_getViewModeIcon(_viewMode)),
+                      icon: Icon(_viewMode.icon),
                       tooltip: 'View mode',
                       onSelected: _onViewModeChanged,
                       itemBuilder: (context) => PdfViewMode.values
@@ -462,7 +449,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                               child: Row(
                                 children: [
                                   Icon(
-                                    _getViewModeIcon(mode),
+                                    mode.icon,
                                     color: mode == _viewMode
                                         ? Theme.of(context).colorScheme.primary
                                         : null,
@@ -579,9 +566,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
             toolType: _currentTool,
             color: _annotationColor,
             thickness: _annotationThickness,
-            existingStrokes: _pageAnnotations.values
-                .expand((strokes) => strokes)
-                .toList(),
+            existingStrokes: _flattenAnnotations(_pageAnnotations),
             onStrokeCompleted: _loadPageAnnotations,
             isEnabled: _annotationMode,
           );
@@ -610,12 +595,8 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
       rightPageNumber: spread.rightPage,
       activePageSide: _activePageSide,
       onPageSideSelected: _onPageSideSelected,
-      leftPageAnnotations: _pageAnnotations.values
-          .expand((strokes) => strokes)
-          .toList(),
-      rightPageAnnotations: _rightPageAnnotations.values
-          .expand((strokes) => strokes)
-          .toList(),
+      leftPageAnnotations: _flattenAnnotations(_pageAnnotations),
+      rightPageAnnotations: _flattenAnnotations(_rightPageAnnotations),
       isAnnotationMode: _annotationMode,
       selectedLayerId: _selectedLayerId,
       currentTool: _currentTool,

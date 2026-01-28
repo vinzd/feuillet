@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:open_score/models/view_mode.dart';
 
@@ -21,6 +22,20 @@ void main() {
 
       test('continuousDouble returns "Continuous Double"', () {
         expect(PdfViewMode.continuousDouble.displayName, 'Continuous Double');
+      });
+    });
+
+    group('icon', () {
+      test('single returns Icons.article', () {
+        expect(PdfViewMode.single.icon, Icons.article);
+      });
+
+      test('booklet returns Icons.menu_book', () {
+        expect(PdfViewMode.booklet.icon, Icons.menu_book);
+      });
+
+      test('continuousDouble returns Icons.auto_stories', () {
+        expect(PdfViewMode.continuousDouble.icon, Icons.auto_stories);
       });
     });
 
