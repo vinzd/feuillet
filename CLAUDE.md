@@ -57,9 +57,11 @@ The app supports web for **fast development iteration only**. Web has limited fu
 
 **Required web files:**
 - `web/drift_worker.dart` - Source (tracked in git)
-- `web/drift_worker.js` - Compiled (auto-generated, ignored)
+- `web/drift_worker.js` - Compiled (auto-generated, gitignored)
 - `web/sqlite3.wasm` - SQLite engine (tracked in git, downloaded from releases)
 - `web/index.html` - PDF.js CDN setup (tracked in git)
+
+**Important:** Always use `make build-web` or `make run-web` instead of running `flutter build web` or `flutter run -d chrome` directly. The Makefile automatically compiles the drift worker and copies required files to the build output. Running Flutter commands directly will result in a missing `drift_worker.js` error.
 
 ```bash
 # Build and serve web version
