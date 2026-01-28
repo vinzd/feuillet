@@ -41,7 +41,8 @@ class PdfService {
 
   /// Handle PDF directory changes detected by file watcher
   Future<void> _handlePdfDirectoryChange(WatchEvent event) async {
-    debugPrint('PdfService: PDF directory changed: ${event.type} - ${event.path}');
+    debugPrint(
+        'PdfService: PDF directory changed: ${event.type} - ${event.path}');
 
     switch (event.type) {
       case ChangeType.ADD:
@@ -207,7 +208,8 @@ class PdfService {
         ),
       );
 
-      debugPrint('PdfService: Added PDF from bytes: $nameWithoutExt (ID: $documentId)');
+      debugPrint(
+          'PdfService: Added PDF from bytes: $nameWithoutExt (ID: $documentId)');
       return 'web://$fileName';
     } catch (e, stackTrace) {
       debugPrint('PdfService: Error adding PDF from bytes: $e');
@@ -277,7 +279,8 @@ class PdfService {
         ),
       );
 
-      debugPrint('PdfService: Added PDF to library: $fileName (ID: $documentId)');
+      debugPrint(
+          'PdfService: Added PDF to library: $fileName (ID: $documentId)');
       return filePath;
     } catch (e, stackTrace) {
       debugPrint('PdfService: Error adding PDF to library: $e');
@@ -298,7 +301,8 @@ class PdfService {
     try {
       debugPrint('PdfService: Scanning PDF directory...');
 
-      final pdfDirPath = await FileWatcherService.instance.getPdfDirectoryPath();
+      final pdfDirPath =
+          await FileWatcherService.instance.getPdfDirectoryPath();
       final pdfDir = Directory(pdfDirPath);
 
       if (!await pdfDir.exists()) {
@@ -310,7 +314,8 @@ class PdfService {
       final pdfFiles = await pdfDir
           .list()
           .where((entity) =>
-              entity is File && p.extension(entity.path).toLowerCase() == '.pdf')
+              entity is File &&
+              p.extension(entity.path).toLowerCase() == '.pdf')
           .cast<File>()
           .toList();
 
@@ -330,7 +335,8 @@ class PdfService {
       for (final doc in dbDocuments) {
         if (!filePaths.contains(doc.filePath)) {
           await _database.deleteDocument(doc.id);
-          debugPrint('PdfService: Removed missing PDF from database: ${doc.name}');
+          debugPrint(
+              'PdfService: Removed missing PDF from database: ${doc.name}');
         }
       }
 

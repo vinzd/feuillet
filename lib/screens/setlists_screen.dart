@@ -172,7 +172,8 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
                     child: Icon(Icons.queue_music),
                   ),
                   title: Text(setList.name),
-                  subtitle: setList.description != null && setList.description!.isNotEmpty
+                  subtitle: setList.description != null &&
+                          setList.description!.isNotEmpty
                       ? Text(
                           setList.description!,
                           maxLines: 2,
@@ -217,7 +218,8 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => SetListDetailScreen(setListId: setList.id),
+                        builder: (context) =>
+                            SetListDetailScreen(setListId: setList.id),
                       ),
                     );
                   },

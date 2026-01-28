@@ -49,7 +49,8 @@ class FileWatcherService {
       // Get the PDF directory path
       final appDocDir = await getApplicationDocumentsDirectory();
       _pdfDirectoryPath = p.join(appDocDir.path, 'open_score', 'pdfs');
-      _databasePath = p.join(appDocDir.path, 'open_score', 'open_score_db.sqlite');
+      _databasePath =
+          p.join(appDocDir.path, 'open_score', 'open_score_db.sqlite');
 
       // Create directories if they don't exist
       final pdfDir = Directory(_pdfDirectoryPath!);
@@ -110,7 +111,8 @@ class FileWatcherService {
 
       _pdfDirectoryWatcher!.events.listen(
         (event) {
-          debugPrint('FileWatcherService: PDF directory event: ${event.type} - ${event.path}');
+          debugPrint(
+              'FileWatcherService: PDF directory event: ${event.type} - ${event.path}');
 
           // Filter out temporary Syncthing files
           if (_isSyncthingTempFile(event.path)) {
@@ -169,9 +171,9 @@ class FileWatcherService {
     final fileName = p.basename(path);
     // Syncthing uses .tmp extensions or ~syncthing~ prefix
     return fileName.startsWith('.syncthing.') ||
-           fileName.startsWith('~syncthing~') ||
-           fileName.endsWith('.tmp') ||
-           fileName.startsWith('.~');
+        fileName.startsWith('~syncthing~') ||
+        fileName.endsWith('.tmp') ||
+        fileName.startsWith('.~');
   }
 
   /// Get the PDF directory path

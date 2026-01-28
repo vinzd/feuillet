@@ -116,16 +116,16 @@ class $DocumentsTable extends Documents
   );
   @override
   List<GeneratedColumn> get $columns => [
-    id,
-    name,
-    filePath,
-    pdfBytes,
-    dateAdded,
-    lastOpened,
-    lastModified,
-    fileSize,
-    pageCount,
-  ];
+        id,
+        name,
+        filePath,
+        pdfBytes,
+        dateAdded,
+        lastOpened,
+        lastModified,
+        fileSize,
+        pageCount,
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -355,17 +355,18 @@ class Document extends DataClass implements Insertable<Document> {
     DateTime? lastModified,
     int? fileSize,
     int? pageCount,
-  }) => Document(
-    id: id ?? this.id,
-    name: name ?? this.name,
-    filePath: filePath ?? this.filePath,
-    pdfBytes: pdfBytes.present ? pdfBytes.value : this.pdfBytes,
-    dateAdded: dateAdded ?? this.dateAdded,
-    lastOpened: lastOpened.present ? lastOpened.value : this.lastOpened,
-    lastModified: lastModified ?? this.lastModified,
-    fileSize: fileSize ?? this.fileSize,
-    pageCount: pageCount ?? this.pageCount,
-  );
+  }) =>
+      Document(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        filePath: filePath ?? this.filePath,
+        pdfBytes: pdfBytes.present ? pdfBytes.value : this.pdfBytes,
+        dateAdded: dateAdded ?? this.dateAdded,
+        lastOpened: lastOpened.present ? lastOpened.value : this.lastOpened,
+        lastModified: lastModified ?? this.lastModified,
+        fileSize: fileSize ?? this.fileSize,
+        pageCount: pageCount ?? this.pageCount,
+      );
   Document copyWithCompanion(DocumentsCompanion data) {
     return Document(
       id: data.id.present ? data.id.value : this.id,
@@ -373,9 +374,8 @@ class Document extends DataClass implements Insertable<Document> {
       filePath: data.filePath.present ? data.filePath.value : this.filePath,
       pdfBytes: data.pdfBytes.present ? data.pdfBytes.value : this.pdfBytes,
       dateAdded: data.dateAdded.present ? data.dateAdded.value : this.dateAdded,
-      lastOpened: data.lastOpened.present
-          ? data.lastOpened.value
-          : this.lastOpened,
+      lastOpened:
+          data.lastOpened.present ? data.lastOpened.value : this.lastOpened,
       lastModified: data.lastModified.present
           ? data.lastModified.value
           : this.lastModified,
@@ -402,16 +402,16 @@ class Document extends DataClass implements Insertable<Document> {
 
   @override
   int get hashCode => Object.hash(
-    id,
-    name,
-    filePath,
-    $driftBlobEquality.hash(pdfBytes),
-    dateAdded,
-    lastOpened,
-    lastModified,
-    fileSize,
-    pageCount,
-  );
+        id,
+        name,
+        filePath,
+        $driftBlobEquality.hash(pdfBytes),
+        dateAdded,
+        lastOpened,
+        lastModified,
+        fileSize,
+        pageCount,
+      );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -458,10 +458,10 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
     required DateTime lastModified,
     required int fileSize,
     this.pageCount = const Value.absent(),
-  }) : name = Value(name),
-       filePath = Value(filePath),
-       lastModified = Value(lastModified),
-       fileSize = Value(fileSize);
+  })  : name = Value(name),
+        filePath = Value(filePath),
+        lastModified = Value(lastModified),
+        fileSize = Value(fileSize);
   static Insertable<Document> custom({
     Expression<int>? id,
     Expression<String>? name,
@@ -655,14 +655,14 @@ class $DocumentSettingsTable extends DocumentSettings
   );
   @override
   List<GeneratedColumn> get $columns => [
-    id,
-    documentId,
-    zoomLevel,
-    brightness,
-    contrast,
-    currentPage,
-    lastUpdated,
-  ];
+        id,
+        documentId,
+        zoomLevel,
+        brightness,
+        contrast,
+        currentPage,
+        lastUpdated,
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -847,32 +847,29 @@ class DocumentSetting extends DataClass implements Insertable<DocumentSetting> {
     double? contrast,
     int? currentPage,
     DateTime? lastUpdated,
-  }) => DocumentSetting(
-    id: id ?? this.id,
-    documentId: documentId ?? this.documentId,
-    zoomLevel: zoomLevel ?? this.zoomLevel,
-    brightness: brightness ?? this.brightness,
-    contrast: contrast ?? this.contrast,
-    currentPage: currentPage ?? this.currentPage,
-    lastUpdated: lastUpdated ?? this.lastUpdated,
-  );
+  }) =>
+      DocumentSetting(
+        id: id ?? this.id,
+        documentId: documentId ?? this.documentId,
+        zoomLevel: zoomLevel ?? this.zoomLevel,
+        brightness: brightness ?? this.brightness,
+        contrast: contrast ?? this.contrast,
+        currentPage: currentPage ?? this.currentPage,
+        lastUpdated: lastUpdated ?? this.lastUpdated,
+      );
   DocumentSetting copyWithCompanion(DocumentSettingsCompanion data) {
     return DocumentSetting(
       id: data.id.present ? data.id.value : this.id,
-      documentId: data.documentId.present
-          ? data.documentId.value
-          : this.documentId,
+      documentId:
+          data.documentId.present ? data.documentId.value : this.documentId,
       zoomLevel: data.zoomLevel.present ? data.zoomLevel.value : this.zoomLevel,
-      brightness: data.brightness.present
-          ? data.brightness.value
-          : this.brightness,
+      brightness:
+          data.brightness.present ? data.brightness.value : this.brightness,
       contrast: data.contrast.present ? data.contrast.value : this.contrast,
-      currentPage: data.currentPage.present
-          ? data.currentPage.value
-          : this.currentPage,
-      lastUpdated: data.lastUpdated.present
-          ? data.lastUpdated.value
-          : this.lastUpdated,
+      currentPage:
+          data.currentPage.present ? data.currentPage.value : this.currentPage,
+      lastUpdated:
+          data.lastUpdated.present ? data.lastUpdated.value : this.lastUpdated,
     );
   }
 
@@ -892,14 +889,14 @@ class DocumentSetting extends DataClass implements Insertable<DocumentSetting> {
 
   @override
   int get hashCode => Object.hash(
-    id,
-    documentId,
-    zoomLevel,
-    brightness,
-    contrast,
-    currentPage,
-    lastUpdated,
-  );
+        id,
+        documentId,
+        zoomLevel,
+        brightness,
+        contrast,
+        currentPage,
+        lastUpdated,
+      );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1107,13 +1104,13 @@ class $AnnotationLayersTable extends AnnotationLayers
   );
   @override
   List<GeneratedColumn> get $columns => [
-    id,
-    documentId,
-    name,
-    orderIndex,
-    isVisible,
-    createdAt,
-  ];
+        id,
+        documentId,
+        name,
+        orderIndex,
+        isVisible,
+        createdAt,
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1279,24 +1276,23 @@ class AnnotationLayer extends DataClass implements Insertable<AnnotationLayer> {
     int? orderIndex,
     bool? isVisible,
     DateTime? createdAt,
-  }) => AnnotationLayer(
-    id: id ?? this.id,
-    documentId: documentId ?? this.documentId,
-    name: name ?? this.name,
-    orderIndex: orderIndex ?? this.orderIndex,
-    isVisible: isVisible ?? this.isVisible,
-    createdAt: createdAt ?? this.createdAt,
-  );
+  }) =>
+      AnnotationLayer(
+        id: id ?? this.id,
+        documentId: documentId ?? this.documentId,
+        name: name ?? this.name,
+        orderIndex: orderIndex ?? this.orderIndex,
+        isVisible: isVisible ?? this.isVisible,
+        createdAt: createdAt ?? this.createdAt,
+      );
   AnnotationLayer copyWithCompanion(AnnotationLayersCompanion data) {
     return AnnotationLayer(
       id: data.id.present ? data.id.value : this.id,
-      documentId: data.documentId.present
-          ? data.documentId.value
-          : this.documentId,
+      documentId:
+          data.documentId.present ? data.documentId.value : this.documentId,
       name: data.name.present ? data.name.value : this.name,
-      orderIndex: data.orderIndex.present
-          ? data.orderIndex.value
-          : this.orderIndex,
+      orderIndex:
+          data.orderIndex.present ? data.orderIndex.value : this.orderIndex,
       isVisible: data.isVisible.present ? data.isVisible.value : this.isVisible,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -1352,9 +1348,9 @@ class AnnotationLayersCompanion extends UpdateCompanion<AnnotationLayer> {
     required int orderIndex,
     this.isVisible = const Value.absent(),
     this.createdAt = const Value.absent(),
-  }) : documentId = Value(documentId),
-       name = Value(name),
-       orderIndex = Value(orderIndex);
+  })  : documentId = Value(documentId),
+        name = Value(name),
+        orderIndex = Value(orderIndex);
   static Insertable<AnnotationLayer> custom({
     Expression<int>? id,
     Expression<int>? documentId,
@@ -1517,14 +1513,14 @@ class $AnnotationsTable extends Annotations
   );
   @override
   List<GeneratedColumn> get $columns => [
-    id,
-    layerId,
-    pageNumber,
-    type,
-    data,
-    createdAt,
-    modifiedAt,
-  ];
+        id,
+        layerId,
+        pageNumber,
+        type,
+        data,
+        createdAt,
+        modifiedAt,
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1709,28 +1705,27 @@ class Annotation extends DataClass implements Insertable<Annotation> {
     String? data,
     DateTime? createdAt,
     DateTime? modifiedAt,
-  }) => Annotation(
-    id: id ?? this.id,
-    layerId: layerId ?? this.layerId,
-    pageNumber: pageNumber ?? this.pageNumber,
-    type: type ?? this.type,
-    data: data ?? this.data,
-    createdAt: createdAt ?? this.createdAt,
-    modifiedAt: modifiedAt ?? this.modifiedAt,
-  );
+  }) =>
+      Annotation(
+        id: id ?? this.id,
+        layerId: layerId ?? this.layerId,
+        pageNumber: pageNumber ?? this.pageNumber,
+        type: type ?? this.type,
+        data: data ?? this.data,
+        createdAt: createdAt ?? this.createdAt,
+        modifiedAt: modifiedAt ?? this.modifiedAt,
+      );
   Annotation copyWithCompanion(AnnotationsCompanion data) {
     return Annotation(
       id: data.id.present ? data.id.value : this.id,
       layerId: data.layerId.present ? data.layerId.value : this.layerId,
-      pageNumber: data.pageNumber.present
-          ? data.pageNumber.value
-          : this.pageNumber,
+      pageNumber:
+          data.pageNumber.present ? data.pageNumber.value : this.pageNumber,
       type: data.type.present ? data.type.value : this.type,
       data: data.data.present ? data.data.value : this.data,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      modifiedAt: data.modifiedAt.present
-          ? data.modifiedAt.value
-          : this.modifiedAt,
+      modifiedAt:
+          data.modifiedAt.present ? data.modifiedAt.value : this.modifiedAt,
     );
   }
 
@@ -1789,10 +1784,10 @@ class AnnotationsCompanion extends UpdateCompanion<Annotation> {
     required String data,
     this.createdAt = const Value.absent(),
     this.modifiedAt = const Value.absent(),
-  }) : layerId = Value(layerId),
-       pageNumber = Value(pageNumber),
-       type = Value(type),
-       data = Value(data);
+  })  : layerId = Value(layerId),
+        pageNumber = Value(pageNumber),
+        type = Value(type),
+        data = Value(data);
   static Insertable<Annotation> custom({
     Expression<int>? id,
     Expression<int>? layerId,
@@ -1943,12 +1938,12 @@ class $SetListsTable extends SetLists with TableInfo<$SetListsTable, SetList> {
   );
   @override
   List<GeneratedColumn> get $columns => [
-    id,
-    name,
-    description,
-    createdAt,
-    modifiedAt,
-  ];
+        id,
+        name,
+        description,
+        createdAt,
+        modifiedAt,
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2100,24 +2095,23 @@ class SetList extends DataClass implements Insertable<SetList> {
     Value<String?> description = const Value.absent(),
     DateTime? createdAt,
     DateTime? modifiedAt,
-  }) => SetList(
-    id: id ?? this.id,
-    name: name ?? this.name,
-    description: description.present ? description.value : this.description,
-    createdAt: createdAt ?? this.createdAt,
-    modifiedAt: modifiedAt ?? this.modifiedAt,
-  );
+  }) =>
+      SetList(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        description: description.present ? description.value : this.description,
+        createdAt: createdAt ?? this.createdAt,
+        modifiedAt: modifiedAt ?? this.modifiedAt,
+      );
   SetList copyWithCompanion(SetListsCompanion data) {
     return SetList(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
-      description: data.description.present
-          ? data.description.value
-          : this.description,
+      description:
+          data.description.present ? data.description.value : this.description,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      modifiedAt: data.modifiedAt.present
-          ? data.modifiedAt.value
-          : this.modifiedAt,
+      modifiedAt:
+          data.modifiedAt.present ? data.modifiedAt.value : this.modifiedAt,
     );
   }
 
@@ -2301,12 +2295,12 @@ class $SetListItemsTable extends SetListItems
   );
   @override
   List<GeneratedColumn> get $columns => [
-    id,
-    setListId,
-    documentId,
-    orderIndex,
-    notes,
-  ];
+        id,
+        setListId,
+        documentId,
+        orderIndex,
+        notes,
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2422,9 +2416,8 @@ class SetListItem extends DataClass implements Insertable<SetListItem> {
       setListId: Value(setListId),
       documentId: Value(documentId),
       orderIndex: Value(orderIndex),
-      notes: notes == null && nullToAbsent
-          ? const Value.absent()
-          : Value(notes),
+      notes:
+          notes == null && nullToAbsent ? const Value.absent() : Value(notes),
     );
   }
 
@@ -2459,23 +2452,22 @@ class SetListItem extends DataClass implements Insertable<SetListItem> {
     int? documentId,
     int? orderIndex,
     Value<String?> notes = const Value.absent(),
-  }) => SetListItem(
-    id: id ?? this.id,
-    setListId: setListId ?? this.setListId,
-    documentId: documentId ?? this.documentId,
-    orderIndex: orderIndex ?? this.orderIndex,
-    notes: notes.present ? notes.value : this.notes,
-  );
+  }) =>
+      SetListItem(
+        id: id ?? this.id,
+        setListId: setListId ?? this.setListId,
+        documentId: documentId ?? this.documentId,
+        orderIndex: orderIndex ?? this.orderIndex,
+        notes: notes.present ? notes.value : this.notes,
+      );
   SetListItem copyWithCompanion(SetListItemsCompanion data) {
     return SetListItem(
       id: data.id.present ? data.id.value : this.id,
       setListId: data.setListId.present ? data.setListId.value : this.setListId,
-      documentId: data.documentId.present
-          ? data.documentId.value
-          : this.documentId,
-      orderIndex: data.orderIndex.present
-          ? data.orderIndex.value
-          : this.orderIndex,
+      documentId:
+          data.documentId.present ? data.documentId.value : this.documentId,
+      orderIndex:
+          data.orderIndex.present ? data.orderIndex.value : this.orderIndex,
       notes: data.notes.present ? data.notes.value : this.notes,
     );
   }
@@ -2524,9 +2516,9 @@ class SetListItemsCompanion extends UpdateCompanion<SetListItem> {
     required int documentId,
     required int orderIndex,
     this.notes = const Value.absent(),
-  }) : setListId = Value(setListId),
-       documentId = Value(documentId),
-       orderIndex = Value(orderIndex);
+  })  : setListId = Value(setListId),
+        documentId = Value(documentId),
+        orderIndex = Value(orderIndex);
   static Insertable<SetListItem> custom({
     Expression<int>? id,
     Expression<int>? setListId,
@@ -2612,93 +2604,92 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
-    documents,
-    documentSettings,
-    annotationLayers,
-    annotations,
-    setLists,
-    setListItems,
-  ];
+        documents,
+        documentSettings,
+        annotationLayers,
+        annotations,
+        setLists,
+        setListItems,
+      ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'documents',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('document_settings', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'documents',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('annotation_layers', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'annotation_layers',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('annotations', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'set_lists',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('set_list_items', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'documents',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('set_list_items', kind: UpdateKind.delete)],
-    ),
-  ]);
+        WritePropagation(
+          on: TableUpdateQuery.onTableName(
+            'documents',
+            limitUpdateKind: UpdateKind.delete,
+          ),
+          result: [TableUpdate('document_settings', kind: UpdateKind.delete)],
+        ),
+        WritePropagation(
+          on: TableUpdateQuery.onTableName(
+            'documents',
+            limitUpdateKind: UpdateKind.delete,
+          ),
+          result: [TableUpdate('annotation_layers', kind: UpdateKind.delete)],
+        ),
+        WritePropagation(
+          on: TableUpdateQuery.onTableName(
+            'annotation_layers',
+            limitUpdateKind: UpdateKind.delete,
+          ),
+          result: [TableUpdate('annotations', kind: UpdateKind.delete)],
+        ),
+        WritePropagation(
+          on: TableUpdateQuery.onTableName(
+            'set_lists',
+            limitUpdateKind: UpdateKind.delete,
+          ),
+          result: [TableUpdate('set_list_items', kind: UpdateKind.delete)],
+        ),
+        WritePropagation(
+          on: TableUpdateQuery.onTableName(
+            'documents',
+            limitUpdateKind: UpdateKind.delete,
+          ),
+          result: [TableUpdate('set_list_items', kind: UpdateKind.delete)],
+        ),
+      ]);
   @override
   DriftDatabaseOptions get options =>
       const DriftDatabaseOptions(storeDateTimeAsText: true);
 }
 
-typedef $$DocumentsTableCreateCompanionBuilder =
-    DocumentsCompanion Function({
-      Value<int> id,
-      required String name,
-      required String filePath,
-      Value<Uint8List?> pdfBytes,
-      Value<DateTime> dateAdded,
-      Value<DateTime?> lastOpened,
-      required DateTime lastModified,
-      required int fileSize,
-      Value<int> pageCount,
-    });
-typedef $$DocumentsTableUpdateCompanionBuilder =
-    DocumentsCompanion Function({
-      Value<int> id,
-      Value<String> name,
-      Value<String> filePath,
-      Value<Uint8List?> pdfBytes,
-      Value<DateTime> dateAdded,
-      Value<DateTime?> lastOpened,
-      Value<DateTime> lastModified,
-      Value<int> fileSize,
-      Value<int> pageCount,
-    });
+typedef $$DocumentsTableCreateCompanionBuilder = DocumentsCompanion Function({
+  Value<int> id,
+  required String name,
+  required String filePath,
+  Value<Uint8List?> pdfBytes,
+  Value<DateTime> dateAdded,
+  Value<DateTime?> lastOpened,
+  required DateTime lastModified,
+  required int fileSize,
+  Value<int> pageCount,
+});
+typedef $$DocumentsTableUpdateCompanionBuilder = DocumentsCompanion Function({
+  Value<int> id,
+  Value<String> name,
+  Value<String> filePath,
+  Value<Uint8List?> pdfBytes,
+  Value<DateTime> dateAdded,
+  Value<DateTime?> lastOpened,
+  Value<DateTime> lastModified,
+  Value<int> fileSize,
+  Value<int> pageCount,
+});
 
 final class $$DocumentsTableReferences
     extends BaseReferences<_$AppDatabase, $DocumentsTable, Document> {
   $$DocumentsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static MultiTypedResultKey<$DocumentSettingsTable, List<DocumentSetting>>
-  _documentSettingsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.documentSettings,
-    aliasName: $_aliasNameGenerator(
-      db.documents.id,
-      db.documentSettings.documentId,
-    ),
-  );
+      _documentSettingsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(
+            db.documentSettings,
+            aliasName: $_aliasNameGenerator(
+              db.documents.id,
+              db.documentSettings.documentId,
+            ),
+          );
 
   $$DocumentSettingsTableProcessedTableManager get documentSettingsRefs {
     final manager = $$DocumentSettingsTableTableManager(
@@ -2715,13 +2706,14 @@ final class $$DocumentsTableReferences
   }
 
   static MultiTypedResultKey<$AnnotationLayersTable, List<AnnotationLayer>>
-  _annotationLayersRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.annotationLayers,
-    aliasName: $_aliasNameGenerator(
-      db.documents.id,
-      db.annotationLayers.documentId,
-    ),
-  );
+      _annotationLayersRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(
+            db.annotationLayers,
+            aliasName: $_aliasNameGenerator(
+              db.documents.id,
+              db.annotationLayers.documentId,
+            ),
+          );
 
   $$AnnotationLayersTableProcessedTableManager get annotationLayersRefs {
     final manager = $$AnnotationLayersTableTableManager(
@@ -2738,13 +2730,13 @@ final class $$DocumentsTableReferences
   }
 
   static MultiTypedResultKey<$SetListItemsTable, List<SetListItem>>
-  _setListItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.setListItems,
-    aliasName: $_aliasNameGenerator(
-      db.documents.id,
-      db.setListItems.documentId,
-    ),
-  );
+      _setListItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+            db.setListItems,
+            aliasName: $_aliasNameGenerator(
+              db.documents.id,
+              db.setListItems.documentId,
+            ),
+          );
 
   $$SetListItemsTableProcessedTableManager get setListItemsRefs {
     final manager = $$SetListItemsTableTableManager(
@@ -2769,49 +2761,49 @@ class $$DocumentsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.id,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.name,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<String> get filePath => $composableBuilder(
-    column: $table.filePath,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.filePath,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<Uint8List> get pdfBytes => $composableBuilder(
-    column: $table.pdfBytes,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.pdfBytes,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<DateTime> get dateAdded => $composableBuilder(
-    column: $table.dateAdded,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.dateAdded,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<DateTime> get lastOpened => $composableBuilder(
-    column: $table.lastOpened,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.lastOpened,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<DateTime> get lastModified => $composableBuilder(
-    column: $table.lastModified,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.lastModified,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<int> get fileSize => $composableBuilder(
-    column: $table.fileSize,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.fileSize,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<int> get pageCount => $composableBuilder(
-    column: $table.pageCount,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.pageCount,
+        builder: (column) => ColumnFilters(column),
+      );
 
   Expression<bool> documentSettingsRefs(
     Expression<bool> Function($$DocumentSettingsTableFilterComposer f) f,
@@ -2821,19 +2813,18 @@ class $$DocumentsTableFilterComposer
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.documentSettings,
       getReferencedColumn: (t) => t.documentId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentSettingsTableFilterComposer(
-            $db: $db,
-            $table: $db.documentSettings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$DocumentSettingsTableFilterComposer(
+        $db: $db,
+        $table: $db.documentSettings,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return f(composer);
   }
@@ -2846,19 +2837,18 @@ class $$DocumentsTableFilterComposer
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.annotationLayers,
       getReferencedColumn: (t) => t.documentId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$AnnotationLayersTableFilterComposer(
-            $db: $db,
-            $table: $db.annotationLayers,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$AnnotationLayersTableFilterComposer(
+        $db: $db,
+        $table: $db.annotationLayers,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return f(composer);
   }
@@ -2871,19 +2861,18 @@ class $$DocumentsTableFilterComposer
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.setListItems,
       getReferencedColumn: (t) => t.documentId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SetListItemsTableFilterComposer(
-            $db: $db,
-            $table: $db.setListItems,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$SetListItemsTableFilterComposer(
+        $db: $db,
+        $table: $db.setListItems,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return f(composer);
   }
@@ -2899,49 +2888,49 @@ class $$DocumentsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.id,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.name,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<String> get filePath => $composableBuilder(
-    column: $table.filePath,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.filePath,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<Uint8List> get pdfBytes => $composableBuilder(
-    column: $table.pdfBytes,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.pdfBytes,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<DateTime> get dateAdded => $composableBuilder(
-    column: $table.dateAdded,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.dateAdded,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<DateTime> get lastOpened => $composableBuilder(
-    column: $table.lastOpened,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.lastOpened,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<DateTime> get lastModified => $composableBuilder(
-    column: $table.lastModified,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.lastModified,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<int> get fileSize => $composableBuilder(
-    column: $table.fileSize,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.fileSize,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<int> get pageCount => $composableBuilder(
-    column: $table.pageCount,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.pageCount,
+        builder: (column) => ColumnOrderings(column),
+      );
 }
 
 class $$DocumentsTableAnnotationComposer
@@ -2969,14 +2958,14 @@ class $$DocumentsTableAnnotationComposer
       $composableBuilder(column: $table.dateAdded, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastOpened => $composableBuilder(
-    column: $table.lastOpened,
-    builder: (column) => column,
-  );
+        column: $table.lastOpened,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<DateTime> get lastModified => $composableBuilder(
-    column: $table.lastModified,
-    builder: (column) => column,
-  );
+        column: $table.lastModified,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<int> get fileSize =>
       $composableBuilder(column: $table.fileSize, builder: (column) => column);
@@ -2992,19 +2981,18 @@ class $$DocumentsTableAnnotationComposer
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.documentSettings,
       getReferencedColumn: (t) => t.documentId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentSettingsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.documentSettings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$DocumentSettingsTableAnnotationComposer(
+        $db: $db,
+        $table: $db.documentSettings,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return f(composer);
   }
@@ -3017,19 +3005,18 @@ class $$DocumentsTableAnnotationComposer
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.annotationLayers,
       getReferencedColumn: (t) => t.documentId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$AnnotationLayersTableAnnotationComposer(
-            $db: $db,
-            $table: $db.annotationLayers,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$AnnotationLayersTableAnnotationComposer(
+        $db: $db,
+        $table: $db.annotationLayers,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return f(composer);
   }
@@ -3042,235 +3029,218 @@ class $$DocumentsTableAnnotationComposer
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.setListItems,
       getReferencedColumn: (t) => t.documentId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SetListItemsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.setListItems,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$SetListItemsTableAnnotationComposer(
+        $db: $db,
+        $table: $db.setListItems,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return f(composer);
   }
 }
 
-class $$DocumentsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $DocumentsTable,
-          Document,
-          $$DocumentsTableFilterComposer,
-          $$DocumentsTableOrderingComposer,
-          $$DocumentsTableAnnotationComposer,
-          $$DocumentsTableCreateCompanionBuilder,
-          $$DocumentsTableUpdateCompanionBuilder,
-          (Document, $$DocumentsTableReferences),
-          Document,
-          PrefetchHooks Function({
-            bool documentSettingsRefs,
-            bool annotationLayersRefs,
-            bool setListItemsRefs,
-          })
-        > {
+class $$DocumentsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $DocumentsTable,
+    Document,
+    $$DocumentsTableFilterComposer,
+    $$DocumentsTableOrderingComposer,
+    $$DocumentsTableAnnotationComposer,
+    $$DocumentsTableCreateCompanionBuilder,
+    $$DocumentsTableUpdateCompanionBuilder,
+    (Document, $$DocumentsTableReferences),
+    Document,
+    PrefetchHooks Function({
+      bool documentSettingsRefs,
+      bool annotationLayersRefs,
+      bool setListItemsRefs,
+    })> {
   $$DocumentsTableTableManager(_$AppDatabase db, $DocumentsTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$DocumentsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$DocumentsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$DocumentsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<String> filePath = const Value.absent(),
-                Value<Uint8List?> pdfBytes = const Value.absent(),
-                Value<DateTime> dateAdded = const Value.absent(),
-                Value<DateTime?> lastOpened = const Value.absent(),
-                Value<DateTime> lastModified = const Value.absent(),
-                Value<int> fileSize = const Value.absent(),
-                Value<int> pageCount = const Value.absent(),
-              }) => DocumentsCompanion(
-                id: id,
-                name: name,
-                filePath: filePath,
-                pdfBytes: pdfBytes,
-                dateAdded: dateAdded,
-                lastOpened: lastOpened,
-                lastModified: lastModified,
-                fileSize: fileSize,
-                pageCount: pageCount,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required String name,
-                required String filePath,
-                Value<Uint8List?> pdfBytes = const Value.absent(),
-                Value<DateTime> dateAdded = const Value.absent(),
-                Value<DateTime?> lastOpened = const Value.absent(),
-                required DateTime lastModified,
-                required int fileSize,
-                Value<int> pageCount = const Value.absent(),
-              }) => DocumentsCompanion.insert(
-                id: id,
-                name: name,
-                filePath: filePath,
-                pdfBytes: pdfBytes,
-                dateAdded: dateAdded,
-                lastOpened: lastOpened,
-                lastModified: lastModified,
-                fileSize: fileSize,
-                pageCount: pageCount,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$DocumentsTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback:
-              ({
-                documentSettingsRefs = false,
-                annotationLayersRefs = false,
-                setListItemsRefs = false,
-              }) {
-                return PrefetchHooks(
-                  db: db,
-                  explicitlyWatchedTables: [
-                    if (documentSettingsRefs) db.documentSettings,
-                    if (annotationLayersRefs) db.annotationLayers,
-                    if (setListItemsRefs) db.setListItems,
-                  ],
-                  addJoins: null,
-                  getPrefetchedDataCallback: (items) async {
-                    return [
-                      if (documentSettingsRefs)
-                        await $_getPrefetchedData<
-                          Document,
-                          $DocumentsTable,
-                          DocumentSetting
-                        >(
-                          currentTable: table,
-                          referencedTable: $$DocumentsTableReferences
-                              ._documentSettingsRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$DocumentsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).documentSettingsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.documentId == item.id,
-                              ),
-                          typedResults: items,
+      : super(
+          TableManagerState(
+            db: db,
+            table: table,
+            createFilteringComposer: () =>
+                $$DocumentsTableFilterComposer($db: db, $table: table),
+            createOrderingComposer: () =>
+                $$DocumentsTableOrderingComposer($db: db, $table: table),
+            createComputedFieldComposer: () =>
+                $$DocumentsTableAnnotationComposer($db: db, $table: table),
+            updateCompanionCallback: ({
+              Value<int> id = const Value.absent(),
+              Value<String> name = const Value.absent(),
+              Value<String> filePath = const Value.absent(),
+              Value<Uint8List?> pdfBytes = const Value.absent(),
+              Value<DateTime> dateAdded = const Value.absent(),
+              Value<DateTime?> lastOpened = const Value.absent(),
+              Value<DateTime> lastModified = const Value.absent(),
+              Value<int> fileSize = const Value.absent(),
+              Value<int> pageCount = const Value.absent(),
+            }) =>
+                DocumentsCompanion(
+              id: id,
+              name: name,
+              filePath: filePath,
+              pdfBytes: pdfBytes,
+              dateAdded: dateAdded,
+              lastOpened: lastOpened,
+              lastModified: lastModified,
+              fileSize: fileSize,
+              pageCount: pageCount,
+            ),
+            createCompanionCallback: ({
+              Value<int> id = const Value.absent(),
+              required String name,
+              required String filePath,
+              Value<Uint8List?> pdfBytes = const Value.absent(),
+              Value<DateTime> dateAdded = const Value.absent(),
+              Value<DateTime?> lastOpened = const Value.absent(),
+              required DateTime lastModified,
+              required int fileSize,
+              Value<int> pageCount = const Value.absent(),
+            }) =>
+                DocumentsCompanion.insert(
+              id: id,
+              name: name,
+              filePath: filePath,
+              pdfBytes: pdfBytes,
+              dateAdded: dateAdded,
+              lastOpened: lastOpened,
+              lastModified: lastModified,
+              fileSize: fileSize,
+              pageCount: pageCount,
+            ),
+            withReferenceMapper: (p0) => p0
+                .map(
+                  (e) => (
+                    e.readTable(table),
+                    $$DocumentsTableReferences(db, table, e),
+                  ),
+                )
+                .toList(),
+            prefetchHooksCallback: ({
+              documentSettingsRefs = false,
+              annotationLayersRefs = false,
+              setListItemsRefs = false,
+            }) {
+              return PrefetchHooks(
+                db: db,
+                explicitlyWatchedTables: [
+                  if (documentSettingsRefs) db.documentSettings,
+                  if (annotationLayersRefs) db.annotationLayers,
+                  if (setListItemsRefs) db.setListItems,
+                ],
+                addJoins: null,
+                getPrefetchedDataCallback: (items) async {
+                  return [
+                    if (documentSettingsRefs)
+                      await $_getPrefetchedData<Document, $DocumentsTable,
+                          DocumentSetting>(
+                        currentTable: table,
+                        referencedTable: $$DocumentsTableReferences
+                            ._documentSettingsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$DocumentsTableReferences(
+                          db,
+                          table,
+                          p0,
+                        ).documentSettingsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems.where(
+                          (e) => e.documentId == item.id,
                         ),
-                      if (annotationLayersRefs)
-                        await $_getPrefetchedData<
-                          Document,
-                          $DocumentsTable,
-                          AnnotationLayer
-                        >(
-                          currentTable: table,
-                          referencedTable: $$DocumentsTableReferences
-                              ._annotationLayersRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$DocumentsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).annotationLayersRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.documentId == item.id,
-                              ),
-                          typedResults: items,
+                        typedResults: items,
+                      ),
+                    if (annotationLayersRefs)
+                      await $_getPrefetchedData<Document, $DocumentsTable,
+                          AnnotationLayer>(
+                        currentTable: table,
+                        referencedTable: $$DocumentsTableReferences
+                            ._annotationLayersRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$DocumentsTableReferences(
+                          db,
+                          table,
+                          p0,
+                        ).annotationLayersRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems.where(
+                          (e) => e.documentId == item.id,
                         ),
-                      if (setListItemsRefs)
-                        await $_getPrefetchedData<
-                          Document,
-                          $DocumentsTable,
-                          SetListItem
-                        >(
-                          currentTable: table,
-                          referencedTable: $$DocumentsTableReferences
-                              ._setListItemsRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$DocumentsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).setListItemsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.documentId == item.id,
-                              ),
-                          typedResults: items,
+                        typedResults: items,
+                      ),
+                    if (setListItemsRefs)
+                      await $_getPrefetchedData<Document, $DocumentsTable,
+                          SetListItem>(
+                        currentTable: table,
+                        referencedTable: $$DocumentsTableReferences
+                            ._setListItemsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$DocumentsTableReferences(
+                          db,
+                          table,
+                          p0,
+                        ).setListItemsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems.where(
+                          (e) => e.documentId == item.id,
                         ),
-                    ];
-                  },
-                );
-              },
-        ),
-      );
+                        typedResults: items,
+                      ),
+                  ];
+                },
+              );
+            },
+          ),
+        );
 }
 
-typedef $$DocumentsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $DocumentsTable,
-      Document,
-      $$DocumentsTableFilterComposer,
-      $$DocumentsTableOrderingComposer,
-      $$DocumentsTableAnnotationComposer,
-      $$DocumentsTableCreateCompanionBuilder,
-      $$DocumentsTableUpdateCompanionBuilder,
-      (Document, $$DocumentsTableReferences),
-      Document,
-      PrefetchHooks Function({
-        bool documentSettingsRefs,
-        bool annotationLayersRefs,
-        bool setListItemsRefs,
-      })
-    >;
-typedef $$DocumentSettingsTableCreateCompanionBuilder =
-    DocumentSettingsCompanion Function({
-      Value<int> id,
-      required int documentId,
-      Value<double> zoomLevel,
-      Value<double> brightness,
-      Value<double> contrast,
-      Value<int> currentPage,
-      Value<DateTime> lastUpdated,
-    });
-typedef $$DocumentSettingsTableUpdateCompanionBuilder =
-    DocumentSettingsCompanion Function({
-      Value<int> id,
-      Value<int> documentId,
-      Value<double> zoomLevel,
-      Value<double> brightness,
-      Value<double> contrast,
-      Value<int> currentPage,
-      Value<DateTime> lastUpdated,
-    });
+typedef $$DocumentsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $DocumentsTable,
+    Document,
+    $$DocumentsTableFilterComposer,
+    $$DocumentsTableOrderingComposer,
+    $$DocumentsTableAnnotationComposer,
+    $$DocumentsTableCreateCompanionBuilder,
+    $$DocumentsTableUpdateCompanionBuilder,
+    (Document, $$DocumentsTableReferences),
+    Document,
+    PrefetchHooks Function({
+      bool documentSettingsRefs,
+      bool annotationLayersRefs,
+      bool setListItemsRefs,
+    })>;
+typedef $$DocumentSettingsTableCreateCompanionBuilder
+    = DocumentSettingsCompanion Function({
+  Value<int> id,
+  required int documentId,
+  Value<double> zoomLevel,
+  Value<double> brightness,
+  Value<double> contrast,
+  Value<int> currentPage,
+  Value<DateTime> lastUpdated,
+});
+typedef $$DocumentSettingsTableUpdateCompanionBuilder
+    = DocumentSettingsCompanion Function({
+  Value<int> id,
+  Value<int> documentId,
+  Value<double> zoomLevel,
+  Value<double> brightness,
+  Value<double> contrast,
+  Value<int> currentPage,
+  Value<DateTime> lastUpdated,
+});
 
-final class $$DocumentSettingsTableReferences
-    extends
-        BaseReferences<_$AppDatabase, $DocumentSettingsTable, DocumentSetting> {
+final class $$DocumentSettingsTableReferences extends BaseReferences<
+    _$AppDatabase, $DocumentSettingsTable, DocumentSetting> {
   $$DocumentSettingsTableReferences(
     super.$_db,
     super.$_table,
@@ -3307,34 +3277,34 @@ class $$DocumentSettingsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.id,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<double> get zoomLevel => $composableBuilder(
-    column: $table.zoomLevel,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.zoomLevel,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<double> get brightness => $composableBuilder(
-    column: $table.brightness,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.brightness,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<double> get contrast => $composableBuilder(
-    column: $table.contrast,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.contrast,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<int> get currentPage => $composableBuilder(
-    column: $table.currentPage,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.currentPage,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<DateTime> get lastUpdated => $composableBuilder(
-    column: $table.lastUpdated,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.lastUpdated,
+        builder: (column) => ColumnFilters(column),
+      );
 
   $$DocumentsTableFilterComposer get documentId {
     final $$DocumentsTableFilterComposer composer = $composerBuilder(
@@ -3342,19 +3312,18 @@ class $$DocumentSettingsTableFilterComposer
       getCurrentColumn: (t) => t.documentId,
       referencedTable: $db.documents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentsTableFilterComposer(
-            $db: $db,
-            $table: $db.documents,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$DocumentsTableFilterComposer(
+        $db: $db,
+        $table: $db.documents,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return composer;
   }
@@ -3370,34 +3339,34 @@ class $$DocumentSettingsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.id,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<double> get zoomLevel => $composableBuilder(
-    column: $table.zoomLevel,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.zoomLevel,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<double> get brightness => $composableBuilder(
-    column: $table.brightness,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.brightness,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<double> get contrast => $composableBuilder(
-    column: $table.contrast,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.contrast,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<int> get currentPage => $composableBuilder(
-    column: $table.currentPage,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.currentPage,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<DateTime> get lastUpdated => $composableBuilder(
-    column: $table.lastUpdated,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.lastUpdated,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   $$DocumentsTableOrderingComposer get documentId {
     final $$DocumentsTableOrderingComposer composer = $composerBuilder(
@@ -3405,19 +3374,18 @@ class $$DocumentSettingsTableOrderingComposer
       getCurrentColumn: (t) => t.documentId,
       referencedTable: $db.documents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentsTableOrderingComposer(
-            $db: $db,
-            $table: $db.documents,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$DocumentsTableOrderingComposer(
+        $db: $db,
+        $table: $db.documents,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return composer;
   }
@@ -3439,22 +3407,22 @@ class $$DocumentSettingsTableAnnotationComposer
       $composableBuilder(column: $table.zoomLevel, builder: (column) => column);
 
   GeneratedColumn<double> get brightness => $composableBuilder(
-    column: $table.brightness,
-    builder: (column) => column,
-  );
+        column: $table.brightness,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<double> get contrast =>
       $composableBuilder(column: $table.contrast, builder: (column) => column);
 
   GeneratedColumn<int> get currentPage => $composableBuilder(
-    column: $table.currentPage,
-    builder: (column) => column,
-  );
+        column: $table.currentPage,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<DateTime> get lastUpdated => $composableBuilder(
-    column: $table.lastUpdated,
-    builder: (column) => column,
-  );
+        column: $table.lastUpdated,
+        builder: (column) => column,
+      );
 
   $$DocumentsTableAnnotationComposer get documentId {
     final $$DocumentsTableAnnotationComposer composer = $composerBuilder(
@@ -3462,179 +3430,166 @@ class $$DocumentSettingsTableAnnotationComposer
       getCurrentColumn: (t) => t.documentId,
       referencedTable: $db.documents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.documents,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$DocumentsTableAnnotationComposer(
+        $db: $db,
+        $table: $db.documents,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return composer;
   }
 }
 
-class $$DocumentSettingsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $DocumentSettingsTable,
-          DocumentSetting,
-          $$DocumentSettingsTableFilterComposer,
-          $$DocumentSettingsTableOrderingComposer,
-          $$DocumentSettingsTableAnnotationComposer,
-          $$DocumentSettingsTableCreateCompanionBuilder,
-          $$DocumentSettingsTableUpdateCompanionBuilder,
-          (DocumentSetting, $$DocumentSettingsTableReferences),
-          DocumentSetting,
-          PrefetchHooks Function({bool documentId})
-        > {
+class $$DocumentSettingsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $DocumentSettingsTable,
+    DocumentSetting,
+    $$DocumentSettingsTableFilterComposer,
+    $$DocumentSettingsTableOrderingComposer,
+    $$DocumentSettingsTableAnnotationComposer,
+    $$DocumentSettingsTableCreateCompanionBuilder,
+    $$DocumentSettingsTableUpdateCompanionBuilder,
+    (DocumentSetting, $$DocumentSettingsTableReferences),
+    DocumentSetting,
+    PrefetchHooks Function({bool documentId})> {
   $$DocumentSettingsTableTableManager(
     _$AppDatabase db,
     $DocumentSettingsTable table,
   ) : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$DocumentSettingsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$DocumentSettingsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$DocumentSettingsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<int> documentId = const Value.absent(),
-                Value<double> zoomLevel = const Value.absent(),
-                Value<double> brightness = const Value.absent(),
-                Value<double> contrast = const Value.absent(),
-                Value<int> currentPage = const Value.absent(),
-                Value<DateTime> lastUpdated = const Value.absent(),
-              }) => DocumentSettingsCompanion(
-                id: id,
-                documentId: documentId,
-                zoomLevel: zoomLevel,
-                brightness: brightness,
-                contrast: contrast,
-                currentPage: currentPage,
-                lastUpdated: lastUpdated,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required int documentId,
-                Value<double> zoomLevel = const Value.absent(),
-                Value<double> brightness = const Value.absent(),
-                Value<double> contrast = const Value.absent(),
-                Value<int> currentPage = const Value.absent(),
-                Value<DateTime> lastUpdated = const Value.absent(),
-              }) => DocumentSettingsCompanion.insert(
-                id: id,
-                documentId: documentId,
-                zoomLevel: zoomLevel,
-                brightness: brightness,
-                contrast: contrast,
-                currentPage: currentPage,
-                lastUpdated: lastUpdated,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$DocumentSettingsTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback: ({documentId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
+          TableManagerState(
+            db: db,
+            table: table,
+            createFilteringComposer: () =>
+                $$DocumentSettingsTableFilterComposer($db: db, $table: table),
+            createOrderingComposer: () =>
+                $$DocumentSettingsTableOrderingComposer($db: db, $table: table),
+            createComputedFieldComposer: () =>
+                $$DocumentSettingsTableAnnotationComposer(
+                    $db: db, $table: table),
+            updateCompanionCallback: ({
+              Value<int> id = const Value.absent(),
+              Value<int> documentId = const Value.absent(),
+              Value<double> zoomLevel = const Value.absent(),
+              Value<double> brightness = const Value.absent(),
+              Value<double> contrast = const Value.absent(),
+              Value<int> currentPage = const Value.absent(),
+              Value<DateTime> lastUpdated = const Value.absent(),
+            }) =>
+                DocumentSettingsCompanion(
+              id: id,
+              documentId: documentId,
+              zoomLevel: zoomLevel,
+              brightness: brightness,
+              contrast: contrast,
+              currentPage: currentPage,
+              lastUpdated: lastUpdated,
+            ),
+            createCompanionCallback: ({
+              Value<int> id = const Value.absent(),
+              required int documentId,
+              Value<double> zoomLevel = const Value.absent(),
+              Value<double> brightness = const Value.absent(),
+              Value<double> contrast = const Value.absent(),
+              Value<int> currentPage = const Value.absent(),
+              Value<DateTime> lastUpdated = const Value.absent(),
+            }) =>
+                DocumentSettingsCompanion.insert(
+              id: id,
+              documentId: documentId,
+              zoomLevel: zoomLevel,
+              brightness: brightness,
+              contrast: contrast,
+              currentPage: currentPage,
+              lastUpdated: lastUpdated,
+            ),
+            withReferenceMapper: (p0) => p0
+                .map(
+                  (e) => (
+                    e.readTable(table),
+                    $$DocumentSettingsTableReferences(db, table, e),
+                  ),
+                )
+                .toList(),
+            prefetchHooksCallback: ({documentId = false}) {
+              return PrefetchHooks(
+                db: db,
+                explicitlyWatchedTables: [],
+                addJoins: <
                     T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (documentId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.documentId,
-                                referencedTable:
-                                    $$DocumentSettingsTableReferences
-                                        ._documentIdTable(db),
-                                referencedColumn:
-                                    $$DocumentSettingsTableReferences
-                                        ._documentIdTable(db)
-                                        .id,
-                              )
-                              as T;
-                    }
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic>>(state) {
+                  if (documentId) {
+                    state = state.withJoin(
+                      currentTable: table,
+                      currentColumn: table.documentId,
+                      referencedTable: $$DocumentSettingsTableReferences
+                          ._documentIdTable(db),
+                      referencedColumn: $$DocumentSettingsTableReferences
+                          ._documentIdTable(db)
+                          .id,
+                    ) as T;
+                  }
 
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
-        ),
-      );
+                  return state;
+                },
+                getPrefetchedDataCallback: (items) async {
+                  return [];
+                },
+              );
+            },
+          ),
+        );
 }
 
-typedef $$DocumentSettingsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $DocumentSettingsTable,
-      DocumentSetting,
-      $$DocumentSettingsTableFilterComposer,
-      $$DocumentSettingsTableOrderingComposer,
-      $$DocumentSettingsTableAnnotationComposer,
-      $$DocumentSettingsTableCreateCompanionBuilder,
-      $$DocumentSettingsTableUpdateCompanionBuilder,
-      (DocumentSetting, $$DocumentSettingsTableReferences),
-      DocumentSetting,
-      PrefetchHooks Function({bool documentId})
-    >;
-typedef $$AnnotationLayersTableCreateCompanionBuilder =
-    AnnotationLayersCompanion Function({
-      Value<int> id,
-      required int documentId,
-      required String name,
-      required int orderIndex,
-      Value<bool> isVisible,
-      Value<DateTime> createdAt,
-    });
-typedef $$AnnotationLayersTableUpdateCompanionBuilder =
-    AnnotationLayersCompanion Function({
-      Value<int> id,
-      Value<int> documentId,
-      Value<String> name,
-      Value<int> orderIndex,
-      Value<bool> isVisible,
-      Value<DateTime> createdAt,
-    });
+typedef $$DocumentSettingsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $DocumentSettingsTable,
+    DocumentSetting,
+    $$DocumentSettingsTableFilterComposer,
+    $$DocumentSettingsTableOrderingComposer,
+    $$DocumentSettingsTableAnnotationComposer,
+    $$DocumentSettingsTableCreateCompanionBuilder,
+    $$DocumentSettingsTableUpdateCompanionBuilder,
+    (DocumentSetting, $$DocumentSettingsTableReferences),
+    DocumentSetting,
+    PrefetchHooks Function({bool documentId})>;
+typedef $$AnnotationLayersTableCreateCompanionBuilder
+    = AnnotationLayersCompanion Function({
+  Value<int> id,
+  required int documentId,
+  required String name,
+  required int orderIndex,
+  Value<bool> isVisible,
+  Value<DateTime> createdAt,
+});
+typedef $$AnnotationLayersTableUpdateCompanionBuilder
+    = AnnotationLayersCompanion Function({
+  Value<int> id,
+  Value<int> documentId,
+  Value<String> name,
+  Value<int> orderIndex,
+  Value<bool> isVisible,
+  Value<DateTime> createdAt,
+});
 
-final class $$AnnotationLayersTableReferences
-    extends
-        BaseReferences<_$AppDatabase, $AnnotationLayersTable, AnnotationLayer> {
+final class $$AnnotationLayersTableReferences extends BaseReferences<
+    _$AppDatabase, $AnnotationLayersTable, AnnotationLayer> {
   $$AnnotationLayersTableReferences(
     super.$_db,
     super.$_table,
@@ -3661,13 +3616,13 @@ final class $$AnnotationLayersTableReferences
   }
 
   static MultiTypedResultKey<$AnnotationsTable, List<Annotation>>
-  _annotationsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.annotations,
-    aliasName: $_aliasNameGenerator(
-      db.annotationLayers.id,
-      db.annotations.layerId,
-    ),
-  );
+      _annotationsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+            db.annotations,
+            aliasName: $_aliasNameGenerator(
+              db.annotationLayers.id,
+              db.annotations.layerId,
+            ),
+          );
 
   $$AnnotationsTableProcessedTableManager get annotationsRefs {
     final manager = $$AnnotationsTableTableManager(
@@ -3692,29 +3647,29 @@ class $$AnnotationLayersTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.id,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.name,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<int> get orderIndex => $composableBuilder(
-    column: $table.orderIndex,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.orderIndex,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<bool> get isVisible => $composableBuilder(
-    column: $table.isVisible,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.isVisible,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.createdAt,
+        builder: (column) => ColumnFilters(column),
+      );
 
   $$DocumentsTableFilterComposer get documentId {
     final $$DocumentsTableFilterComposer composer = $composerBuilder(
@@ -3722,19 +3677,18 @@ class $$AnnotationLayersTableFilterComposer
       getCurrentColumn: (t) => t.documentId,
       referencedTable: $db.documents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentsTableFilterComposer(
-            $db: $db,
-            $table: $db.documents,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$DocumentsTableFilterComposer(
+        $db: $db,
+        $table: $db.documents,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return composer;
   }
@@ -3747,19 +3701,18 @@ class $$AnnotationLayersTableFilterComposer
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.annotations,
       getReferencedColumn: (t) => t.layerId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$AnnotationsTableFilterComposer(
-            $db: $db,
-            $table: $db.annotations,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$AnnotationsTableFilterComposer(
+        $db: $db,
+        $table: $db.annotations,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return f(composer);
   }
@@ -3775,29 +3728,29 @@ class $$AnnotationLayersTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.id,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.name,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<int> get orderIndex => $composableBuilder(
-    column: $table.orderIndex,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.orderIndex,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<bool> get isVisible => $composableBuilder(
-    column: $table.isVisible,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.isVisible,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.createdAt,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   $$DocumentsTableOrderingComposer get documentId {
     final $$DocumentsTableOrderingComposer composer = $composerBuilder(
@@ -3805,19 +3758,18 @@ class $$AnnotationLayersTableOrderingComposer
       getCurrentColumn: (t) => t.documentId,
       referencedTable: $db.documents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentsTableOrderingComposer(
-            $db: $db,
-            $table: $db.documents,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$DocumentsTableOrderingComposer(
+        $db: $db,
+        $table: $db.documents,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return composer;
   }
@@ -3839,9 +3791,9 @@ class $$AnnotationLayersTableAnnotationComposer
       $composableBuilder(column: $table.name, builder: (column) => column);
 
   GeneratedColumn<int> get orderIndex => $composableBuilder(
-    column: $table.orderIndex,
-    builder: (column) => column,
-  );
+        column: $table.orderIndex,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<bool> get isVisible =>
       $composableBuilder(column: $table.isVisible, builder: (column) => column);
@@ -3855,19 +3807,18 @@ class $$AnnotationLayersTableAnnotationComposer
       getCurrentColumn: (t) => t.documentId,
       referencedTable: $db.documents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.documents,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$DocumentsTableAnnotationComposer(
+        $db: $db,
+        $table: $db.documents,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return composer;
   }
@@ -3880,198 +3831,183 @@ class $$AnnotationLayersTableAnnotationComposer
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.annotations,
       getReferencedColumn: (t) => t.layerId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$AnnotationsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.annotations,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$AnnotationsTableAnnotationComposer(
+        $db: $db,
+        $table: $db.annotations,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return f(composer);
   }
 }
 
-class $$AnnotationLayersTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $AnnotationLayersTable,
-          AnnotationLayer,
-          $$AnnotationLayersTableFilterComposer,
-          $$AnnotationLayersTableOrderingComposer,
-          $$AnnotationLayersTableAnnotationComposer,
-          $$AnnotationLayersTableCreateCompanionBuilder,
-          $$AnnotationLayersTableUpdateCompanionBuilder,
-          (AnnotationLayer, $$AnnotationLayersTableReferences),
-          AnnotationLayer,
-          PrefetchHooks Function({bool documentId, bool annotationsRefs})
-        > {
+class $$AnnotationLayersTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $AnnotationLayersTable,
+    AnnotationLayer,
+    $$AnnotationLayersTableFilterComposer,
+    $$AnnotationLayersTableOrderingComposer,
+    $$AnnotationLayersTableAnnotationComposer,
+    $$AnnotationLayersTableCreateCompanionBuilder,
+    $$AnnotationLayersTableUpdateCompanionBuilder,
+    (AnnotationLayer, $$AnnotationLayersTableReferences),
+    AnnotationLayer,
+    PrefetchHooks Function({bool documentId, bool annotationsRefs})> {
   $$AnnotationLayersTableTableManager(
     _$AppDatabase db,
     $AnnotationLayersTable table,
   ) : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$AnnotationLayersTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$AnnotationLayersTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$AnnotationLayersTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<int> documentId = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<int> orderIndex = const Value.absent(),
-                Value<bool> isVisible = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-              }) => AnnotationLayersCompanion(
-                id: id,
-                documentId: documentId,
-                name: name,
-                orderIndex: orderIndex,
-                isVisible: isVisible,
-                createdAt: createdAt,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required int documentId,
-                required String name,
-                required int orderIndex,
-                Value<bool> isVisible = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-              }) => AnnotationLayersCompanion.insert(
-                id: id,
-                documentId: documentId,
-                name: name,
-                orderIndex: orderIndex,
-                isVisible: isVisible,
-                createdAt: createdAt,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$AnnotationLayersTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback:
-              ({documentId = false, annotationsRefs = false}) {
-                return PrefetchHooks(
-                  db: db,
-                  explicitlyWatchedTables: [
-                    if (annotationsRefs) db.annotations,
-                  ],
-                  addJoins:
-                      <
-                        T extends TableManagerState<
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic,
-                          dynamic
-                        >
-                      >(state) {
-                        if (documentId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.documentId,
-                                    referencedTable:
-                                        $$AnnotationLayersTableReferences
-                                            ._documentIdTable(db),
-                                    referencedColumn:
-                                        $$AnnotationLayersTableReferences
-                                            ._documentIdTable(db)
-                                            .id,
-                                  )
-                                  as T;
-                        }
+          TableManagerState(
+            db: db,
+            table: table,
+            createFilteringComposer: () =>
+                $$AnnotationLayersTableFilterComposer($db: db, $table: table),
+            createOrderingComposer: () =>
+                $$AnnotationLayersTableOrderingComposer($db: db, $table: table),
+            createComputedFieldComposer: () =>
+                $$AnnotationLayersTableAnnotationComposer(
+                    $db: db, $table: table),
+            updateCompanionCallback: ({
+              Value<int> id = const Value.absent(),
+              Value<int> documentId = const Value.absent(),
+              Value<String> name = const Value.absent(),
+              Value<int> orderIndex = const Value.absent(),
+              Value<bool> isVisible = const Value.absent(),
+              Value<DateTime> createdAt = const Value.absent(),
+            }) =>
+                AnnotationLayersCompanion(
+              id: id,
+              documentId: documentId,
+              name: name,
+              orderIndex: orderIndex,
+              isVisible: isVisible,
+              createdAt: createdAt,
+            ),
+            createCompanionCallback: ({
+              Value<int> id = const Value.absent(),
+              required int documentId,
+              required String name,
+              required int orderIndex,
+              Value<bool> isVisible = const Value.absent(),
+              Value<DateTime> createdAt = const Value.absent(),
+            }) =>
+                AnnotationLayersCompanion.insert(
+              id: id,
+              documentId: documentId,
+              name: name,
+              orderIndex: orderIndex,
+              isVisible: isVisible,
+              createdAt: createdAt,
+            ),
+            withReferenceMapper: (p0) => p0
+                .map(
+                  (e) => (
+                    e.readTable(table),
+                    $$AnnotationLayersTableReferences(db, table, e),
+                  ),
+                )
+                .toList(),
+            prefetchHooksCallback: (
+                {documentId = false, annotationsRefs = false}) {
+              return PrefetchHooks(
+                db: db,
+                explicitlyWatchedTables: [
+                  if (annotationsRefs) db.annotations,
+                ],
+                addJoins: <
+                    T extends TableManagerState<
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic>>(state) {
+                  if (documentId) {
+                    state = state.withJoin(
+                      currentTable: table,
+                      currentColumn: table.documentId,
+                      referencedTable: $$AnnotationLayersTableReferences
+                          ._documentIdTable(db),
+                      referencedColumn: $$AnnotationLayersTableReferences
+                          ._documentIdTable(db)
+                          .id,
+                    ) as T;
+                  }
 
-                        return state;
-                      },
-                  getPrefetchedDataCallback: (items) async {
-                    return [
-                      if (annotationsRefs)
-                        await $_getPrefetchedData<
-                          AnnotationLayer,
-                          $AnnotationLayersTable,
-                          Annotation
-                        >(
-                          currentTable: table,
-                          referencedTable: $$AnnotationLayersTableReferences
-                              ._annotationsRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$AnnotationLayersTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).annotationsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.layerId == item.id,
-                              ),
-                          typedResults: items,
+                  return state;
+                },
+                getPrefetchedDataCallback: (items) async {
+                  return [
+                    if (annotationsRefs)
+                      await $_getPrefetchedData<AnnotationLayer,
+                          $AnnotationLayersTable, Annotation>(
+                        currentTable: table,
+                        referencedTable: $$AnnotationLayersTableReferences
+                            ._annotationsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$AnnotationLayersTableReferences(
+                          db,
+                          table,
+                          p0,
+                        ).annotationsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems.where(
+                          (e) => e.layerId == item.id,
                         ),
-                    ];
-                  },
-                );
-              },
-        ),
-      );
+                        typedResults: items,
+                      ),
+                  ];
+                },
+              );
+            },
+          ),
+        );
 }
 
-typedef $$AnnotationLayersTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $AnnotationLayersTable,
-      AnnotationLayer,
-      $$AnnotationLayersTableFilterComposer,
-      $$AnnotationLayersTableOrderingComposer,
-      $$AnnotationLayersTableAnnotationComposer,
-      $$AnnotationLayersTableCreateCompanionBuilder,
-      $$AnnotationLayersTableUpdateCompanionBuilder,
-      (AnnotationLayer, $$AnnotationLayersTableReferences),
-      AnnotationLayer,
-      PrefetchHooks Function({bool documentId, bool annotationsRefs})
-    >;
-typedef $$AnnotationsTableCreateCompanionBuilder =
-    AnnotationsCompanion Function({
-      Value<int> id,
-      required int layerId,
-      required int pageNumber,
-      required String type,
-      required String data,
-      Value<DateTime> createdAt,
-      Value<DateTime> modifiedAt,
-    });
-typedef $$AnnotationsTableUpdateCompanionBuilder =
-    AnnotationsCompanion Function({
-      Value<int> id,
-      Value<int> layerId,
-      Value<int> pageNumber,
-      Value<String> type,
-      Value<String> data,
-      Value<DateTime> createdAt,
-      Value<DateTime> modifiedAt,
-    });
+typedef $$AnnotationLayersTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $AnnotationLayersTable,
+    AnnotationLayer,
+    $$AnnotationLayersTableFilterComposer,
+    $$AnnotationLayersTableOrderingComposer,
+    $$AnnotationLayersTableAnnotationComposer,
+    $$AnnotationLayersTableCreateCompanionBuilder,
+    $$AnnotationLayersTableUpdateCompanionBuilder,
+    (AnnotationLayer, $$AnnotationLayersTableReferences),
+    AnnotationLayer,
+    PrefetchHooks Function({bool documentId, bool annotationsRefs})>;
+typedef $$AnnotationsTableCreateCompanionBuilder = AnnotationsCompanion
+    Function({
+  Value<int> id,
+  required int layerId,
+  required int pageNumber,
+  required String type,
+  required String data,
+  Value<DateTime> createdAt,
+  Value<DateTime> modifiedAt,
+});
+typedef $$AnnotationsTableUpdateCompanionBuilder = AnnotationsCompanion
+    Function({
+  Value<int> id,
+  Value<int> layerId,
+  Value<int> pageNumber,
+  Value<String> type,
+  Value<String> data,
+  Value<DateTime> createdAt,
+  Value<DateTime> modifiedAt,
+});
 
 final class $$AnnotationsTableReferences
     extends BaseReferences<_$AppDatabase, $AnnotationsTable, Annotation> {
@@ -4107,34 +4043,34 @@ class $$AnnotationsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.id,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<int> get pageNumber => $composableBuilder(
-    column: $table.pageNumber,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.pageNumber,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<String> get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.type,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<String> get data => $composableBuilder(
-    column: $table.data,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.data,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.createdAt,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<DateTime> get modifiedAt => $composableBuilder(
-    column: $table.modifiedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.modifiedAt,
+        builder: (column) => ColumnFilters(column),
+      );
 
   $$AnnotationLayersTableFilterComposer get layerId {
     final $$AnnotationLayersTableFilterComposer composer = $composerBuilder(
@@ -4142,19 +4078,18 @@ class $$AnnotationsTableFilterComposer
       getCurrentColumn: (t) => t.layerId,
       referencedTable: $db.annotationLayers,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$AnnotationLayersTableFilterComposer(
-            $db: $db,
-            $table: $db.annotationLayers,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$AnnotationLayersTableFilterComposer(
+        $db: $db,
+        $table: $db.annotationLayers,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return composer;
   }
@@ -4170,34 +4105,34 @@ class $$AnnotationsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.id,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<int> get pageNumber => $composableBuilder(
-    column: $table.pageNumber,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.pageNumber,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<String> get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.type,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<String> get data => $composableBuilder(
-    column: $table.data,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.data,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.createdAt,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<DateTime> get modifiedAt => $composableBuilder(
-    column: $table.modifiedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.modifiedAt,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   $$AnnotationLayersTableOrderingComposer get layerId {
     final $$AnnotationLayersTableOrderingComposer composer = $composerBuilder(
@@ -4205,19 +4140,18 @@ class $$AnnotationsTableOrderingComposer
       getCurrentColumn: (t) => t.layerId,
       referencedTable: $db.annotationLayers,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$AnnotationLayersTableOrderingComposer(
-            $db: $db,
-            $table: $db.annotationLayers,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$AnnotationLayersTableOrderingComposer(
+        $db: $db,
+        $table: $db.annotationLayers,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return composer;
   }
@@ -4236,9 +4170,9 @@ class $$AnnotationsTableAnnotationComposer
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<int> get pageNumber => $composableBuilder(
-    column: $table.pageNumber,
-    builder: (column) => column,
-  );
+        column: $table.pageNumber,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
@@ -4250,9 +4184,9 @@ class $$AnnotationsTableAnnotationComposer
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get modifiedAt => $composableBuilder(
-    column: $table.modifiedAt,
-    builder: (column) => column,
-  );
+        column: $table.modifiedAt,
+        builder: (column) => column,
+      );
 
   $$AnnotationLayersTableAnnotationComposer get layerId {
     final $$AnnotationLayersTableAnnotationComposer composer = $composerBuilder(
@@ -4260,179 +4194,166 @@ class $$AnnotationsTableAnnotationComposer
       getCurrentColumn: (t) => t.layerId,
       referencedTable: $db.annotationLayers,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$AnnotationLayersTableAnnotationComposer(
-            $db: $db,
-            $table: $db.annotationLayers,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$AnnotationLayersTableAnnotationComposer(
+        $db: $db,
+        $table: $db.annotationLayers,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return composer;
   }
 }
 
-class $$AnnotationsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $AnnotationsTable,
-          Annotation,
-          $$AnnotationsTableFilterComposer,
-          $$AnnotationsTableOrderingComposer,
-          $$AnnotationsTableAnnotationComposer,
-          $$AnnotationsTableCreateCompanionBuilder,
-          $$AnnotationsTableUpdateCompanionBuilder,
-          (Annotation, $$AnnotationsTableReferences),
-          Annotation,
-          PrefetchHooks Function({bool layerId})
-        > {
+class $$AnnotationsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $AnnotationsTable,
+    Annotation,
+    $$AnnotationsTableFilterComposer,
+    $$AnnotationsTableOrderingComposer,
+    $$AnnotationsTableAnnotationComposer,
+    $$AnnotationsTableCreateCompanionBuilder,
+    $$AnnotationsTableUpdateCompanionBuilder,
+    (Annotation, $$AnnotationsTableReferences),
+    Annotation,
+    PrefetchHooks Function({bool layerId})> {
   $$AnnotationsTableTableManager(_$AppDatabase db, $AnnotationsTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$AnnotationsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$AnnotationsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$AnnotationsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<int> layerId = const Value.absent(),
-                Value<int> pageNumber = const Value.absent(),
-                Value<String> type = const Value.absent(),
-                Value<String> data = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> modifiedAt = const Value.absent(),
-              }) => AnnotationsCompanion(
-                id: id,
-                layerId: layerId,
-                pageNumber: pageNumber,
-                type: type,
-                data: data,
-                createdAt: createdAt,
-                modifiedAt: modifiedAt,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required int layerId,
-                required int pageNumber,
-                required String type,
-                required String data,
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> modifiedAt = const Value.absent(),
-              }) => AnnotationsCompanion.insert(
-                id: id,
-                layerId: layerId,
-                pageNumber: pageNumber,
-                type: type,
-                data: data,
-                createdAt: createdAt,
-                modifiedAt: modifiedAt,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$AnnotationsTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback: ({layerId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
+      : super(
+          TableManagerState(
+            db: db,
+            table: table,
+            createFilteringComposer: () =>
+                $$AnnotationsTableFilterComposer($db: db, $table: table),
+            createOrderingComposer: () =>
+                $$AnnotationsTableOrderingComposer($db: db, $table: table),
+            createComputedFieldComposer: () =>
+                $$AnnotationsTableAnnotationComposer($db: db, $table: table),
+            updateCompanionCallback: ({
+              Value<int> id = const Value.absent(),
+              Value<int> layerId = const Value.absent(),
+              Value<int> pageNumber = const Value.absent(),
+              Value<String> type = const Value.absent(),
+              Value<String> data = const Value.absent(),
+              Value<DateTime> createdAt = const Value.absent(),
+              Value<DateTime> modifiedAt = const Value.absent(),
+            }) =>
+                AnnotationsCompanion(
+              id: id,
+              layerId: layerId,
+              pageNumber: pageNumber,
+              type: type,
+              data: data,
+              createdAt: createdAt,
+              modifiedAt: modifiedAt,
+            ),
+            createCompanionCallback: ({
+              Value<int> id = const Value.absent(),
+              required int layerId,
+              required int pageNumber,
+              required String type,
+              required String data,
+              Value<DateTime> createdAt = const Value.absent(),
+              Value<DateTime> modifiedAt = const Value.absent(),
+            }) =>
+                AnnotationsCompanion.insert(
+              id: id,
+              layerId: layerId,
+              pageNumber: pageNumber,
+              type: type,
+              data: data,
+              createdAt: createdAt,
+              modifiedAt: modifiedAt,
+            ),
+            withReferenceMapper: (p0) => p0
+                .map(
+                  (e) => (
+                    e.readTable(table),
+                    $$AnnotationsTableReferences(db, table, e),
+                  ),
+                )
+                .toList(),
+            prefetchHooksCallback: ({layerId = false}) {
+              return PrefetchHooks(
+                db: db,
+                explicitlyWatchedTables: [],
+                addJoins: <
                     T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (layerId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.layerId,
-                                referencedTable: $$AnnotationsTableReferences
-                                    ._layerIdTable(db),
-                                referencedColumn: $$AnnotationsTableReferences
-                                    ._layerIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic>>(state) {
+                  if (layerId) {
+                    state = state.withJoin(
+                      currentTable: table,
+                      currentColumn: table.layerId,
+                      referencedTable:
+                          $$AnnotationsTableReferences._layerIdTable(db),
+                      referencedColumn:
+                          $$AnnotationsTableReferences._layerIdTable(db).id,
+                    ) as T;
+                  }
 
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
-        ),
-      );
+                  return state;
+                },
+                getPrefetchedDataCallback: (items) async {
+                  return [];
+                },
+              );
+            },
+          ),
+        );
 }
 
-typedef $$AnnotationsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $AnnotationsTable,
-      Annotation,
-      $$AnnotationsTableFilterComposer,
-      $$AnnotationsTableOrderingComposer,
-      $$AnnotationsTableAnnotationComposer,
-      $$AnnotationsTableCreateCompanionBuilder,
-      $$AnnotationsTableUpdateCompanionBuilder,
-      (Annotation, $$AnnotationsTableReferences),
-      Annotation,
-      PrefetchHooks Function({bool layerId})
-    >;
-typedef $$SetListsTableCreateCompanionBuilder =
-    SetListsCompanion Function({
-      Value<int> id,
-      required String name,
-      Value<String?> description,
-      Value<DateTime> createdAt,
-      Value<DateTime> modifiedAt,
-    });
-typedef $$SetListsTableUpdateCompanionBuilder =
-    SetListsCompanion Function({
-      Value<int> id,
-      Value<String> name,
-      Value<String?> description,
-      Value<DateTime> createdAt,
-      Value<DateTime> modifiedAt,
-    });
+typedef $$AnnotationsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $AnnotationsTable,
+    Annotation,
+    $$AnnotationsTableFilterComposer,
+    $$AnnotationsTableOrderingComposer,
+    $$AnnotationsTableAnnotationComposer,
+    $$AnnotationsTableCreateCompanionBuilder,
+    $$AnnotationsTableUpdateCompanionBuilder,
+    (Annotation, $$AnnotationsTableReferences),
+    Annotation,
+    PrefetchHooks Function({bool layerId})>;
+typedef $$SetListsTableCreateCompanionBuilder = SetListsCompanion Function({
+  Value<int> id,
+  required String name,
+  Value<String?> description,
+  Value<DateTime> createdAt,
+  Value<DateTime> modifiedAt,
+});
+typedef $$SetListsTableUpdateCompanionBuilder = SetListsCompanion Function({
+  Value<int> id,
+  Value<String> name,
+  Value<String?> description,
+  Value<DateTime> createdAt,
+  Value<DateTime> modifiedAt,
+});
 
 final class $$SetListsTableReferences
     extends BaseReferences<_$AppDatabase, $SetListsTable, SetList> {
   $$SetListsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static MultiTypedResultKey<$SetListItemsTable, List<SetListItem>>
-  _setListItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.setListItems,
-    aliasName: $_aliasNameGenerator(db.setLists.id, db.setListItems.setListId),
-  );
+      _setListItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+            db.setListItems,
+            aliasName:
+                $_aliasNameGenerator(db.setLists.id, db.setListItems.setListId),
+          );
 
   $$SetListItemsTableProcessedTableManager get setListItemsRefs {
     final manager = $$SetListItemsTableTableManager(
@@ -4457,29 +4378,29 @@ class $$SetListsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.id,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.name,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<String> get description => $composableBuilder(
-    column: $table.description,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.description,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.createdAt,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<DateTime> get modifiedAt => $composableBuilder(
-    column: $table.modifiedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.modifiedAt,
+        builder: (column) => ColumnFilters(column),
+      );
 
   Expression<bool> setListItemsRefs(
     Expression<bool> Function($$SetListItemsTableFilterComposer f) f,
@@ -4489,19 +4410,18 @@ class $$SetListsTableFilterComposer
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.setListItems,
       getReferencedColumn: (t) => t.setListId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SetListItemsTableFilterComposer(
-            $db: $db,
-            $table: $db.setListItems,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$SetListItemsTableFilterComposer(
+        $db: $db,
+        $table: $db.setListItems,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return f(composer);
   }
@@ -4517,29 +4437,29 @@ class $$SetListsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.id,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.name,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<String> get description => $composableBuilder(
-    column: $table.description,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.description,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.createdAt,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<DateTime> get modifiedAt => $composableBuilder(
-    column: $table.modifiedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.modifiedAt,
+        builder: (column) => ColumnOrderings(column),
+      );
 }
 
 class $$SetListsTableAnnotationComposer
@@ -4558,17 +4478,17 @@ class $$SetListsTableAnnotationComposer
       $composableBuilder(column: $table.name, builder: (column) => column);
 
   GeneratedColumn<String> get description => $composableBuilder(
-    column: $table.description,
-    builder: (column) => column,
-  );
+        column: $table.description,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get modifiedAt => $composableBuilder(
-    column: $table.modifiedAt,
-    builder: (column) => column,
-  );
+        column: $table.modifiedAt,
+        builder: (column) => column,
+      );
 
   Expression<T> setListItemsRefs<T extends Object>(
     Expression<T> Function($$SetListItemsTableAnnotationComposer a) f,
@@ -4578,149 +4498,144 @@ class $$SetListsTableAnnotationComposer
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.setListItems,
       getReferencedColumn: (t) => t.setListId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SetListItemsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.setListItems,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$SetListItemsTableAnnotationComposer(
+        $db: $db,
+        $table: $db.setListItems,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return f(composer);
   }
 }
 
-class $$SetListsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $SetListsTable,
-          SetList,
-          $$SetListsTableFilterComposer,
-          $$SetListsTableOrderingComposer,
-          $$SetListsTableAnnotationComposer,
-          $$SetListsTableCreateCompanionBuilder,
-          $$SetListsTableUpdateCompanionBuilder,
-          (SetList, $$SetListsTableReferences),
-          SetList,
-          PrefetchHooks Function({bool setListItemsRefs})
-        > {
+class $$SetListsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SetListsTable,
+    SetList,
+    $$SetListsTableFilterComposer,
+    $$SetListsTableOrderingComposer,
+    $$SetListsTableAnnotationComposer,
+    $$SetListsTableCreateCompanionBuilder,
+    $$SetListsTableUpdateCompanionBuilder,
+    (SetList, $$SetListsTableReferences),
+    SetList,
+    PrefetchHooks Function({bool setListItemsRefs})> {
   $$SetListsTableTableManager(_$AppDatabase db, $SetListsTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$SetListsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$SetListsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$SetListsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<String?> description = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> modifiedAt = const Value.absent(),
-              }) => SetListsCompanion(
-                id: id,
-                name: name,
-                description: description,
-                createdAt: createdAt,
-                modifiedAt: modifiedAt,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required String name,
-                Value<String?> description = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> modifiedAt = const Value.absent(),
-              }) => SetListsCompanion.insert(
-                id: id,
-                name: name,
-                description: description,
-                createdAt: createdAt,
-                modifiedAt: modifiedAt,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$SetListsTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback: ({setListItemsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (setListItemsRefs) db.setListItems],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (setListItemsRefs)
-                    await $_getPrefetchedData<
-                      SetList,
-                      $SetListsTable,
-                      SetListItem
-                    >(
-                      currentTable: table,
-                      referencedTable: $$SetListsTableReferences
-                          ._setListItemsRefsTable(db),
-                      managerFromTypedResult: (p0) => $$SetListsTableReferences(
-                        db,
-                        table,
-                        p0,
-                      ).setListItemsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.setListId == item.id),
-                      typedResults: items,
-                    ),
-                ];
-              },
-            );
-          },
-        ),
-      );
+      : super(
+          TableManagerState(
+            db: db,
+            table: table,
+            createFilteringComposer: () =>
+                $$SetListsTableFilterComposer($db: db, $table: table),
+            createOrderingComposer: () =>
+                $$SetListsTableOrderingComposer($db: db, $table: table),
+            createComputedFieldComposer: () =>
+                $$SetListsTableAnnotationComposer($db: db, $table: table),
+            updateCompanionCallback: ({
+              Value<int> id = const Value.absent(),
+              Value<String> name = const Value.absent(),
+              Value<String?> description = const Value.absent(),
+              Value<DateTime> createdAt = const Value.absent(),
+              Value<DateTime> modifiedAt = const Value.absent(),
+            }) =>
+                SetListsCompanion(
+              id: id,
+              name: name,
+              description: description,
+              createdAt: createdAt,
+              modifiedAt: modifiedAt,
+            ),
+            createCompanionCallback: ({
+              Value<int> id = const Value.absent(),
+              required String name,
+              Value<String?> description = const Value.absent(),
+              Value<DateTime> createdAt = const Value.absent(),
+              Value<DateTime> modifiedAt = const Value.absent(),
+            }) =>
+                SetListsCompanion.insert(
+              id: id,
+              name: name,
+              description: description,
+              createdAt: createdAt,
+              modifiedAt: modifiedAt,
+            ),
+            withReferenceMapper: (p0) => p0
+                .map(
+                  (e) => (
+                    e.readTable(table),
+                    $$SetListsTableReferences(db, table, e),
+                  ),
+                )
+                .toList(),
+            prefetchHooksCallback: ({setListItemsRefs = false}) {
+              return PrefetchHooks(
+                db: db,
+                explicitlyWatchedTables: [
+                  if (setListItemsRefs) db.setListItems
+                ],
+                addJoins: null,
+                getPrefetchedDataCallback: (items) async {
+                  return [
+                    if (setListItemsRefs)
+                      await $_getPrefetchedData<SetList, $SetListsTable,
+                          SetListItem>(
+                        currentTable: table,
+                        referencedTable: $$SetListsTableReferences
+                            ._setListItemsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SetListsTableReferences(
+                          db,
+                          table,
+                          p0,
+                        ).setListItemsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.setListId == item.id),
+                        typedResults: items,
+                      ),
+                  ];
+                },
+              );
+            },
+          ),
+        );
 }
 
-typedef $$SetListsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $SetListsTable,
-      SetList,
-      $$SetListsTableFilterComposer,
-      $$SetListsTableOrderingComposer,
-      $$SetListsTableAnnotationComposer,
-      $$SetListsTableCreateCompanionBuilder,
-      $$SetListsTableUpdateCompanionBuilder,
-      (SetList, $$SetListsTableReferences),
-      SetList,
-      PrefetchHooks Function({bool setListItemsRefs})
-    >;
-typedef $$SetListItemsTableCreateCompanionBuilder =
-    SetListItemsCompanion Function({
-      Value<int> id,
-      required int setListId,
-      required int documentId,
-      required int orderIndex,
-      Value<String?> notes,
-    });
-typedef $$SetListItemsTableUpdateCompanionBuilder =
-    SetListItemsCompanion Function({
-      Value<int> id,
-      Value<int> setListId,
-      Value<int> documentId,
-      Value<int> orderIndex,
-      Value<String?> notes,
-    });
+typedef $$SetListsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $SetListsTable,
+    SetList,
+    $$SetListsTableFilterComposer,
+    $$SetListsTableOrderingComposer,
+    $$SetListsTableAnnotationComposer,
+    $$SetListsTableCreateCompanionBuilder,
+    $$SetListsTableUpdateCompanionBuilder,
+    (SetList, $$SetListsTableReferences),
+    SetList,
+    PrefetchHooks Function({bool setListItemsRefs})>;
+typedef $$SetListItemsTableCreateCompanionBuilder = SetListItemsCompanion
+    Function({
+  Value<int> id,
+  required int setListId,
+  required int documentId,
+  required int orderIndex,
+  Value<String?> notes,
+});
+typedef $$SetListItemsTableUpdateCompanionBuilder = SetListItemsCompanion
+    Function({
+  Value<int> id,
+  Value<int> setListId,
+  Value<int> documentId,
+  Value<int> orderIndex,
+  Value<String?> notes,
+});
 
 final class $$SetListItemsTableReferences
     extends BaseReferences<_$AppDatabase, $SetListItemsTable, SetListItem> {
@@ -4775,19 +4690,19 @@ class $$SetListItemsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.id,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<int> get orderIndex => $composableBuilder(
-    column: $table.orderIndex,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.orderIndex,
+        builder: (column) => ColumnFilters(column),
+      );
 
   ColumnFilters<String> get notes => $composableBuilder(
-    column: $table.notes,
-    builder: (column) => ColumnFilters(column),
-  );
+        column: $table.notes,
+        builder: (column) => ColumnFilters(column),
+      );
 
   $$SetListsTableFilterComposer get setListId {
     final $$SetListsTableFilterComposer composer = $composerBuilder(
@@ -4795,19 +4710,18 @@ class $$SetListItemsTableFilterComposer
       getCurrentColumn: (t) => t.setListId,
       referencedTable: $db.setLists,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SetListsTableFilterComposer(
-            $db: $db,
-            $table: $db.setLists,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$SetListsTableFilterComposer(
+        $db: $db,
+        $table: $db.setLists,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return composer;
   }
@@ -4818,19 +4732,18 @@ class $$SetListItemsTableFilterComposer
       getCurrentColumn: (t) => t.documentId,
       referencedTable: $db.documents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentsTableFilterComposer(
-            $db: $db,
-            $table: $db.documents,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$DocumentsTableFilterComposer(
+        $db: $db,
+        $table: $db.documents,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return composer;
   }
@@ -4846,19 +4759,19 @@ class $$SetListItemsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.id,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<int> get orderIndex => $composableBuilder(
-    column: $table.orderIndex,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.orderIndex,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   ColumnOrderings<String> get notes => $composableBuilder(
-    column: $table.notes,
-    builder: (column) => ColumnOrderings(column),
-  );
+        column: $table.notes,
+        builder: (column) => ColumnOrderings(column),
+      );
 
   $$SetListsTableOrderingComposer get setListId {
     final $$SetListsTableOrderingComposer composer = $composerBuilder(
@@ -4866,19 +4779,18 @@ class $$SetListItemsTableOrderingComposer
       getCurrentColumn: (t) => t.setListId,
       referencedTable: $db.setLists,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SetListsTableOrderingComposer(
-            $db: $db,
-            $table: $db.setLists,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$SetListsTableOrderingComposer(
+        $db: $db,
+        $table: $db.setLists,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return composer;
   }
@@ -4889,19 +4801,18 @@ class $$SetListItemsTableOrderingComposer
       getCurrentColumn: (t) => t.documentId,
       referencedTable: $db.documents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentsTableOrderingComposer(
-            $db: $db,
-            $table: $db.documents,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$DocumentsTableOrderingComposer(
+        $db: $db,
+        $table: $db.documents,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return composer;
   }
@@ -4920,9 +4831,9 @@ class $$SetListItemsTableAnnotationComposer
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<int> get orderIndex => $composableBuilder(
-    column: $table.orderIndex,
-    builder: (column) => column,
-  );
+        column: $table.orderIndex,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
@@ -4933,19 +4844,18 @@ class $$SetListItemsTableAnnotationComposer
       getCurrentColumn: (t) => t.setListId,
       referencedTable: $db.setLists,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SetListsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.setLists,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$SetListsTableAnnotationComposer(
+        $db: $db,
+        $table: $db.setLists,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return composer;
   }
@@ -4956,158 +4866,143 @@ class $$SetListItemsTableAnnotationComposer
       getCurrentColumn: (t) => t.documentId,
       referencedTable: $db.documents,
       getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$DocumentsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.documents,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
+      builder: (
+        joinBuilder, {
+        $addJoinBuilderToRootComposer,
+        $removeJoinBuilderFromRootComposer,
+      }) =>
+          $$DocumentsTableAnnotationComposer(
+        $db: $db,
+        $table: $db.documents,
+        $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+        joinBuilder: joinBuilder,
+        $removeJoinBuilderFromRootComposer: $removeJoinBuilderFromRootComposer,
+      ),
     );
     return composer;
   }
 }
 
-class $$SetListItemsTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $SetListItemsTable,
-          SetListItem,
-          $$SetListItemsTableFilterComposer,
-          $$SetListItemsTableOrderingComposer,
-          $$SetListItemsTableAnnotationComposer,
-          $$SetListItemsTableCreateCompanionBuilder,
-          $$SetListItemsTableUpdateCompanionBuilder,
-          (SetListItem, $$SetListItemsTableReferences),
-          SetListItem,
-          PrefetchHooks Function({bool setListId, bool documentId})
-        > {
+class $$SetListItemsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SetListItemsTable,
+    SetListItem,
+    $$SetListItemsTableFilterComposer,
+    $$SetListItemsTableOrderingComposer,
+    $$SetListItemsTableAnnotationComposer,
+    $$SetListItemsTableCreateCompanionBuilder,
+    $$SetListItemsTableUpdateCompanionBuilder,
+    (SetListItem, $$SetListItemsTableReferences),
+    SetListItem,
+    PrefetchHooks Function({bool setListId, bool documentId})> {
   $$SetListItemsTableTableManager(_$AppDatabase db, $SetListItemsTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$SetListItemsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$SetListItemsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$SetListItemsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<int> setListId = const Value.absent(),
-                Value<int> documentId = const Value.absent(),
-                Value<int> orderIndex = const Value.absent(),
-                Value<String?> notes = const Value.absent(),
-              }) => SetListItemsCompanion(
-                id: id,
-                setListId: setListId,
-                documentId: documentId,
-                orderIndex: orderIndex,
-                notes: notes,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required int setListId,
-                required int documentId,
-                required int orderIndex,
-                Value<String?> notes = const Value.absent(),
-              }) => SetListItemsCompanion.insert(
-                id: id,
-                setListId: setListId,
-                documentId: documentId,
-                orderIndex: orderIndex,
-                notes: notes,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$SetListItemsTableReferences(db, table, e),
-                ),
-              )
-              .toList(),
-          prefetchHooksCallback: ({setListId = false, documentId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
+      : super(
+          TableManagerState(
+            db: db,
+            table: table,
+            createFilteringComposer: () =>
+                $$SetListItemsTableFilterComposer($db: db, $table: table),
+            createOrderingComposer: () =>
+                $$SetListItemsTableOrderingComposer($db: db, $table: table),
+            createComputedFieldComposer: () =>
+                $$SetListItemsTableAnnotationComposer($db: db, $table: table),
+            updateCompanionCallback: ({
+              Value<int> id = const Value.absent(),
+              Value<int> setListId = const Value.absent(),
+              Value<int> documentId = const Value.absent(),
+              Value<int> orderIndex = const Value.absent(),
+              Value<String?> notes = const Value.absent(),
+            }) =>
+                SetListItemsCompanion(
+              id: id,
+              setListId: setListId,
+              documentId: documentId,
+              orderIndex: orderIndex,
+              notes: notes,
+            ),
+            createCompanionCallback: ({
+              Value<int> id = const Value.absent(),
+              required int setListId,
+              required int documentId,
+              required int orderIndex,
+              Value<String?> notes = const Value.absent(),
+            }) =>
+                SetListItemsCompanion.insert(
+              id: id,
+              setListId: setListId,
+              documentId: documentId,
+              orderIndex: orderIndex,
+              notes: notes,
+            ),
+            withReferenceMapper: (p0) => p0
+                .map(
+                  (e) => (
+                    e.readTable(table),
+                    $$SetListItemsTableReferences(db, table, e),
+                  ),
+                )
+                .toList(),
+            prefetchHooksCallback: ({setListId = false, documentId = false}) {
+              return PrefetchHooks(
+                db: db,
+                explicitlyWatchedTables: [],
+                addJoins: <
                     T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (setListId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.setListId,
-                                referencedTable: $$SetListItemsTableReferences
-                                    ._setListIdTable(db),
-                                referencedColumn: $$SetListItemsTableReferences
-                                    ._setListIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-                    if (documentId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.documentId,
-                                referencedTable: $$SetListItemsTableReferences
-                                    ._documentIdTable(db),
-                                referencedColumn: $$SetListItemsTableReferences
-                                    ._documentIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic,
+                        dynamic>>(state) {
+                  if (setListId) {
+                    state = state.withJoin(
+                      currentTable: table,
+                      currentColumn: table.setListId,
+                      referencedTable:
+                          $$SetListItemsTableReferences._setListIdTable(db),
+                      referencedColumn:
+                          $$SetListItemsTableReferences._setListIdTable(db).id,
+                    ) as T;
+                  }
+                  if (documentId) {
+                    state = state.withJoin(
+                      currentTable: table,
+                      currentColumn: table.documentId,
+                      referencedTable:
+                          $$SetListItemsTableReferences._documentIdTable(db),
+                      referencedColumn:
+                          $$SetListItemsTableReferences._documentIdTable(db).id,
+                    ) as T;
+                  }
 
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
-        ),
-      );
+                  return state;
+                },
+                getPrefetchedDataCallback: (items) async {
+                  return [];
+                },
+              );
+            },
+          ),
+        );
 }
 
-typedef $$SetListItemsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $SetListItemsTable,
-      SetListItem,
-      $$SetListItemsTableFilterComposer,
-      $$SetListItemsTableOrderingComposer,
-      $$SetListItemsTableAnnotationComposer,
-      $$SetListItemsTableCreateCompanionBuilder,
-      $$SetListItemsTableUpdateCompanionBuilder,
-      (SetListItem, $$SetListItemsTableReferences),
-      SetListItem,
-      PrefetchHooks Function({bool setListId, bool documentId})
-    >;
+typedef $$SetListItemsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $SetListItemsTable,
+    SetListItem,
+    $$SetListItemsTableFilterComposer,
+    $$SetListItemsTableOrderingComposer,
+    $$SetListItemsTableAnnotationComposer,
+    $$SetListItemsTableCreateCompanionBuilder,
+    $$SetListItemsTableUpdateCompanionBuilder,
+    (SetListItem, $$SetListItemsTableReferences),
+    SetListItem,
+    PrefetchHooks Function({bool setListId, bool documentId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;

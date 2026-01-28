@@ -101,7 +101,8 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     _layers = await _annotationService.getLayers(widget.document.id);
     if (_layers.isEmpty) {
       // Create default layer
-      final layerId = await _annotationService.createLayer(widget.document.id, 'Layer 1');
+      final layerId =
+          await _annotationService.createLayer(widget.document.id, 'Layer 1');
       _layers = await _annotationService.getLayers(widget.document.id);
       _selectedLayerId = layerId;
     } else {
@@ -204,7 +205,8 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                 backgroundColor: Colors.black.withValues(alpha: 0.7),
                 actions: [
                   IconButton(
-                    icon: Icon(_annotationMode ? Icons.edit : Icons.edit_outlined),
+                    icon: Icon(
+                        _annotationMode ? Icons.edit : Icons.edit_outlined),
                     onPressed: () {
                       setState(() => _annotationMode = !_annotationMode);
                     },
@@ -253,8 +255,10 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                   annotationColor: _annotationColor,
                   annotationThickness: _annotationThickness,
                   onToolChanged: (tool) => setState(() => _currentTool = tool),
-                  onColorChanged: (color) => setState(() => _annotationColor = color),
-                  onThicknessChanged: (thickness) => setState(() => _annotationThickness = thickness),
+                  onColorChanged: (color) =>
+                      setState(() => _annotationColor = color),
+                  onThicknessChanged: (thickness) =>
+                      setState(() => _annotationThickness = thickness),
                 ),
               ),
 
@@ -346,5 +350,4 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
       ),
     );
   }
-
 }

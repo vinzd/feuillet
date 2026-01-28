@@ -65,7 +65,8 @@ void main() {
 
     test('date formatting', () {
       final date = DateTime(2024, 1, 15, 14, 30);
-      final formatted = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final formatted =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
       expect(formatted, '2024-01-15');
     });

@@ -98,7 +98,8 @@ class AnnotationToolbar extends StatelessWidget {
               size: 20 + annotationThickness,
             ),
             onPressed: () {
-              final newThickness = annotationThickness >= 10 ? 2.0 : annotationThickness + 2;
+              final newThickness =
+                  annotationThickness >= 10 ? 2.0 : annotationThickness + 2;
               onThicknessChanged(newThickness);
             },
           ),

@@ -104,18 +104,22 @@ class AnnotationService {
   }
 
   /// Get annotations for a specific layer and page
-  Future<List<DrawingStroke>> getAnnotations(int layerId, int pageNumber) async {
+  Future<List<DrawingStroke>> getAnnotations(
+      int layerId, int pageNumber) async {
     final annotations = await _database.getAnnotations(layerId, pageNumber);
 
-    return annotations.map((annotation) {
-      try {
-        final data = jsonDecode(annotation.data) as Map<String, dynamic>;
-        return DrawingStroke.fromJson(data);
-      } catch (e) {
-        debugPrint('Error decoding annotation: $e');
-        return null;
-      }
-    }).whereType<DrawingStroke>().toList();
+    return annotations
+        .map((annotation) {
+          try {
+            final data = jsonDecode(annotation.data) as Map<String, dynamic>;
+            return DrawingStroke.fromJson(data);
+          } catch (e) {
+            debugPrint('Error decoding annotation: $e');
+            return null;
+          }
+        })
+        .whereType<DrawingStroke>()
+        .toList();
   }
 
   /// Save an annotation
