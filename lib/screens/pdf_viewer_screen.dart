@@ -5,14 +5,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:drift/drift.dart' as drift;
 import '../models/database.dart';
+import '../models/view_mode.dart';
 import '../services/database_service.dart';
 import '../services/annotation_service.dart';
+import '../utils/page_spread_calculator.dart';
 import '../widgets/cached_pdf_view.dart';
+import '../widgets/cached_pdf_page.dart';
 import '../widgets/drawing_canvas.dart';
 import '../widgets/layer_panel.dart';
 import '../widgets/annotation_toolbar.dart';
 import '../widgets/display_settings_panel.dart';
 import '../widgets/pdf_bottom_controls.dart';
+import '../widgets/two_page_pdf_view.dart';
 
 /// PDF Viewer screen with zoom, pan, and contrast controls
 class PdfViewerScreen extends ConsumerStatefulWidget {
@@ -26,6 +30,7 @@ class PdfViewerScreen extends ConsumerStatefulWidget {
 
 class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   CachedPdfController? _pdfController;
+  PageController? _singlePageController;
   DocumentSetting? _settings;
   final FocusNode _focusNode = FocusNode();
 
@@ -38,6 +43,9 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   double _brightness = 0.0;
   double _contrast = 1.0;
   int _currentPage = 1;
+  PdfViewMode _viewMode = PdfViewMode.single;
+  PageSide _activePageSide = PageSide.left;
+  PdfDocument? _pdfDocument;
 
   // Annotation settings
   bool _annotationMode = false;
@@ -48,6 +56,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   Color _annotationColor = Colors.red;
   double _annotationThickness = 3.0;
   Map<int, List<DrawingStroke>> _pageAnnotations = {};
+  Map<int, List<DrawingStroke>> _rightPageAnnotations = {};
 
   @override
   void initState() {
@@ -65,6 +74,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
         _brightness = _settings!.brightness;
         _contrast = _settings!.contrast;
         _currentPage = _settings!.currentPage + 1; // Convert to 1-based
+        _viewMode = PdfViewMode.fromStorageString(_settings!.viewMode);
       }
 
       final freshDocument = await db.getDocument(widget.document.id);
@@ -80,10 +90,14 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
         throw Exception('Document not found');
       }
 
+      _pdfDocument = await pdfDocument;
+
       _pdfController = CachedPdfController(
-        document: pdfDocument,
+        document: Future.value(_pdfDocument),
         initialPage: _currentPage,
       );
+
+      _singlePageController = PageController(initialPage: _currentPage - 1);
 
       await _loadLayers();
       await _loadPageAnnotations();
@@ -111,14 +125,35 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   }
 
   Future<void> _loadPageAnnotations() async {
-    // Load annotations from all visible layers
+    // Load annotations from all visible layers for left page
     final allAnnotations = await _annotationService.getAllPageAnnotations(
       widget.document.id,
       _currentPage - 1,
     );
 
+    // Load annotations for right page in two-page mode
+    Map<int, List<DrawingStroke>> rightAnnotations = {};
+    if (_viewMode.isTwoPage) {
+      final spread = PageSpreadCalculator.getPagesForSpread(
+        _viewMode,
+        PageSpreadCalculator.getSpreadForPage(
+          _viewMode,
+          _currentPage,
+          widget.document.pageCount,
+        ),
+        widget.document.pageCount,
+      );
+      if (spread.rightPage != null) {
+        rightAnnotations = await _annotationService.getAllPageAnnotations(
+          widget.document.id,
+          spread.rightPage! - 1,
+        );
+      }
+    }
+
     setState(() {
       _pageAnnotations = allAnnotations;
+      _rightPageAnnotations = rightAnnotations;
     });
   }
 
@@ -131,6 +166,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
         brightness: drift.Value(_brightness),
         contrast: drift.Value(_contrast),
         currentPage: drift.Value(_currentPage - 1), // Convert to 0-based
+        viewMode: drift.Value(_viewMode.toStorageString()),
       ),
     );
   }
@@ -155,6 +191,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   void dispose() {
     _hideControlsTimer?.cancel();
     _pdfController?.dispose();
+    _singlePageController?.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -171,20 +208,20 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
 
     final key = event.logicalKey;
 
-    // Left arrow or Page Up: previous page
+    // Left arrow or Page Up: previous page/spread
     if (key == LogicalKeyboardKey.arrowLeft ||
         key == LogicalKeyboardKey.pageUp) {
-      if (_currentPage > 1) {
+      if (_canGoToPrevious()) {
         _goToPreviousPage();
         return KeyEventResult.handled;
       }
     }
 
-    // Right arrow, Page Down, or Space: next page
+    // Right arrow, Page Down, or Space: next page/spread
     if (key == LogicalKeyboardKey.arrowRight ||
         key == LogicalKeyboardKey.pageDown ||
         key == LogicalKeyboardKey.space) {
-      if (_currentPage < widget.document.pageCount) {
+      if (_canGoToNext()) {
         _goToNextPage();
         return KeyEventResult.handled;
       }
@@ -193,7 +230,11 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     // Home: first page
     if (key == LogicalKeyboardKey.home) {
       if (_currentPage != 1) {
-        _pdfController?.jumpToPage(1); // pdfx uses 1-indexed pages
+        if (_viewMode == PdfViewMode.single) {
+          _singlePageController?.jumpToPage(0); // PageController uses 0-indexed
+        } else {
+          _pdfController?.jumpToPage(1);
+        }
       }
       return KeyEventResult.handled;
     }
@@ -202,7 +243,13 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     if (key == LogicalKeyboardKey.end) {
       final lastPage = widget.document.pageCount;
       if (_currentPage != lastPage) {
-        _pdfController?.jumpToPage(lastPage); // pdfx uses 1-indexed pages
+        if (_viewMode == PdfViewMode.single) {
+          _singlePageController?.jumpToPage(
+            lastPage - 1,
+          ); // PageController uses 0-indexed
+        } else {
+          _pdfController?.jumpToPage(lastPage);
+        }
       }
       return KeyEventResult.handled;
     }
@@ -211,17 +258,65 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   }
 
   void _goToPreviousPage() {
-    _pdfController?.previousPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    if (_viewMode == PdfViewMode.single) {
+      _singlePageController?.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      // Two-page mode: navigate by spread
+      final currentSpread = PageSpreadCalculator.getSpreadForPage(
+        _viewMode,
+        _currentPage,
+        widget.document.pageCount,
+      );
+      if (currentSpread > 0) {
+        final prevSpread = PageSpreadCalculator.getPagesForSpread(
+          _viewMode,
+          currentSpread - 1,
+          widget.document.pageCount,
+        );
+        setState(() {
+          _currentPage = prevSpread.leftPage;
+          _activePageSide = PageSide.left;
+        });
+        _saveSettings();
+        _loadPageAnnotations();
+      }
+    }
   }
 
   void _goToNextPage() {
-    _pdfController?.nextPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    if (_viewMode == PdfViewMode.single) {
+      _singlePageController?.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      // Two-page mode: navigate by spread
+      final currentSpread = PageSpreadCalculator.getSpreadForPage(
+        _viewMode,
+        _currentPage,
+        widget.document.pageCount,
+      );
+      final totalSpreads = PageSpreadCalculator.getTotalSpreads(
+        _viewMode,
+        widget.document.pageCount,
+      );
+      if (currentSpread < totalSpreads - 1) {
+        final nextSpread = PageSpreadCalculator.getPagesForSpread(
+          _viewMode,
+          currentSpread + 1,
+          widget.document.pageCount,
+        );
+        setState(() {
+          _currentPage = nextSpread.leftPage;
+          _activePageSide = PageSide.left;
+        });
+        _saveSettings();
+        _loadPageAnnotations();
+      }
+    }
   }
 
   void _onPageChanged(int page) {
@@ -230,6 +325,77 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     });
     _saveSettings();
     _loadPageAnnotations();
+  }
+
+  void _onViewModeChanged(PdfViewMode mode) {
+    setState(() {
+      _viewMode = mode;
+      _activePageSide = PageSide.left;
+    });
+    _saveSettings();
+    _loadPageAnnotations();
+  }
+
+  void _onPageSideSelected(PageSide side) {
+    if (_viewMode.isTwoPage) {
+      setState(() {
+        _activePageSide = side;
+      });
+    }
+  }
+
+  /// Get the current spread info for two-page modes
+  ({int leftPage, int? rightPage}) _getCurrentSpread() {
+    return PageSpreadCalculator.getPagesForSpread(
+      _viewMode,
+      PageSpreadCalculator.getSpreadForPage(
+        _viewMode,
+        _currentPage,
+        widget.document.pageCount,
+      ),
+      widget.document.pageCount,
+    );
+  }
+
+  /// Check if we can navigate to the previous spread
+  bool _canGoToPrevious() {
+    if (_viewMode == PdfViewMode.single) {
+      return _currentPage > 1;
+    }
+    final currentSpread = PageSpreadCalculator.getSpreadForPage(
+      _viewMode,
+      _currentPage,
+      widget.document.pageCount,
+    );
+    return currentSpread > 0;
+  }
+
+  /// Check if we can navigate to the next spread
+  bool _canGoToNext() {
+    if (_viewMode == PdfViewMode.single) {
+      return _currentPage < widget.document.pageCount;
+    }
+    final currentSpread = PageSpreadCalculator.getSpreadForPage(
+      _viewMode,
+      _currentPage,
+      widget.document.pageCount,
+    );
+    final totalSpreads = PageSpreadCalculator.getTotalSpreads(
+      _viewMode,
+      widget.document.pageCount,
+    );
+    return currentSpread < totalSpreads - 1;
+  }
+
+  IconData _getViewModeIcon(PdfViewMode mode) {
+    switch (mode) {
+      case PdfViewMode.single:
+        return Icons.article;
+      case PdfViewMode.booklet:
+        return Icons.menu_book;
+      case PdfViewMode.continuousDouble:
+        return Icons.auto_stories;
+    }
   }
 
   @override
@@ -261,46 +427,19 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
           onTap: _toggleControls,
           child: Stack(
             children: [
-              // PDF viewer
+              // PDF viewer - single or two-page mode
+              // Annotations are handled internally for both modes
               Center(
                 child: ColorFiltered(
                   colorFilter: ColorFilter.matrix(_createColorMatrix()),
                   child: Transform.scale(
                     scale: _zoomLevel,
-                    child: CachedPdfView(
-                      controller: _pdfController!,
-                      scrollDirection: Axis.horizontal,
-                      pageSnapping: true,
-                      onPageChanged: _onPageChanged,
-                      onDocumentError: (error) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error loading PDF: $error')),
-                        );
-                      },
-                    ),
+                    child: _viewMode == PdfViewMode.single
+                        ? _buildSinglePageView()
+                        : _buildTwoPageView(),
                   ),
                 ),
               ),
-
-              // Annotation overlay - always visible, but only editable in annotation mode
-              // Must be below controls so they remain clickable
-              if (_selectedLayerId != null)
-                Positioned.fill(
-                  child: DrawingCanvas(
-                    key: ValueKey('$_selectedLayerId-$_currentPage'),
-                    layerId: _selectedLayerId!,
-                    pageNumber: _currentPage - 1,
-                    toolType: _currentTool,
-                    color: _annotationColor,
-                    thickness: _annotationThickness,
-                    // Display strokes from all visible layers
-                    existingStrokes: _pageAnnotations.values
-                        .expand((strokes) => strokes)
-                        .toList(),
-                    onStrokeCompleted: _loadPageAnnotations,
-                    isEnabled: _annotationMode,
-                  ),
-                ),
 
               // Top app bar
               AnimatedPositioned(
@@ -312,6 +451,30 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                   title: Text(widget.document.name),
                   backgroundColor: Colors.black.withValues(alpha: 0.7),
                   actions: [
+                    PopupMenuButton<PdfViewMode>(
+                      icon: Icon(_getViewModeIcon(_viewMode)),
+                      tooltip: 'View mode',
+                      onSelected: _onViewModeChanged,
+                      itemBuilder: (context) => PdfViewMode.values
+                          .map(
+                            (mode) => PopupMenuItem(
+                              value: mode,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    _getViewModeIcon(mode),
+                                    color: mode == _viewMode
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(mode.displayName),
+                                ],
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
                     IconButton(
                       icon: Icon(
                         _annotationMode ? Icons.edit : Icons.edit_outlined,
@@ -361,23 +524,105 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                 bottom: _showControls ? 0 : -100,
                 left: 0,
                 right: 0,
-                child: PdfBottomControls(
-                  currentPage: _currentPage,
-                  totalPages: widget.document.pageCount,
-                  zoomLevel: _zoomLevel,
-                  onPreviousPage: _currentPage > 1 ? _goToPreviousPage : null,
-                  onNextPage: _currentPage < widget.document.pageCount
-                      ? _goToNextPage
-                      : null,
-                  onZoomChanged: (value) => setState(() => _zoomLevel = value),
-                  onZoomChangeEnd: (value) => _saveSettings(),
-                  onInteraction: _resetControlsTimer,
+                child: Builder(
+                  builder: (context) {
+                    final spread = _getCurrentSpread();
+                    return PdfBottomControls(
+                      currentPage: spread.leftPage,
+                      rightPage: spread.rightPage,
+                      totalPages: widget.document.pageCount,
+                      viewMode: _viewMode,
+                      zoomLevel: _zoomLevel,
+                      onPreviousPage: _canGoToPrevious()
+                          ? _goToPreviousPage
+                          : null,
+                      onNextPage: _canGoToNext() ? _goToNextPage : null,
+                      onZoomChanged: (value) =>
+                          setState(() => _zoomLevel = value),
+                      onZoomChangeEnd: (value) => _saveSettings(),
+                      onInteraction: _resetControlsTimer,
+                    );
+                  },
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSinglePageView() {
+    if (_pdfDocument == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // Use PageView with CachedPdfPage for consistent rendering
+    // Annotations are passed to CachedPdfPage so they scale with the PDF
+    return PageView.builder(
+      controller: _singlePageController,
+      scrollDirection: Axis.horizontal,
+      pageSnapping: true,
+      itemCount: _pdfDocument!.pagesCount,
+      onPageChanged: (index) => _onPageChanged(index + 1),
+      itemBuilder: (context, index) {
+        final pageNumber = index + 1;
+        final isCurrentPage = pageNumber == _currentPage;
+
+        // Build annotation overlay if on current page with a selected layer
+        Widget? annotationOverlay;
+        if (isCurrentPage && _selectedLayerId != null) {
+          annotationOverlay = DrawingCanvas(
+            key: ValueKey('$_selectedLayerId-$pageNumber'),
+            layerId: _selectedLayerId!,
+            pageNumber: pageNumber - 1,
+            toolType: _currentTool,
+            color: _annotationColor,
+            thickness: _annotationThickness,
+            existingStrokes: _pageAnnotations.values
+                .expand((strokes) => strokes)
+                .toList(),
+            onStrokeCompleted: _loadPageAnnotations,
+            isEnabled: _annotationMode,
+          );
+        }
+
+        return CachedPdfPage(
+          document: _pdfDocument!,
+          pageNumber: pageNumber,
+          backgroundDecoration: const BoxDecoration(color: Colors.black),
+          annotationOverlay: annotationOverlay,
+        );
+      },
+    );
+  }
+
+  Widget _buildTwoPageView() {
+    if (_pdfDocument == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final spread = _getCurrentSpread();
+
+    return TwoPagePdfView(
+      document: _pdfDocument!,
+      leftPageNumber: spread.leftPage,
+      rightPageNumber: spread.rightPage,
+      activePageSide: _activePageSide,
+      onPageSideSelected: _onPageSideSelected,
+      leftPageAnnotations: _pageAnnotations.values
+          .expand((strokes) => strokes)
+          .toList(),
+      rightPageAnnotations: _rightPageAnnotations.values
+          .expand((strokes) => strokes)
+          .toList(),
+      isAnnotationMode: _annotationMode,
+      selectedLayerId: _selectedLayerId,
+      currentTool: _currentTool,
+      annotationColor: _annotationColor,
+      annotationThickness: _annotationThickness,
+      onStrokeCompleted: _loadPageAnnotations,
+      backgroundDecoration: const BoxDecoration(color: Colors.black),
     );
   }
 

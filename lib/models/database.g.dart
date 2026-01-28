@@ -2,7 +2,7 @@
 
 part of 'database.dart';
 
-// ignore_for_file: type=lint, unused_element
+// ignore_for_file: type=lint
 class $DocumentsTable extends Documents
     with TableInfo<$DocumentsTable, Document> {
   @override
@@ -641,6 +641,18 @@ class $DocumentSettingsTable extends DocumentSettings
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _viewModeMeta = const VerificationMeta(
+    'viewMode',
+  );
+  @override
+  late final GeneratedColumn<String> viewMode = GeneratedColumn<String>(
+    'view_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('single'),
+  );
   static const VerificationMeta _lastUpdatedMeta = const VerificationMeta(
     'lastUpdated',
   );
@@ -661,6 +673,7 @@ class $DocumentSettingsTable extends DocumentSettings
     brightness,
     contrast,
     currentPage,
+    viewMode,
     lastUpdated,
   ];
   @override
@@ -713,6 +726,12 @@ class $DocumentSettingsTable extends DocumentSettings
         ),
       );
     }
+    if (data.containsKey('view_mode')) {
+      context.handle(
+        _viewModeMeta,
+        viewMode.isAcceptableOrUnknown(data['view_mode']!, _viewModeMeta),
+      );
+    }
     if (data.containsKey('last_updated')) {
       context.handle(
         _lastUpdatedMeta,
@@ -755,6 +774,10 @@ class $DocumentSettingsTable extends DocumentSettings
         DriftSqlType.int,
         data['${effectivePrefix}current_page'],
       )!,
+      viewMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}view_mode'],
+      )!,
       lastUpdated: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_updated'],
@@ -775,6 +798,7 @@ class DocumentSetting extends DataClass implements Insertable<DocumentSetting> {
   final double brightness;
   final double contrast;
   final int currentPage;
+  final String viewMode;
   final DateTime lastUpdated;
   const DocumentSetting({
     required this.id,
@@ -783,6 +807,7 @@ class DocumentSetting extends DataClass implements Insertable<DocumentSetting> {
     required this.brightness,
     required this.contrast,
     required this.currentPage,
+    required this.viewMode,
     required this.lastUpdated,
   });
   @override
@@ -794,6 +819,7 @@ class DocumentSetting extends DataClass implements Insertable<DocumentSetting> {
     map['brightness'] = Variable<double>(brightness);
     map['contrast'] = Variable<double>(contrast);
     map['current_page'] = Variable<int>(currentPage);
+    map['view_mode'] = Variable<String>(viewMode);
     map['last_updated'] = Variable<DateTime>(lastUpdated);
     return map;
   }
@@ -806,6 +832,7 @@ class DocumentSetting extends DataClass implements Insertable<DocumentSetting> {
       brightness: Value(brightness),
       contrast: Value(contrast),
       currentPage: Value(currentPage),
+      viewMode: Value(viewMode),
       lastUpdated: Value(lastUpdated),
     );
   }
@@ -822,6 +849,7 @@ class DocumentSetting extends DataClass implements Insertable<DocumentSetting> {
       brightness: serializer.fromJson<double>(json['brightness']),
       contrast: serializer.fromJson<double>(json['contrast']),
       currentPage: serializer.fromJson<int>(json['currentPage']),
+      viewMode: serializer.fromJson<String>(json['viewMode']),
       lastUpdated: serializer.fromJson<DateTime>(json['lastUpdated']),
     );
   }
@@ -835,6 +863,7 @@ class DocumentSetting extends DataClass implements Insertable<DocumentSetting> {
       'brightness': serializer.toJson<double>(brightness),
       'contrast': serializer.toJson<double>(contrast),
       'currentPage': serializer.toJson<int>(currentPage),
+      'viewMode': serializer.toJson<String>(viewMode),
       'lastUpdated': serializer.toJson<DateTime>(lastUpdated),
     };
   }
@@ -846,6 +875,7 @@ class DocumentSetting extends DataClass implements Insertable<DocumentSetting> {
     double? brightness,
     double? contrast,
     int? currentPage,
+    String? viewMode,
     DateTime? lastUpdated,
   }) => DocumentSetting(
     id: id ?? this.id,
@@ -854,6 +884,7 @@ class DocumentSetting extends DataClass implements Insertable<DocumentSetting> {
     brightness: brightness ?? this.brightness,
     contrast: contrast ?? this.contrast,
     currentPage: currentPage ?? this.currentPage,
+    viewMode: viewMode ?? this.viewMode,
     lastUpdated: lastUpdated ?? this.lastUpdated,
   );
   DocumentSetting copyWithCompanion(DocumentSettingsCompanion data) {
@@ -870,6 +901,7 @@ class DocumentSetting extends DataClass implements Insertable<DocumentSetting> {
       currentPage: data.currentPage.present
           ? data.currentPage.value
           : this.currentPage,
+      viewMode: data.viewMode.present ? data.viewMode.value : this.viewMode,
       lastUpdated: data.lastUpdated.present
           ? data.lastUpdated.value
           : this.lastUpdated,
@@ -885,6 +917,7 @@ class DocumentSetting extends DataClass implements Insertable<DocumentSetting> {
           ..write('brightness: $brightness, ')
           ..write('contrast: $contrast, ')
           ..write('currentPage: $currentPage, ')
+          ..write('viewMode: $viewMode, ')
           ..write('lastUpdated: $lastUpdated')
           ..write(')'))
         .toString();
@@ -898,6 +931,7 @@ class DocumentSetting extends DataClass implements Insertable<DocumentSetting> {
     brightness,
     contrast,
     currentPage,
+    viewMode,
     lastUpdated,
   );
   @override
@@ -910,6 +944,7 @@ class DocumentSetting extends DataClass implements Insertable<DocumentSetting> {
           other.brightness == this.brightness &&
           other.contrast == this.contrast &&
           other.currentPage == this.currentPage &&
+          other.viewMode == this.viewMode &&
           other.lastUpdated == this.lastUpdated);
 }
 
@@ -920,6 +955,7 @@ class DocumentSettingsCompanion extends UpdateCompanion<DocumentSetting> {
   final Value<double> brightness;
   final Value<double> contrast;
   final Value<int> currentPage;
+  final Value<String> viewMode;
   final Value<DateTime> lastUpdated;
   const DocumentSettingsCompanion({
     this.id = const Value.absent(),
@@ -928,6 +964,7 @@ class DocumentSettingsCompanion extends UpdateCompanion<DocumentSetting> {
     this.brightness = const Value.absent(),
     this.contrast = const Value.absent(),
     this.currentPage = const Value.absent(),
+    this.viewMode = const Value.absent(),
     this.lastUpdated = const Value.absent(),
   });
   DocumentSettingsCompanion.insert({
@@ -937,6 +974,7 @@ class DocumentSettingsCompanion extends UpdateCompanion<DocumentSetting> {
     this.brightness = const Value.absent(),
     this.contrast = const Value.absent(),
     this.currentPage = const Value.absent(),
+    this.viewMode = const Value.absent(),
     this.lastUpdated = const Value.absent(),
   }) : documentId = Value(documentId);
   static Insertable<DocumentSetting> custom({
@@ -946,6 +984,7 @@ class DocumentSettingsCompanion extends UpdateCompanion<DocumentSetting> {
     Expression<double>? brightness,
     Expression<double>? contrast,
     Expression<int>? currentPage,
+    Expression<String>? viewMode,
     Expression<DateTime>? lastUpdated,
   }) {
     return RawValuesInsertable({
@@ -955,6 +994,7 @@ class DocumentSettingsCompanion extends UpdateCompanion<DocumentSetting> {
       if (brightness != null) 'brightness': brightness,
       if (contrast != null) 'contrast': contrast,
       if (currentPage != null) 'current_page': currentPage,
+      if (viewMode != null) 'view_mode': viewMode,
       if (lastUpdated != null) 'last_updated': lastUpdated,
     });
   }
@@ -966,6 +1006,7 @@ class DocumentSettingsCompanion extends UpdateCompanion<DocumentSetting> {
     Value<double>? brightness,
     Value<double>? contrast,
     Value<int>? currentPage,
+    Value<String>? viewMode,
     Value<DateTime>? lastUpdated,
   }) {
     return DocumentSettingsCompanion(
@@ -975,6 +1016,7 @@ class DocumentSettingsCompanion extends UpdateCompanion<DocumentSetting> {
       brightness: brightness ?? this.brightness,
       contrast: contrast ?? this.contrast,
       currentPage: currentPage ?? this.currentPage,
+      viewMode: viewMode ?? this.viewMode,
       lastUpdated: lastUpdated ?? this.lastUpdated,
     );
   }
@@ -1000,6 +1042,9 @@ class DocumentSettingsCompanion extends UpdateCompanion<DocumentSetting> {
     if (currentPage.present) {
       map['current_page'] = Variable<int>(currentPage.value);
     }
+    if (viewMode.present) {
+      map['view_mode'] = Variable<String>(viewMode.value);
+    }
     if (lastUpdated.present) {
       map['last_updated'] = Variable<DateTime>(lastUpdated.value);
     }
@@ -1015,6 +1060,7 @@ class DocumentSettingsCompanion extends UpdateCompanion<DocumentSetting> {
           ..write('brightness: $brightness, ')
           ..write('contrast: $contrast, ')
           ..write('currentPage: $currentPage, ')
+          ..write('viewMode: $viewMode, ')
           ..write('lastUpdated: $lastUpdated')
           ..write(')'))
         .toString();
@@ -3255,6 +3301,7 @@ typedef $$DocumentSettingsTableCreateCompanionBuilder =
       Value<double> brightness,
       Value<double> contrast,
       Value<int> currentPage,
+      Value<String> viewMode,
       Value<DateTime> lastUpdated,
     });
 typedef $$DocumentSettingsTableUpdateCompanionBuilder =
@@ -3265,6 +3312,7 @@ typedef $$DocumentSettingsTableUpdateCompanionBuilder =
       Value<double> brightness,
       Value<double> contrast,
       Value<int> currentPage,
+      Value<String> viewMode,
       Value<DateTime> lastUpdated,
     });
 
@@ -3331,6 +3379,11 @@ class $$DocumentSettingsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get viewMode => $composableBuilder(
+    column: $table.viewMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<DateTime> get lastUpdated => $composableBuilder(
     column: $table.lastUpdated,
     builder: (column) => ColumnFilters(column),
@@ -3394,6 +3447,11 @@ class $$DocumentSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get viewMode => $composableBuilder(
+    column: $table.viewMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get lastUpdated => $composableBuilder(
     column: $table.lastUpdated,
     builder: (column) => ColumnOrderings(column),
@@ -3450,6 +3508,9 @@ class $$DocumentSettingsTableAnnotationComposer
     column: $table.currentPage,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get viewMode =>
+      $composableBuilder(column: $table.viewMode, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastUpdated => $composableBuilder(
     column: $table.lastUpdated,
@@ -3516,6 +3577,7 @@ class $$DocumentSettingsTableTableManager
                 Value<double> brightness = const Value.absent(),
                 Value<double> contrast = const Value.absent(),
                 Value<int> currentPage = const Value.absent(),
+                Value<String> viewMode = const Value.absent(),
                 Value<DateTime> lastUpdated = const Value.absent(),
               }) => DocumentSettingsCompanion(
                 id: id,
@@ -3524,6 +3586,7 @@ class $$DocumentSettingsTableTableManager
                 brightness: brightness,
                 contrast: contrast,
                 currentPage: currentPage,
+                viewMode: viewMode,
                 lastUpdated: lastUpdated,
               ),
           createCompanionCallback:
@@ -3534,6 +3597,7 @@ class $$DocumentSettingsTableTableManager
                 Value<double> brightness = const Value.absent(),
                 Value<double> contrast = const Value.absent(),
                 Value<int> currentPage = const Value.absent(),
+                Value<String> viewMode = const Value.absent(),
                 Value<DateTime> lastUpdated = const Value.absent(),
               }) => DocumentSettingsCompanion.insert(
                 id: id,
@@ -3542,6 +3606,7 @@ class $$DocumentSettingsTableTableManager
                 brightness: brightness,
                 contrast: contrast,
                 currentPage: currentPage,
+                viewMode: viewMode,
                 lastUpdated: lastUpdated,
               ),
           withReferenceMapper: (p0) => p0
