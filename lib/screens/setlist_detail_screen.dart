@@ -46,12 +46,14 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
   Future<void> _addDocuments() async {
     final allDocuments = await _database.getAllDocuments();
     final currentDocIds = _documents.map((d) => d.id).toSet();
-    final availableDocs = allDocuments.where((d) => !currentDocIds.contains(d.id)).toList();
+    final availableDocs =
+        allDocuments.where((d) => !currentDocIds.contains(d.id)).toList();
 
     if (availableDocs.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('All documents are already in this set list')),
+          const SnackBar(
+              content: Text('All documents are already in this set list')),
         );
       }
       return;
@@ -99,7 +101,8 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
   Future<void> _startPerformance() async {
     if (_documents.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Add documents to start performance mode')),
+        const SnackBar(
+            content: Text('Add documents to start performance mode')),
       );
       return;
     }
@@ -145,7 +148,8 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
       body: Column(
         children: [
           // Description card
-          if (_setList!.description != null && _setList!.description!.isNotEmpty)
+          if (_setList!.description != null &&
+              _setList!.description!.isNotEmpty)
             Card(
               margin: const EdgeInsets.all(16),
               child: Padding(
@@ -202,14 +206,16 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => PdfViewerScreen(document: doc),
+                                      builder: (context) =>
+                                          PdfViewerScreen(document: doc),
                                     ),
                                   );
                                 },
                                 tooltip: 'View',
                               ),
                               IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
                                 onPressed: () => _removeDocument(item.id),
                                 tooltip: 'Remove',
                               ),

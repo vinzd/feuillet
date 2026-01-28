@@ -72,7 +72,8 @@ void main() {
       expect(tapped, isTrue);
     });
 
-    testWidgets('renders with different page counts', (WidgetTester tester) async {
+    testWidgets('renders with different page counts',
+        (WidgetTester tester) async {
       final documents = [
         testDocument.copyWith(pageCount: 1),
         testDocument.copyWith(pageCount: 10),

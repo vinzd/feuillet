@@ -50,7 +50,13 @@ void main() {
     });
 
     testWidgets('accepts different colors', (WidgetTester tester) async {
-      final colors = [Colors.red, Colors.blue, Colors.green, Colors.yellow, Colors.black];
+      final colors = [
+        Colors.red,
+        Colors.blue,
+        Colors.green,
+        Colors.yellow,
+        Colors.black
+      ];
 
       for (final color in colors) {
         await tester.pumpWidget(
@@ -73,7 +79,8 @@ void main() {
       }
     });
 
-    testWidgets('accepts different thickness values', (WidgetTester tester) async {
+    testWidgets('accepts different thickness values',
+        (WidgetTester tester) async {
       final thicknesses = [1.0, 2.0, 3.0, 5.0, 10.0];
 
       for (final thickness in thicknesses) {

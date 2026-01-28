@@ -8,7 +8,8 @@ class Documents extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().withLength(min: 1, max: 255)();
   TextColumn get filePath => text()();
-  BlobColumn get pdfBytes => blob().nullable()(); // For web platform - stores PDF bytes
+  BlobColumn get pdfBytes =>
+      blob().nullable()(); // For web platform - stores PDF bytes
   DateTimeColumn get dateAdded => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get lastOpened => dateTime().nullable()();
   DateTimeColumn get lastModified => dateTime()();
@@ -19,18 +20,21 @@ class Documents extends Table {
 // Document settings - stores per-document viewing preferences
 class DocumentSettings extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get documentId => integer().references(Documents, #id, onDelete: KeyAction.cascade)();
+  IntColumn get documentId =>
+      integer().references(Documents, #id, onDelete: KeyAction.cascade)();
   RealColumn get zoomLevel => real().withDefault(const Constant(1.0))();
   RealColumn get brightness => real().withDefault(const Constant(0.0))();
   RealColumn get contrast => real().withDefault(const Constant(1.0))();
   IntColumn get currentPage => integer().withDefault(const Constant(0))();
-  DateTimeColumn get lastUpdated => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get lastUpdated =>
+      dateTime().withDefault(currentDateAndTime)();
 }
 
 // Annotation layers - supports multiple layers per document
 class AnnotationLayers extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get documentId => integer().references(Documents, #id, onDelete: KeyAction.cascade)();
+  IntColumn get documentId =>
+      integer().references(Documents, #id, onDelete: KeyAction.cascade)();
   TextColumn get name => text().withLength(min: 1, max: 100)();
   IntColumn get orderIndex => integer()();
   BoolColumn get isVisible => boolean().withDefault(const Constant(true))();
@@ -40,10 +44,13 @@ class AnnotationLayers extends Table {
 // Annotations - stores drawing data for each layer
 class Annotations extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get layerId => integer().references(AnnotationLayers, #id, onDelete: KeyAction.cascade)();
+  IntColumn get layerId => integer()
+      .references(AnnotationLayers, #id, onDelete: KeyAction.cascade)();
   IntColumn get pageNumber => integer()();
-  TextColumn get type => text()(); // 'pen', 'highlighter', 'eraser', 'text', etc.
-  TextColumn get data => text()(); // JSON-encoded drawing data (points, color, thickness)
+  TextColumn get type =>
+      text()(); // 'pen', 'highlighter', 'eraser', 'text', etc.
+  TextColumn get data =>
+      text()(); // JSON-encoded drawing data (points, color, thickness)
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get modifiedAt => dateTime().withDefault(currentDateAndTime)();
 }
@@ -60,8 +67,10 @@ class SetLists extends Table {
 // Set list items - documents in a set list with ordering
 class SetListItems extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get setListId => integer().references(SetLists, #id, onDelete: KeyAction.cascade)();
-  IntColumn get documentId => integer().references(Documents, #id, onDelete: KeyAction.cascade)();
+  IntColumn get setListId =>
+      integer().references(SetLists, #id, onDelete: KeyAction.cascade)();
+  IntColumn get documentId =>
+      integer().references(Documents, #id, onDelete: KeyAction.cascade)();
   IntColumn get orderIndex => integer()();
   TextColumn get notes => text().nullable()();
 }
@@ -129,11 +138,13 @@ class AppDatabase extends _$AppDatabase {
 
   // Document settings operations
   Future<DocumentSetting?> getDocumentSettings(int documentId) {
-    return (select(documentSettings)..where((s) => s.documentId.equals(documentId)))
+    return (select(documentSettings)
+          ..where((s) => s.documentId.equals(documentId)))
         .getSingleOrNull();
   }
 
-  Future<int> insertOrUpdateDocumentSettings(DocumentSettingsCompanion settings) {
+  Future<int> insertOrUpdateDocumentSettings(
+      DocumentSettingsCompanion settings) {
     return into(documentSettings).insertOnConflictUpdate(settings);
   }
 
@@ -164,7 +175,8 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<Annotation>> getAnnotations(int layerId, int pageNumber) {
     return (select(annotations)
-          ..where((a) => a.layerId.equals(layerId) & a.pageNumber.equals(pageNumber)))
+          ..where((a) =>
+              a.layerId.equals(layerId) & a.pageNumber.equals(pageNumber)))
         .get();
   }
 

@@ -51,7 +51,8 @@ class _LayerPanelState extends State<LayerPanel> {
     );
 
     if (name != null && name.isNotEmpty) {
-      final layerId = await _annotationService.createLayer(widget.documentId, name);
+      final layerId =
+          await _annotationService.createLayer(widget.documentId, name);
       await _loadLayers();
       widget.onLayerSelected(layerId);
       widget.onLayersChanged();
@@ -62,7 +63,8 @@ class _LayerPanelState extends State<LayerPanel> {
     final confirmed = await LayerDialogs.showConfirmationDialog(
       context: context,
       title: 'Delete Layer',
-      message: 'Are you sure you want to delete "${layer.name}"? This will delete all annotations on this layer.',
+      message:
+          'Are you sure you want to delete "${layer.name}"? This will delete all annotations on this layer.',
       confirmText: 'Delete',
       isDangerous: true,
     );
@@ -173,7 +175,9 @@ class _LayerPanelState extends State<LayerPanel> {
                     selected: isSelected,
                     leading: IconButton(
                       icon: Icon(
-                        layer.isVisible ? Icons.visibility : Icons.visibility_off,
+                        layer.isVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () => _toggleVisibility(layer),
                       tooltip: layer.isVisible ? 'Hide layer' : 'Show layer',
@@ -207,7 +211,8 @@ class _LayerPanelState extends State<LayerPanel> {
                             children: [
                               Icon(Icons.delete, color: Colors.red),
                               SizedBox(width: 8),
-                              Text('Delete', style: TextStyle(color: Colors.red)),
+                              Text('Delete',
+                                  style: TextStyle(color: Colors.red)),
                             ],
                           ),
                         ),

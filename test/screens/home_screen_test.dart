@@ -8,7 +8,8 @@ void main() {
     // Note: This test is skipped because it triggers FileWatcherService timers
     // which don't complete before test teardown. The same functionality is
     // tested in widget_test.dart using the full app initialization.
-    testWidgets('renders navigation bar with two tabs', (WidgetTester tester) async {
+    testWidgets('renders navigation bar with two tabs',
+        (WidgetTester tester) async {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
