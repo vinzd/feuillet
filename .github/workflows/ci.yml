@@ -26,7 +26,13 @@ jobs:
         run: flutter pub get
 
       - name: Verify formatting
-        run: dart format --set-exit-if-changed lib/ test/
+        run: |
+          dart format --set-exit-if-changed lib/ test/ || {
+            echo "Formatting issues found. Here's the diff:"
+            dart format --output=none lib/ test/
+            git diff
+            exit 1
+          }
 
       - name: Analyze code
         run: flutter analyze
