@@ -27,6 +27,7 @@ class DocumentSettings extends Table {
   RealColumn get brightness => real().withDefault(const Constant(0.0))();
   RealColumn get contrast => real().withDefault(const Constant(1.0))();
   IntColumn get currentPage => integer().withDefault(const Constant(0))();
+  TextColumn get viewMode => text().withDefault(const Constant('single'))();
   DateTimeColumn get lastUpdated =>
       dateTime().withDefault(currentDateAndTime)();
 }
@@ -97,7 +98,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
@@ -106,9 +107,13 @@ class AppDatabase extends _$AppDatabase {
         await m.createAll();
       },
       onUpgrade: (Migrator m, int from, int to) async {
-        if (from == 1) {
+        if (from < 2) {
           // Add pdfBytes column for web platform support
           await m.addColumn(documents, documents.pdfBytes);
+        }
+        if (from < 3) {
+          // Add viewMode column for two-page view support
+          await m.addColumn(documentSettings, documentSettings.viewMode);
         }
       },
       beforeOpen: (details) async {

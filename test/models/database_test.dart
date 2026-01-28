@@ -83,6 +83,7 @@ void main() {
         brightness: 0.1,
         contrast: 1.2,
         currentPage: 5,
+        viewMode: 'single',
         lastUpdated: now,
       );
 
@@ -91,6 +92,7 @@ void main() {
       expect(settings.brightness, 0.1);
       expect(settings.contrast, 1.2);
       expect(settings.currentPage, 5);
+      expect(settings.viewMode, 'single');
     });
 
     test('Annotation can be created', () {
