@@ -7,6 +7,7 @@ import 'package:drift/drift.dart' as drift;
 import '../models/database.dart';
 import '../services/database_service.dart';
 import '../services/annotation_service.dart';
+import '../widgets/cached_pdf_view.dart';
 import '../widgets/drawing_canvas.dart';
 import '../widgets/layer_panel.dart';
 import '../widgets/annotation_toolbar.dart';
@@ -24,7 +25,7 @@ class PdfViewerScreen extends ConsumerStatefulWidget {
 }
 
 class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
-  PdfController? _pdfController;
+  CachedPdfController? _pdfController;
   DocumentSetting? _settings;
   final FocusNode _focusNode = FocusNode();
 
@@ -79,7 +80,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
         throw Exception('Document not found');
       }
 
-      _pdfController = PdfController(
+      _pdfController = CachedPdfController(
         document: pdfDocument,
         initialPage: _currentPage,
       );
@@ -267,7 +268,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                   colorFilter: ColorFilter.matrix(_createColorMatrix()),
                   child: Transform.scale(
                     scale: _zoomLevel,
-                    child: PdfView(
+                    child: CachedPdfView(
                       controller: _pdfController!,
                       scrollDirection: Axis.horizontal,
                       pageSnapping: true,
