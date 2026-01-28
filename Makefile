@@ -1,5 +1,8 @@
 .PHONY: help setup build test clean run-web run-macos run-android web-worker db-gen analyze format install-hooks
 
+# Git commit hash for version display
+GIT_HASH := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+
 # Default target
 help:
 	@echo "Open Score - Development Makefile"
@@ -75,24 +78,24 @@ web-worker:
 # Build targets
 build-web: web-worker
 	@echo "🌐 Building for web (release)..."
-	flutter build web --release
+	flutter build web --release --dart-define=GIT_HASH=$(GIT_HASH)
 	@echo "Copying web worker files to build output..."
 	cp -f web/sqlite3.wasm web/drift_worker.js build/web/
 	@echo "✅ Web build complete: build/web/"
 
 build-macos:
 	@echo "🖥️  Building for macOS (release)..."
-	flutter build macos --release
+	flutter build macos --release --dart-define=GIT_HASH=$(GIT_HASH)
 	@echo "✅ macOS build complete"
 
 build-android:
 	@echo "🤖 Building for Android (release)..."
-	flutter build apk --release
+	flutter build apk --release --dart-define=GIT_HASH=$(GIT_HASH)
 	@echo "✅ Android APK: build/app/outputs/flutter-apk/app-release.apk"
 
 build-ios:
 	@echo "📱 Building for iOS (release)..."
-	flutter build ios --release --no-codesign
+	flutter build ios --release --no-codesign --dart-define=GIT_HASH=$(GIT_HASH)
 	@echo "✅ iOS build complete"
 
 build-all: build-web build-macos build-android
@@ -101,15 +104,15 @@ build-all: build-web build-macos build-android
 # Run targets
 run-web: web-worker
 	@echo "🌐 Running on Chrome..."
-	flutter run -d chrome
+	flutter run -d chrome --dart-define=GIT_HASH=$(GIT_HASH)
 
 run-macos:
 	@echo "🖥️  Running on macOS..."
-	flutter run -d macos
+	flutter run -d macos --dart-define=GIT_HASH=$(GIT_HASH)
 
 run-android:
 	@echo "🤖 Running on Android..."
-	flutter run -d android
+	flutter run -d android --dart-define=GIT_HASH=$(GIT_HASH)
 
 # Serve web build locally
 serve-web: build-web

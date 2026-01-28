@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/database.dart';
 import '../services/database_service.dart';
 import '../services/pdf_service.dart';
+import '../services/version_service.dart';
 import '../widgets/pdf_card.dart';
 import 'pdf_viewer_screen.dart';
 
@@ -143,9 +144,27 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   Widget build(BuildContext context) {
     final documentsAsync = ref.watch(documentsProvider);
 
+    final versionInfo = ref.watch(versionInfoProvider);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Open Score'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Open Score'),
+            const SizedBox(width: 8),
+            versionInfo.when(
+              data: (info) => Text(
+                info.displayString,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
+                ),
+              ),
+              loading: () => const SizedBox.shrink(),
+              error: (error, stack) => const SizedBox.shrink(),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view),
