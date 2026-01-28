@@ -8,6 +8,7 @@ import '../models/database.dart';
 import '../models/view_mode.dart';
 import '../services/database_service.dart';
 import '../services/annotation_service.dart';
+import '../services/pdf_page_cache_service.dart';
 import '../utils/page_spread_calculator.dart';
 import '../widgets/cached_pdf_view.dart';
 import '../widgets/cached_pdf_page.dart';
@@ -44,7 +45,6 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   double _contrast = 1.0;
   int _currentPage = 1;
   PdfViewMode _viewMode = PdfViewMode.single;
-  PageSide _activePageSide = PageSide.left;
   PdfDocument? _pdfDocument;
 
   // Annotation settings
@@ -74,8 +74,9 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   Future<void> _initializePdf() async {
     try {
       final db = ref.read(databaseProvider);
-      _settings = await db.getDocumentSettings(widget.document.id);
 
+      // Load settings first (fast operation)
+      _settings = await db.getDocumentSettings(widget.document.id);
       if (_settings != null) {
         _zoomLevel = _settings!.zoomLevel;
         _brightness = _settings!.brightness;
@@ -84,6 +85,13 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
         _viewMode = PdfViewMode.fromStorageString(_settings!.viewMode);
       }
 
+      // Load layers (fast operation)
+      await _loadLayers();
+
+      // Show UI with loading spinner for the PDF area
+      setState(() => _isLoading = false);
+
+      // Now load PDF document in background - UI is already visible
       final freshDocument = await db.getDocument(widget.document.id);
 
       final Future<PdfDocument> pdfDocument;
@@ -106,10 +114,15 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
 
       _singlePageController = PageController(initialPage: _currentPage - 1);
 
-      await _loadLayers();
       await _loadPageAnnotations();
 
-      setState(() => _isLoading = false);
+      // Trigger rebuild now that PDF is ready
+      if (mounted) {
+        setState(() {});
+      }
+
+      // Trigger pre-rendering of adjacent pages after initial load
+      _preRenderPages();
     } catch (e) {
       debugPrint('Error initializing PDF: $e');
       setState(() => _isLoading = false);
@@ -153,6 +166,19 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
       _pageAnnotations = leftAnnotations;
       _rightPageAnnotations = rightAnnotations;
     });
+  }
+
+  /// Pre-render pages around the current page for faster navigation
+  void _preRenderPages() {
+    if (_pdfDocument == null) return;
+
+    final spread = _getCurrentSpread();
+    // Use leftPage as the basis for pre-rendering
+    PdfPageCacheService.instance.preRenderPages(
+      document: _pdfDocument!,
+      currentPage: spread.leftPage,
+      totalPages: widget.document.pageCount,
+    );
   }
 
   Future<void> _saveSettings() async {
@@ -276,10 +302,10 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
         );
         setState(() {
           _currentPage = prevSpread.leftPage;
-          _activePageSide = PageSide.left;
         });
         _saveSettings();
         _loadPageAnnotations();
+        _preRenderPages();
       }
     }
   }
@@ -309,10 +335,10 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
         );
         setState(() {
           _currentPage = nextSpread.leftPage;
-          _activePageSide = PageSide.left;
         });
         _saveSettings();
         _loadPageAnnotations();
+        _preRenderPages();
       }
     }
   }
@@ -323,23 +349,16 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     });
     _saveSettings();
     _loadPageAnnotations();
+    _preRenderPages();
   }
 
   void _onViewModeChanged(PdfViewMode mode) {
     setState(() {
       _viewMode = mode;
-      _activePageSide = PageSide.left;
     });
     _saveSettings();
     _loadPageAnnotations();
-  }
-
-  void _onPageSideSelected(PageSide side) {
-    if (_viewMode.isTwoPage) {
-      setState(() {
-        _activePageSide = side;
-      });
-    }
+    _preRenderPages();
   }
 
   /// Get the current spread info for two-page modes
@@ -593,8 +612,6 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
       document: _pdfDocument!,
       leftPageNumber: spread.leftPage,
       rightPageNumber: spread.rightPage,
-      activePageSide: _activePageSide,
-      onPageSideSelected: _onPageSideSelected,
       leftPageAnnotations: _flattenAnnotations(_pageAnnotations),
       rightPageAnnotations: _flattenAnnotations(_rightPageAnnotations),
       isAnnotationMode: _annotationMode,
