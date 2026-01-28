@@ -7,7 +7,11 @@
 
 A forScore clone built with Flutter - a powerful PDF sheet music reader with annotation and set list management capabilities.
 
-> **Note:** Replace `vinzd` in the badge URLs with your actual GitHub username.
+## 🌐 Try It Online
+
+**[Launch Web Demo](https://vinzd.github.io/open_score/)** - Test Open Score directly in your browser
+
+> **Note:** The web version has limitations - PDFs are stored in browser storage (not file system), and Syncthing integration is not available. For full functionality, use the native macOS, iOS, or Android apps.
 
 ## Features
 
