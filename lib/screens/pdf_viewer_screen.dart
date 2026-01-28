@@ -79,7 +79,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
 
       _pdfController = PdfController(
         document: pdfDocument,
-        initialPage: _currentPage - 1,
+        initialPage: _currentPage, // pdfx uses 1-indexed pages
       );
 
       // Load annotation layers
@@ -194,7 +194,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     // Home: first page
     if (key == LogicalKeyboardKey.home) {
       if (_currentPage != 1) {
-        _pdfController.jumpToPage(0);
+        _pdfController.jumpToPage(1); // pdfx uses 1-indexed pages
       }
       return KeyEventResult.handled;
     }
@@ -203,7 +203,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     if (key == LogicalKeyboardKey.end) {
       final lastPage = widget.document.pageCount;
       if (_currentPage != lastPage) {
-        _pdfController.jumpToPage(lastPage - 1);
+        _pdfController.jumpToPage(lastPage); // pdfx uses 1-indexed pages
       }
       return KeyEventResult.handled;
     }
@@ -227,7 +227,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
 
   void _onPageChanged(int page) {
     setState(() {
-      _currentPage = page + 1; // Convert to 1-based
+      _currentPage = page; // pdfx provides 1-indexed page numbers
     });
     _saveSettings();
     _loadPageAnnotations();
