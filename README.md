@@ -3,7 +3,7 @@
 [![CI](https://github.com/YOUR_USERNAME/open_score/workflows/CI/badge.svg)](https://github.com/YOUR_USERNAME/open_score/actions/workflows/ci.yml)
 [![Build](https://github.com/YOUR_USERNAME/open_score/workflows/Build%20All%20Platforms/badge.svg)](https://github.com/YOUR_USERNAME/open_score/actions/workflows/build.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Flutter](https://img.shields.io/badge/Flutter-3.27.1-02569B?logo=flutter)](https://flutter.dev)
+[![Flutter](https://img.shields.io/badge/Flutter-3.38.8-02569B?logo=flutter)](https://flutter.dev)
 
 A forScore clone built with Flutter - a powerful PDF sheet music reader with annotation and set list management capabilities.
 

@@ -147,7 +147,7 @@ Update in all workflow files:
 ```yaml
 uses: subosito/flutter-action@v2
 with:
-  flutter-version: '3.27.1'  # Update this version
+  flutter-version: '3.38.8'  # Update this version
 ```
 
 ### Disabling a Workflow
