@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import '../models/view_mode.dart';
 
 /// Bottom controls for PDF viewer (page navigation and zoom)
 class PdfBottomControls extends StatelessWidget {
   final int currentPage;
+  final int? rightPage;
   final int totalPages;
   final double zoomLevel;
+  final PdfViewMode viewMode;
   final VoidCallback? onPreviousPage;
   final VoidCallback? onNextPage;
   final ValueChanged<double> onZoomChanged;
@@ -14,14 +17,23 @@ class PdfBottomControls extends StatelessWidget {
   const PdfBottomControls({
     super.key,
     required this.currentPage,
+    this.rightPage,
     required this.totalPages,
     required this.zoomLevel,
+    this.viewMode = PdfViewMode.single,
     this.onPreviousPage,
     this.onNextPage,
     required this.onZoomChanged,
     required this.onZoomChangeEnd,
     required this.onInteraction,
   });
+
+  String _buildPageText() {
+    if (viewMode == PdfViewMode.single || rightPage == null) {
+      return 'Page $currentPage of $totalPages';
+    }
+    return 'Pages $currentPage-$rightPage of $totalPages';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +52,7 @@ class PdfBottomControls extends StatelessWidget {
                 onPressed: onPreviousPage,
               ),
               Text(
-                'Page $currentPage of $totalPages',
+                _buildPageText(),
                 style: const TextStyle(color: Colors.white),
               ),
               IconButton(
