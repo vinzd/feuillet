@@ -77,7 +77,7 @@ jobs:
           cp -f web/sqlite3.wasm web/drift_worker.js build/web/
 
       - name: Upload web build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: web-build
           path: build/web/
