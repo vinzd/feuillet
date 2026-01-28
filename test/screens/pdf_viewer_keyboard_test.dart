@@ -47,7 +47,6 @@ void main() {
     group('Page boundary checks', () {
       test('should not go to previous page when on first page', () {
         const currentPage = 1;
-        const totalPages = 10;
 
         // Should not allow going to previous page
         expect(currentPage > 1, isFalse);
@@ -55,7 +54,6 @@ void main() {
 
       test('should allow going to previous page when not on first page', () {
         const currentPage = 5;
-        const totalPages = 10;
 
         expect(currentPage > 1, isTrue);
       });
