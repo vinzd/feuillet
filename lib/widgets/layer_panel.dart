@@ -221,7 +221,6 @@ class _LayerPanelState extends State<LayerPanel> {
                     ),
                     onTap: () {
                       widget.onLayerSelected(layer.id);
-                      Navigator.pop(context);
                     },
                   );
                 },

@@ -110,15 +110,14 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   }
 
   Future<void> _loadPageAnnotations() async {
-    if (_selectedLayerId == null) return;
-
-    final annotations = await _annotationService.getAnnotations(
-      _selectedLayerId!,
+    // Load annotations from all visible layers
+    final allAnnotations = await _annotationService.getAllPageAnnotations(
+      widget.document.id,
       _currentPage - 1,
     );
 
     setState(() {
-      _pageAnnotations = {_selectedLayerId!: annotations};
+      _pageAnnotations = allAnnotations;
     });
   }
 
@@ -282,6 +281,26 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                 ),
               ),
 
+              // Annotation overlay - always visible, but only editable in annotation mode
+              // Must be below controls so they remain clickable
+              if (_selectedLayerId != null)
+                Positioned.fill(
+                  child: DrawingCanvas(
+                    key: ValueKey('$_selectedLayerId-$_currentPage'),
+                    layerId: _selectedLayerId!,
+                    pageNumber: _currentPage - 1,
+                    toolType: _currentTool,
+                    color: _annotationColor,
+                    thickness: _annotationThickness,
+                    // Display strokes from all visible layers
+                    existingStrokes: _pageAnnotations.values
+                        .expand((strokes) => strokes)
+                        .toList(),
+                    onStrokeCompleted: _loadPageAnnotations,
+                    isEnabled: _annotationMode,
+                  ),
+                ),
+
               // Top app bar
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 300),
@@ -301,12 +320,11 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                       },
                       tooltip: 'Annotations',
                     ),
-                    if (_annotationMode)
-                      IconButton(
-                        icon: const Icon(Icons.layers),
-                        onPressed: _showLayerPanel,
-                        tooltip: 'Layers',
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.layers),
+                      onPressed: _showLayerPanel,
+                      tooltip: 'Layers',
+                    ),
                     IconButton(
                       icon: const Icon(Icons.tune),
                       onPressed: () => _showControlsPanel(),
@@ -315,22 +333,6 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                   ],
                 ),
               ),
-
-              // Drawing canvas overlay (when in annotation mode)
-              if (_annotationMode && _selectedLayerId != null)
-                Positioned.fill(
-                  child: DrawingCanvas(
-                    key: ValueKey('$_selectedLayerId-$_currentPage'),
-                    layerId: _selectedLayerId!,
-                    pageNumber: _currentPage - 1,
-                    toolType: _currentTool,
-                    color: _annotationColor,
-                    thickness: _annotationThickness,
-                    existingStrokes: _pageAnnotations[_selectedLayerId] ?? [],
-                    onStrokeCompleted: _loadPageAnnotations,
-                    isEnabled: _annotationMode,
-                  ),
-                ),
 
               // Annotation toolbar (when in annotation mode)
               if (_annotationMode)
