@@ -24,7 +24,7 @@ class PdfViewerScreen extends ConsumerStatefulWidget {
 }
 
 class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
-  late PdfController _pdfController;
+  PdfController? _pdfController;
   DocumentSetting? _settings;
   final FocusNode _focusNode = FocusNode();
 
@@ -56,7 +56,6 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
 
   Future<void> _initializePdf() async {
     try {
-      // Load saved settings
       final db = ref.read(databaseProvider);
       _settings = await db.getDocumentSettings(widget.document.id);
 
@@ -67,25 +66,25 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
         _currentPage = _settings!.currentPage + 1; // Convert to 1-based
       }
 
-      // Initialize PDF controller - use bytes on web, file path on native
+      final freshDocument = await db.getDocument(widget.document.id);
+
       final Future<PdfDocument> pdfDocument;
-      if (widget.document.pdfBytes != null) {
-        // Web platform: Load from bytes
-        pdfDocument = PdfDocument.openData(widget.document.pdfBytes!);
+      if (freshDocument?.pdfBytes != null) {
+        // Copy bytes to avoid detached ArrayBuffer issue on web
+        final bytesCopy = Uint8List.fromList(freshDocument!.pdfBytes!);
+        pdfDocument = PdfDocument.openData(bytesCopy);
+      } else if (freshDocument != null) {
+        pdfDocument = PdfDocument.openFile(freshDocument.filePath);
       } else {
-        // Native platform: Load from file path
-        pdfDocument = PdfDocument.openFile(widget.document.filePath);
+        throw Exception('Document not found');
       }
 
       _pdfController = PdfController(
         document: pdfDocument,
-        initialPage: _currentPage, // pdfx uses 1-indexed pages
+        initialPage: _currentPage,
       );
 
-      // Load annotation layers
       await _loadLayers();
-
-      // Load annotations for current page
       await _loadPageAnnotations();
 
       setState(() => _isLoading = false);
@@ -155,7 +154,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   @override
   void dispose() {
     _hideControlsTimer?.cancel();
-    _pdfController.dispose();
+    _pdfController?.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -194,7 +193,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     // Home: first page
     if (key == LogicalKeyboardKey.home) {
       if (_currentPage != 1) {
-        _pdfController.jumpToPage(1); // pdfx uses 1-indexed pages
+        _pdfController?.jumpToPage(1); // pdfx uses 1-indexed pages
       }
       return KeyEventResult.handled;
     }
@@ -203,7 +202,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     if (key == LogicalKeyboardKey.end) {
       final lastPage = widget.document.pageCount;
       if (_currentPage != lastPage) {
-        _pdfController.jumpToPage(lastPage); // pdfx uses 1-indexed pages
+        _pdfController?.jumpToPage(lastPage); // pdfx uses 1-indexed pages
       }
       return KeyEventResult.handled;
     }
@@ -212,14 +211,14 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   }
 
   void _goToPreviousPage() {
-    _pdfController.previousPage(
+    _pdfController?.previousPage(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
   }
 
   void _goToNextPage() {
-    _pdfController.nextPage(
+    _pdfController?.nextPage(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
@@ -242,6 +241,16 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
       );
     }
 
+    // Show error if PDF controller failed to initialize
+    if (_pdfController == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(widget.document.name)),
+        body: const Center(
+          child: Text('Failed to load PDF. Please try again.'),
+        ),
+      );
+    }
+
     return Focus(
       focusNode: _focusNode,
       autofocus: true,
@@ -259,7 +268,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                   child: Transform.scale(
                     scale: _zoomLevel,
                     child: PdfView(
-                      controller: _pdfController,
+                      controller: _pdfController!,
                       scrollDirection: Axis.horizontal,
                       pageSnapping: true,
                       onPageChanged: _onPageChanged,

@@ -143,16 +143,32 @@ class AppDatabase extends _$AppDatabase {
   }
 
   // Document settings operations
-  Future<DocumentSetting?> getDocumentSettings(int documentId) {
-    return (select(
-      documentSettings,
-    )..where((s) => s.documentId.equals(documentId))).getSingleOrNull();
+  Future<DocumentSetting?> getDocumentSettings(int documentId) async {
+    final results =
+        await (select(documentSettings)
+              ..where((s) => s.documentId.equals(documentId))
+              ..limit(1))
+            .get();
+    return results.isEmpty ? null : results.first;
   }
 
   Future<int> insertOrUpdateDocumentSettings(
     DocumentSettingsCompanion settings,
-  ) {
-    return into(documentSettings).insertOnConflictUpdate(settings);
+  ) async {
+    // Check if settings exist for this document
+    final docId = settings.documentId.value;
+    final existing = await getDocumentSettings(docId);
+
+    if (existing != null) {
+      // Update existing settings
+      await (update(
+        documentSettings,
+      )..where((s) => s.documentId.equals(docId))).write(settings);
+      return existing.id;
+    } else {
+      // Insert new settings
+      return into(documentSettings).insert(settings);
+    }
   }
 
   // Annotation layer operations
