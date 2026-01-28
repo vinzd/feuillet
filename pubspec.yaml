@@ -44,18 +44,18 @@ dependencies:
 
   # File system
   path_provider: ^2.1.4
-  file_picker: ^8.1.4
+  file_picker: ^10.3.10
   path: ^1.9.0
 
   # File watching for Syncthing support
   watcher: ^1.1.0
 
   # State management
-  flutter_riverpod: ^2.6.1
+  flutter_riverpod: ^3.2.0
 
   # Utilities
   uuid: ^4.5.1
-  intl: ^0.19.0
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
