@@ -1,4 +1,4 @@
-.PHONY: help setup build test clean run-web run-macos run-android web-worker db-gen analyze format
+.PHONY: help setup build test clean run-web run-macos run-android web-worker db-gen analyze format install-hooks
 
 # Default target
 help:
@@ -6,6 +6,7 @@ help:
 	@echo ""
 	@echo "Setup & Dependencies:"
 	@echo "  make setup           - Install dependencies and setup project from scratch"
+	@echo "  make install-hooks   - Install git hooks (pre-commit formatting check)"
 	@echo "  make web-worker      - Compile drift_worker.dart for web support"
 	@echo "  make db-gen          - Generate database code from schema"
 	@echo ""
@@ -43,7 +44,22 @@ setup:
 	@echo "🌐 Compiling web worker..."
 	$(MAKE) web-worker
 	@echo ""
+	@echo "🔗 Installing git hooks..."
+	$(MAKE) install-hooks
+	@echo ""
 	@echo "✅ Setup complete! Use 'make run-web' or 'make run-macos' to start developing."
+
+# Install git hooks
+install-hooks:
+	@echo "Installing git hooks..."
+	@mkdir -p .git/hooks
+	@if [ -f .git/hooks/pre-commit ]; then \
+		echo "⚠️  pre-commit hook already exists, backing up to pre-commit.backup"; \
+		cp .git/hooks/pre-commit .git/hooks/pre-commit.backup; \
+	fi
+	@cp hooks/pre-commit .git/hooks/pre-commit
+	@chmod +x .git/hooks/pre-commit
+	@echo "✓ Pre-commit hook installed (formats code before each commit)"
 
 # Generate database code using drift
 db-gen:

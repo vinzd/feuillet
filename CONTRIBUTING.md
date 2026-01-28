@@ -20,12 +20,26 @@ Thank you for your interest in contributing to Open Score! This document provide
    ```bash
    make setup
    ```
+   This will install dependencies, generate code, and install git hooks (including a pre-commit hook that automatically checks formatting).
+
 4. **Create a branch** for your changes:
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
 ## Development Workflow
+
+### Git Hooks
+
+The project uses a pre-commit hook to ensure code is properly formatted before committing:
+- **Automatic formatting check**: Runs `dart format` on all staged files
+- **Auto-format on failure**: If formatting issues are detected, files are automatically formatted
+- **Manual review required**: You'll need to review and re-add the formatted files before committing
+
+To install or reinstall hooks:
+```bash
+make install-hooks
+```
 
 ### Before Making Changes
 

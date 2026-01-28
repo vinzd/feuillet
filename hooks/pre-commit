@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# Git pre-commit hook to ensure code is formatted before committing
+#
+
+echo "Running dart format check..."
+
+# Run dart format with exit-if-changed flag
+if ! dart format --set-exit-if-changed lib/ test/ > /dev/null 2>&1; then
+    echo "❌ Code formatting issues detected!"
+    echo ""
+    echo "Formatting files now..."
+    dart format lib/ test/
+    echo ""
+    echo "✓ Files have been formatted."
+    echo ""
+    echo "Please review the changes and add them to your commit:"
+    echo "  git add -u"
+    echo "  git commit"
+    echo ""
+    exit 1
+fi
+
+echo "✓ Code formatting is correct"
+exit 0
