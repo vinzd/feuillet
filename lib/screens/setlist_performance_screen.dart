@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pdfx/pdfx.dart';
+
 import '../models/database.dart';
 import '../models/view_mode.dart';
 import '../services/pdf_page_cache_service.dart';
 import '../utils/auto_hide_controller.dart';
 import '../utils/display_settings.dart';
+import '../utils/zoom_pan_gesture_handler.dart';
 import '../widgets/display_settings_panel.dart';
 import '../widgets/performance_bottom_controls.dart';
 import '../widgets/performance_document_view.dart';
@@ -32,7 +34,8 @@ class SetListPerformanceScreen extends StatefulWidget {
       _SetListPerformanceScreenState();
 }
 
-class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
+class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
+    with ZoomPanGestureMixin {
   late PageController _documentPageController;
   int _currentDocIndex = 0;
 
@@ -46,8 +49,8 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
   late final AutoHideController _autoHideController;
   final FocusNode _focusNode = FocusNode();
 
-  // Display settings
-  DisplaySettings _displaySettings = DisplaySettings.defaults;
+  @override
+  late final ZoomPanState zoomPanState;
 
   int _currentPage = 1;
   int? _currentRightPage;
@@ -55,6 +58,7 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
   @override
   void initState() {
     super.initState();
+    zoomPanState = ZoomPanState(displaySettings: DisplaySettings.defaults);
     _autoHideController = AutoHideController()
       ..addListener(() {
         if (mounted) setState(() {});
@@ -62,6 +66,9 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
     _documentPageController = PageController();
     _initializeDocuments();
   }
+
+  @override
+  void onZoomPanTap() => _autoHideController.toggle();
 
   Future<void> _initializeDocuments() async {
     // Load the first document immediately
@@ -344,20 +351,20 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
       context: context,
       backgroundColor: Colors.grey[900],
       builder: (context) => DisplaySettingsPanel(
-        brightness: _displaySettings.brightness,
-        contrast: _displaySettings.contrast,
+        brightness: zoomPanState.displaySettings.brightness,
+        contrast: zoomPanState.displaySettings.contrast,
         onBrightnessChanged: (value) => setState(
-          () => _displaySettings = _displaySettings.copyWith(brightness: value),
+          () => zoomPanState.displaySettings = zoomPanState.displaySettings
+              .copyWith(brightness: value),
         ),
         onContrastChanged: (value) => setState(
-          () => _displaySettings = _displaySettings.copyWith(contrast: value),
+          () => zoomPanState.displaySettings = zoomPanState.displaySettings
+              .copyWith(contrast: value),
         ),
         onReset: () {
           setState(() {
-            _displaySettings = _displaySettings.copyWith(
-              brightness: 0.0,
-              contrast: 1.0,
-            );
+            zoomPanState.displaySettings = zoomPanState.displaySettings
+                .copyWith(brightness: 0.0, contrast: 1.0);
           });
         },
       ),
@@ -372,14 +379,12 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
       onKeyEvent: _handleKeyEvent,
       child: Scaffold(
         backgroundColor: Colors.black,
-        body: GestureDetector(
-          onTap: _autoHideController.toggle,
+        body: buildZoomPanGestureDetector(
           child: Stack(
             children: [
               ColorFiltered(
-                colorFilter: _displaySettings.colorFilter,
-                child: Transform.scale(
-                  scale: _displaySettings.zoomLevel,
+                colorFilter: zoomPanState.displaySettings.colorFilter,
+                child: buildZoomPanTransform(
                   child: PageView.builder(
                     controller: _documentPageController,
                     itemCount: widget.documents.length,
@@ -477,7 +482,7 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
                   rightPage: _currentRightPage,
                   totalPages: widget.documents[_currentDocIndex].pageCount,
                   viewMode: _viewMode,
-                  zoomLevel: _displaySettings.zoomLevel,
+                  zoomLevel: zoomPanState.displaySettings.zoomLevel,
                   onPrevDoc: _currentDocIndex > 0
                       ? _goToPreviousDocument
                       : null,
@@ -487,9 +492,9 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
                   onPrevPage: _goToPreviousPage,
                   onNextPage: _goToNextPage,
                   onZoomChanged: (value) => setState(
-                    () => _displaySettings = _displaySettings.copyWith(
-                      zoomLevel: value,
-                    ),
+                    () => zoomPanState.displaySettings = zoomPanState
+                        .displaySettings
+                        .copyWith(zoomLevel: value),
                   ),
                   onInteraction: _autoHideController.resetTimer,
                 ),

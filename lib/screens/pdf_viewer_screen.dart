@@ -1,24 +1,26 @@
+import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdfx/pdfx.dart';
-import 'package:drift/drift.dart' as drift;
+
 import '../models/database.dart';
 import '../models/view_mode.dart';
-import '../services/database_service.dart';
 import '../services/annotation_service.dart';
+import '../services/database_service.dart';
 import '../services/pdf_page_cache_service.dart';
 import '../utils/auto_hide_controller.dart';
 import '../utils/display_settings.dart';
 import '../utils/page_spread_calculator.dart';
-import '../widgets/cached_pdf_view.dart';
+import '../utils/zoom_pan_gesture_handler.dart';
 import '../widgets/cached_pdf_page.dart';
-import '../widgets/drawing_canvas.dart';
-import '../widgets/floating_annotations_panel.dart';
+import '../widgets/cached_pdf_view.dart';
 import '../widgets/display_settings_panel.dart';
+import '../widgets/drawing_canvas.dart';
+import '../widgets/export_pdf_dialog.dart';
+import '../widgets/floating_annotations_panel.dart';
 import '../widgets/pdf_bottom_controls.dart';
 import '../widgets/two_page_pdf_view.dart';
-import '../widgets/export_pdf_dialog.dart';
 
 /// PDF Viewer screen with zoom, pan, and contrast controls
 class PdfViewerScreen extends ConsumerStatefulWidget {
@@ -30,7 +32,8 @@ class PdfViewerScreen extends ConsumerStatefulWidget {
   ConsumerState<PdfViewerScreen> createState() => _PdfViewerScreenState();
 }
 
-class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
+class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen>
+    with ZoomPanGestureMixin {
   CachedPdfController? _pdfController;
   PageController? _singlePageController;
   DocumentSetting? _settings;
@@ -40,9 +43,11 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   bool _isLoading = true;
 
   // View settings
-  DisplaySettings _displaySettings = DisplaySettings.defaults;
+  @override
+  late final ZoomPanState zoomPanState;
   int _currentPage = 1;
   PdfViewMode _viewMode = PdfViewMode.single;
+
   PdfDocument? _pdfDocument;
 
   // Annotation settings
@@ -61,12 +66,22 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   @override
   void initState() {
     super.initState();
+    zoomPanState = ZoomPanState(displaySettings: DisplaySettings.defaults);
     _autoHideController = AutoHideController()
       ..addListener(() {
         if (mounted) setState(() {});
       });
     _initializePdf();
   }
+
+  @override
+  bool get isZoomPanDisabled => _annotationMode;
+
+  @override
+  void onZoomPanTap() => _autoHideController.toggle();
+
+  @override
+  void onZoomChanged() => _saveSettings();
 
   Future<void> _initializePdf() async {
     try {
@@ -75,7 +90,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
       // Load settings first (fast operation)
       _settings = await db.getDocumentSettings(widget.document.id);
       if (_settings != null) {
-        _displaySettings = DisplaySettings(
+        zoomPanState.displaySettings = DisplaySettings(
           zoomLevel: _settings!.zoomLevel,
           brightness: _settings!.brightness,
           contrast: _settings!.contrast,
@@ -184,12 +199,13 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
 
   Future<void> _saveSettings() async {
     final db = ref.read(databaseProvider);
+    final settings = zoomPanState.displaySettings;
     await db.insertOrUpdateDocumentSettings(
       DocumentSettingsCompanion(
         documentId: drift.Value(widget.document.id),
-        zoomLevel: drift.Value(_displaySettings.zoomLevel),
-        brightness: drift.Value(_displaySettings.brightness),
-        contrast: drift.Value(_displaySettings.contrast),
+        zoomLevel: drift.Value(settings.zoomLevel),
+        brightness: drift.Value(settings.brightness),
+        contrast: drift.Value(settings.contrast),
         currentPage: drift.Value(_currentPage - 1), // Convert to 0-based
         viewMode: drift.Value(_viewMode.toStorageString()),
       ),
@@ -436,17 +452,15 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
       onKeyEvent: _handleKeyEvent,
       child: Scaffold(
         backgroundColor: Colors.black,
-        body: GestureDetector(
-          onTap: _autoHideController.toggle,
+        body: buildZoomPanGestureDetector(
           child: Stack(
             children: [
               // PDF viewer - single or two-page mode
               // Annotations are handled internally for both modes
               Center(
                 child: ColorFiltered(
-                  colorFilter: _displaySettings.colorFilter,
-                  child: Transform.scale(
-                    scale: _displaySettings.zoomLevel,
+                  colorFilter: zoomPanState.displaySettings.colorFilter,
+                  child: buildZoomPanTransform(
                     child: _viewMode == PdfViewMode.single
                         ? _buildSinglePageView()
                         : _buildTwoPageView(),
@@ -569,15 +583,15 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                       rightPage: spread.rightPage,
                       totalPages: widget.document.pageCount,
                       viewMode: _viewMode,
-                      zoomLevel: _displaySettings.zoomLevel,
+                      zoomLevel: zoomPanState.displaySettings.zoomLevel,
                       onPreviousPage: _canGoToPrevious()
                           ? _goToPreviousPage
                           : null,
                       onNextPage: _canGoToNext() ? _goToNextPage : null,
                       onZoomChanged: (value) => setState(
-                        () => _displaySettings = _displaySettings.copyWith(
-                          zoomLevel: value,
-                        ),
+                        () => zoomPanState.displaySettings = zoomPanState
+                            .displaySettings
+                            .copyWith(zoomLevel: value),
                       ),
                       onZoomChangeEnd: (value) => _saveSettings(),
                       onInteraction: _autoHideController.resetTimer,
@@ -663,20 +677,20 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
       context: context,
       backgroundColor: Colors.grey[900],
       builder: (context) => DisplaySettingsPanel(
-        brightness: _displaySettings.brightness,
-        contrast: _displaySettings.contrast,
+        brightness: zoomPanState.displaySettings.brightness,
+        contrast: zoomPanState.displaySettings.contrast,
         onBrightnessChanged: (value) => setState(
-          () => _displaySettings = _displaySettings.copyWith(brightness: value),
+          () => zoomPanState.displaySettings = zoomPanState.displaySettings
+              .copyWith(brightness: value),
         ),
         onContrastChanged: (value) => setState(
-          () => _displaySettings = _displaySettings.copyWith(contrast: value),
+          () => zoomPanState.displaySettings = zoomPanState.displaySettings
+              .copyWith(contrast: value),
         ),
         onReset: () {
           setState(() {
-            _displaySettings = _displaySettings.copyWith(
-              brightness: 0.0,
-              contrast: 1.0,
-            );
+            zoomPanState.displaySettings = zoomPanState.displaySettings
+                .copyWith(brightness: 0.0, contrast: 1.0);
           });
           _saveSettings();
         },
