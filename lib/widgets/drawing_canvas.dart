@@ -33,6 +33,17 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
   DrawingStroke? _currentStroke;
 
   @override
+  void didUpdateWidget(DrawingCanvas oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Clear session strokes when layer or page changes to avoid stale annotations
+    if (oldWidget.layerId != widget.layerId ||
+        oldWidget.pageNumber != widget.pageNumber) {
+      _currentSessionStrokes.clear();
+      _currentStroke = null;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onPanStart: widget.isEnabled ? _onPanStart : null,
@@ -101,7 +112,7 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
         stroke: stroke,
       );
     } catch (e) {
-      debugPrint('Error saving annotation: $e');
+      debugPrint('[DrawingCanvas] Error saving annotation: $e');
     }
   }
 }

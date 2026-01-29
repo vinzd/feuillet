@@ -137,6 +137,7 @@ class _PageContainer extends StatelessWidget {
     Widget? annotationOverlay;
     if (selectedLayerId != null) {
       annotationOverlay = DrawingCanvas(
+        key: ValueKey('$selectedLayerId-$pageNumber'),
         layerId: selectedLayerId!,
         pageNumber: pageNumber - 1,
         toolType: currentTool,
