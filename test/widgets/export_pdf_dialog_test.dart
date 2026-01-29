@@ -1,6 +1,4 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_score/models/database.dart';
 import 'package:open_score/widgets/export_pdf_dialog.dart';
 
 void main() {
