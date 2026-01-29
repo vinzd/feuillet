@@ -58,6 +58,10 @@ dependencies:
   intl: ^0.20.2
   package_info_plus: ^8.0.0
 
+  # PDF export
+  pdf: ^3.11.0
+  share_plus: ^10.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
