@@ -154,12 +154,6 @@ class PerformanceDocumentViewState extends State<PerformanceDocumentView> {
     );
   }
 
-  List<DrawingStroke> _flattenAnnotations(
-    Map<int, List<DrawingStroke>> annotations,
-  ) {
-    return annotations.values.expand((strokes) => strokes).toList();
-  }
-
   bool _canGoToPrevious() {
     if (widget.viewMode == PdfViewMode.single) {
       return _currentPage > 1;
@@ -317,7 +311,7 @@ class PerformanceDocumentViewState extends State<PerformanceDocumentView> {
             toolType: AnnotationType.pen,
             color: Colors.red,
             thickness: 3.0,
-            existingStrokes: _flattenAnnotations(_leftPageAnnotations),
+            layerAnnotations: _leftPageAnnotations,
             isEnabled: false, // Read-only in performance mode
           );
         }
@@ -339,8 +333,8 @@ class PerformanceDocumentViewState extends State<PerformanceDocumentView> {
       document: widget.pdfDocument,
       leftPageNumber: spread.leftPage,
       rightPageNumber: spread.rightPage,
-      leftPageAnnotations: _flattenAnnotations(_leftPageAnnotations),
-      rightPageAnnotations: _flattenAnnotations(_rightPageAnnotations),
+      leftPageAnnotations: _leftPageAnnotations,
+      rightPageAnnotations: _rightPageAnnotations,
       isAnnotationMode: false, // Read-only
       selectedLayerId: _layers.isNotEmpty ? _layers.first.id : null,
       backgroundDecoration: const BoxDecoration(color: Colors.black),
