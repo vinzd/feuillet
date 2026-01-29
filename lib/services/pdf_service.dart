@@ -11,6 +11,36 @@ import '../models/database.dart';
 import 'database_service.dart';
 import 'file_watcher_service.dart';
 
+/// Result of importing a single PDF file
+class PdfImportResult {
+  final String fileName;
+  final bool success;
+  final String? error;
+  final String? filePath;
+
+  const PdfImportResult({
+    required this.fileName,
+    required this.success,
+    this.error,
+    this.filePath,
+  });
+}
+
+/// Result of a batch PDF import operation
+class PdfImportBatchResult {
+  final List<PdfImportResult> results;
+
+  const PdfImportBatchResult(this.results);
+
+  int get successCount => results.where((r) => r.success).length;
+  int get failureCount => results.where((r) => !r.success).length;
+  int get totalCount => results.length;
+  bool get hasFailures => failureCount > 0;
+  bool get allSucceeded => failureCount == 0;
+  List<PdfImportResult> get failures =>
+      results.where((r) => !r.success).toList();
+}
+
 /// Service to manage PDF files and library operations
 class PdfService {
   PdfService._() {
@@ -141,13 +171,21 @@ class PdfService {
     }
   }
 
-  /// Import a PDF file using file picker
-  Future<String?> importPdf() async {
+  /// Import one or more PDF files using file picker
+  ///
+  /// Returns a [PdfImportBatchResult] with results for each file,
+  /// or null if the user cancelled the file picker.
+  ///
+  /// Optional [onProgress] callback is called after each file is processed
+  /// with (currentIndex, totalCount, currentFileName).
+  Future<PdfImportBatchResult?> importPdfs({
+    void Function(int current, int total, String fileName)? onProgress,
+  }) async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf'],
-        allowMultiple: false,
+        allowMultiple: true,
         withData: kIsWeb, // Load bytes on web
       );
 
@@ -155,28 +193,85 @@ class PdfService {
         return null;
       }
 
-      final file = result.files.first;
+      final results = <PdfImportResult>[];
+      final total = result.files.length;
 
-      // On web, use bytes-based approach
-      if (kIsWeb) {
-        if (file.bytes == null) {
-          debugPrint('PdfService: No bytes available for web import');
-          return null;
-        }
-        return await _addPdfFromBytes(file.name, file.bytes!);
+      for (var i = 0; i < result.files.length; i++) {
+        final file = result.files[i];
+        onProgress?.call(i + 1, total, file.name);
+        results.add(await _importSingleFile(file));
       }
 
-      // On native platforms, use file path approach
-      if (file.path == null) {
-        return null;
-      }
-
-      final destPath = await _copyToPdfDirectory(file.path!);
-      return await addPdfToLibrary(destPath);
+      return PdfImportBatchResult(results);
     } catch (e) {
-      debugPrint('PdfService: Error importing PDF: $e');
+      debugPrint('PdfService: Error opening file picker: $e');
       return null;
     }
+  }
+
+  /// Import a single PDF file using file picker (convenience method)
+  @Deprecated('Use importPdfs() instead for multi-file support')
+  Future<String?> importPdf() async {
+    final result = await importPdfs();
+    if (result == null || result.results.isEmpty) {
+      return null;
+    }
+    final first = result.results.first;
+    return first.success ? first.filePath : null;
+  }
+
+  /// Import a single file from the file picker result
+  Future<PdfImportResult> _importSingleFile(PlatformFile file) async {
+    try {
+      if (kIsWeb) {
+        return await _importFileFromBytes(file);
+      }
+      return await _importFileFromPath(file);
+    } catch (e) {
+      debugPrint('PdfService: Error importing ${file.name}: $e');
+      return PdfImportResult(
+        fileName: file.name,
+        success: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  /// Import a file using bytes (web platform)
+  Future<PdfImportResult> _importFileFromBytes(PlatformFile file) async {
+    if (file.bytes == null) {
+      return PdfImportResult(
+        fileName: file.name,
+        success: false,
+        error: 'No bytes available',
+      );
+    }
+    final path = await _addPdfFromBytes(file.name, file.bytes!);
+    return PdfImportResult(
+      fileName: file.name,
+      success: path != null,
+      filePath: path,
+      error: path == null ? 'Failed to add PDF' : null,
+    );
+  }
+
+  /// Import a file using file path (native platforms)
+  Future<PdfImportResult> _importFileFromPath(PlatformFile file) async {
+    if (file.path == null) {
+      return PdfImportResult(
+        fileName: file.name,
+        success: false,
+        error: 'No file path available',
+      );
+    }
+    final destPath = await _copyToPdfDirectory(file.path!);
+    final addedPath = await addPdfToLibrary(destPath);
+    return PdfImportResult(
+      fileName: file.name,
+      success: addedPath != null,
+      filePath: addedPath,
+      error: addedPath == null ? 'Failed to add PDF to library' : null,
+    );
   }
 
   /// Add a PDF from bytes (web platform)
