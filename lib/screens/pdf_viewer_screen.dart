@@ -59,13 +59,6 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   Map<int, List<DrawingStroke>> _pageAnnotations = {};
   Map<int, List<DrawingStroke>> _rightPageAnnotations = {};
 
-  /// Flatten annotations from all layers into a single list
-  List<DrawingStroke> _flattenAnnotations(
-    Map<int, List<DrawingStroke>> annotations,
-  ) {
-    return annotations.values.expand((strokes) => strokes).toList();
-  }
-
   @override
   void initState() {
     super.initState();
@@ -140,7 +133,9 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
       );
       _layers = await _annotationService.getLayers(widget.document.id);
       _selectedLayerId = layerId;
-    } else {
+    } else if (_selectedLayerId == null ||
+        !_layers.any((l) => l.id == _selectedLayerId)) {
+      // Only change selection if current selection is invalid
       _selectedLayerId = _layers.first.id;
     }
   }
@@ -620,7 +615,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
             toolType: _currentTool,
             color: _annotationColor,
             thickness: _annotationThickness,
-            existingStrokes: _flattenAnnotations(_pageAnnotations),
+            layerAnnotations: _pageAnnotations,
             onStrokeCompleted: _loadPageAnnotations,
             isEnabled: _annotationMode,
           );
@@ -647,8 +642,8 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
       document: _pdfDocument!,
       leftPageNumber: spread.leftPage,
       rightPageNumber: spread.rightPage,
-      leftPageAnnotations: _flattenAnnotations(_pageAnnotations),
-      rightPageAnnotations: _flattenAnnotations(_rightPageAnnotations),
+      leftPageAnnotations: _pageAnnotations,
+      rightPageAnnotations: _rightPageAnnotations,
       isAnnotationMode: _annotationMode,
       selectedLayerId: _selectedLayerId,
       currentTool: _currentTool,

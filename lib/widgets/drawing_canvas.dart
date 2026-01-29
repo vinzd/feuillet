@@ -8,7 +8,9 @@ class DrawingCanvas extends StatefulWidget {
   final AnnotationType toolType;
   final Color color;
   final double thickness;
-  final List<DrawingStroke> existingStrokes;
+
+  /// Annotations grouped by layer ID - erasers only affect their own layer
+  final Map<int, List<DrawingStroke>> layerAnnotations;
   final VoidCallback? onStrokeCompleted;
   final bool isEnabled;
 
@@ -19,7 +21,7 @@ class DrawingCanvas extends StatefulWidget {
     required this.toolType,
     required this.color,
     required this.thickness,
-    required this.existingStrokes,
+    required this.layerAnnotations,
     this.onStrokeCompleted,
     this.isEnabled = true,
   });
@@ -51,7 +53,8 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
       onPanEnd: widget.isEnabled ? _onPanEnd : null,
       child: CustomPaint(
         painter: DrawingPainter(
-          existingStrokes: widget.existingStrokes,
+          layerAnnotations: widget.layerAnnotations,
+          activeLayerId: widget.layerId,
           currentSessionStrokes: _currentSessionStrokes,
           currentStroke: _currentStroke,
         ),
@@ -119,31 +122,65 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
 
 /// Custom painter for drawing strokes
 class DrawingPainter extends CustomPainter {
-  final List<DrawingStroke> existingStrokes;
+  /// Annotations grouped by layer ID
+  final Map<int, List<DrawingStroke>> layerAnnotations;
+
+  /// The currently active layer (for session strokes)
+  final int activeLayerId;
   final List<DrawingStroke> currentSessionStrokes;
   final DrawingStroke? currentStroke;
 
   DrawingPainter({
-    required this.existingStrokes,
+    required this.layerAnnotations,
+    required this.activeLayerId,
     required this.currentSessionStrokes,
     this.currentStroke,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Draw existing strokes
-    for (final stroke in existingStrokes) {
-      _drawStroke(canvas, stroke);
+    // Render each layer separately so erasers only affect their own layer
+    for (final entry in layerAnnotations.entries) {
+      final layerId = entry.key;
+      final strokes = entry.value;
+
+      // Use saveLayer for each layer so BlendMode.clear only affects this layer
+      canvas.saveLayer(Offset.zero & size, Paint());
+
+      // Draw this layer's strokes
+      for (final stroke in strokes) {
+        _drawStroke(canvas, stroke);
+      }
+
+      // If this is the active layer, also draw current session strokes
+      if (layerId == activeLayerId) {
+        for (final stroke in currentSessionStrokes) {
+          _drawStroke(canvas, stroke);
+        }
+
+        // Draw current stroke being drawn
+        if (currentStroke != null) {
+          _drawStroke(canvas, currentStroke!);
+        }
+      }
+
+      canvas.restore();
     }
 
-    // Draw current session strokes
-    for (final stroke in currentSessionStrokes) {
-      _drawStroke(canvas, stroke);
-    }
+    // If active layer has no existing strokes but has session strokes, draw them
+    if (!layerAnnotations.containsKey(activeLayerId) &&
+        (currentSessionStrokes.isNotEmpty || currentStroke != null)) {
+      canvas.saveLayer(Offset.zero & size, Paint());
 
-    // Draw current stroke being drawn
-    if (currentStroke != null) {
-      _drawStroke(canvas, currentStroke!);
+      for (final stroke in currentSessionStrokes) {
+        _drawStroke(canvas, stroke);
+      }
+
+      if (currentStroke != null) {
+        _drawStroke(canvas, currentStroke!);
+      }
+
+      canvas.restore();
     }
   }
 
@@ -193,7 +230,8 @@ class DrawingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant DrawingPainter oldDelegate) {
-    return oldDelegate.existingStrokes != existingStrokes ||
+    return oldDelegate.layerAnnotations != layerAnnotations ||
+        oldDelegate.activeLayerId != activeLayerId ||
         oldDelegate.currentSessionStrokes != currentSessionStrokes ||
         oldDelegate.currentStroke != currentStroke;
   }

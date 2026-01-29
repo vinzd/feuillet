@@ -8,7 +8,7 @@ void main() {
     Widget buildDrawingCanvas({
       int layerId = 1,
       int pageNumber = 0,
-      List<DrawingStroke>? existingStrokes,
+      Map<int, List<DrawingStroke>>? layerAnnotations,
       AnnotationType toolType = AnnotationType.pen,
       Color color = Colors.red,
       double thickness = 3.0,
@@ -21,7 +21,7 @@ void main() {
             key: key,
             layerId: layerId,
             pageNumber: pageNumber,
-            existingStrokes: existingStrokes ?? [],
+            layerAnnotations: layerAnnotations ?? {},
             toolType: toolType,
             color: color,
             thickness: thickness,

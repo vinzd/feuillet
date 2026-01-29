@@ -13,8 +13,8 @@ class TwoPagePdfView extends StatelessWidget {
     required this.document,
     required this.leftPageNumber,
     this.rightPageNumber,
-    this.leftPageAnnotations = const [],
-    this.rightPageAnnotations = const [],
+    this.leftPageAnnotations = const {},
+    this.rightPageAnnotations = const {},
     this.isAnnotationMode = false,
     this.selectedLayerId,
     this.currentTool = AnnotationType.pen,
@@ -34,11 +34,11 @@ class TwoPagePdfView extends StatelessWidget {
   /// The page number for the right side (1-indexed), null if only one page
   final int? rightPageNumber;
 
-  /// Annotations for the left page
-  final List<DrawingStroke> leftPageAnnotations;
+  /// Annotations for the left page, grouped by layer ID
+  final Map<int, List<DrawingStroke>> leftPageAnnotations;
 
-  /// Annotations for the right page
-  final List<DrawingStroke> rightPageAnnotations;
+  /// Annotations for the right page, grouped by layer ID
+  final Map<int, List<DrawingStroke>> rightPageAnnotations;
 
   /// Whether annotation mode is enabled
   final bool isAnnotationMode;
@@ -69,7 +69,7 @@ class TwoPagePdfView extends StatelessWidget {
           child: _PageContainer(
             document: document,
             pageNumber: leftPageNumber,
-            annotations: leftPageAnnotations,
+            layerAnnotations: leftPageAnnotations,
             isAnnotationMode: isAnnotationMode,
             selectedLayerId: selectedLayerId,
             currentTool: currentTool,
@@ -84,7 +84,7 @@ class TwoPagePdfView extends StatelessWidget {
               ? _PageContainer(
                   document: document,
                   pageNumber: rightPageNumber!,
-                  annotations: rightPageAnnotations,
+                  layerAnnotations: rightPageAnnotations,
                   isAnnotationMode: isAnnotationMode,
                   selectedLayerId: selectedLayerId,
                   currentTool: currentTool,
@@ -109,7 +109,7 @@ class _PageContainer extends StatelessWidget {
   const _PageContainer({
     required this.document,
     required this.pageNumber,
-    required this.annotations,
+    required this.layerAnnotations,
     required this.isAnnotationMode,
     this.selectedLayerId,
     required this.currentTool,
@@ -121,7 +121,7 @@ class _PageContainer extends StatelessWidget {
 
   final PdfDocument document;
   final int pageNumber;
-  final List<DrawingStroke> annotations;
+  final Map<int, List<DrawingStroke>> layerAnnotations;
   final bool isAnnotationMode;
   final int? selectedLayerId;
   final AnnotationType currentTool;
@@ -143,7 +143,7 @@ class _PageContainer extends StatelessWidget {
         toolType: currentTool,
         color: annotationColor,
         thickness: annotationThickness,
-        existingStrokes: annotations,
+        layerAnnotations: layerAnnotations,
         onStrokeCompleted: onStrokeCompleted,
         isEnabled: isEditable,
       );

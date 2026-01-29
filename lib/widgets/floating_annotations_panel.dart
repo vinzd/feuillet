@@ -226,20 +226,37 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
                 icon: Icons.edit,
                 tooltip: 'Pen',
                 isSelected: widget.currentTool == AnnotationType.pen,
-                onPressed: () => widget.onToolChanged(AnnotationType.pen),
+                onPressed: () {
+                  widget.onToolChanged(AnnotationType.pen);
+                  // Set default pen thickness if current is too large
+                  if (widget.annotationThickness > 12) {
+                    widget.onThicknessChanged(3.0);
+                  }
+                },
               ),
               _ToolButton(
                 icon: Icons.highlight,
                 tooltip: 'Highlighter',
                 isSelected: widget.currentTool == AnnotationType.highlighter,
-                onPressed: () =>
-                    widget.onToolChanged(AnnotationType.highlighter),
+                onPressed: () {
+                  widget.onToolChanged(AnnotationType.highlighter);
+                  // Set default highlighter thickness
+                  if (widget.annotationThickness < 8) {
+                    widget.onThicknessChanged(12.0);
+                  }
+                },
               ),
               _ToolButton(
                 icon: Icons.auto_fix_high,
                 tooltip: 'Eraser',
                 isSelected: widget.currentTool == AnnotationType.eraser,
-                onPressed: () => widget.onToolChanged(AnnotationType.eraser),
+                onPressed: () {
+                  widget.onToolChanged(AnnotationType.eraser);
+                  // Set default eraser thickness (larger for easier erasing)
+                  if (widget.annotationThickness < 15) {
+                    widget.onThicknessChanged(20.0);
+                  }
+                },
               ),
             ],
           ),
@@ -267,8 +284,8 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
                 child: Slider(
                   value: widget.annotationThickness,
                   min: 1,
-                  max: 12,
-                  divisions: 11,
+                  max: 30,
+                  divisions: 29,
                   onChanged: widget.onThicknessChanged,
                 ),
               ),
