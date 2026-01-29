@@ -4,6 +4,7 @@ import '../models/database.dart';
 import '../services/database_service.dart';
 import '../services/setlist_service.dart';
 import 'setlist_detail_screen.dart';
+import 'setlist_performance_screen.dart';
 
 /// Provider for set lists
 final setListsProvider = StreamProvider<List<SetList>>((ref) {
@@ -123,6 +124,33 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
     }
   }
 
+  Future<void> _startPerformance(SetList setList) async {
+    final documents = await _setListService.getSetListDocuments(setList.id);
+
+    if (documents.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Add documents to start performance mode'),
+          ),
+        );
+      }
+      return;
+    }
+
+    if (mounted) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SetListPerformanceScreen(
+            setListId: setList.id,
+            documents: documents,
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final setListsAsync = ref.watch(setListsProvider);
@@ -175,37 +203,50 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
                           overflow: TextOverflow.ellipsis,
                         )
                       : null,
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (value) {
-                      switch (value) {
-                        case 'duplicate':
-                          _duplicateSetList(setList);
-                          break;
-                        case 'delete':
-                          _deleteSetList(setList);
-                          break;
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'duplicate',
-                        child: Row(
-                          children: [
-                            Icon(Icons.copy),
-                            SizedBox(width: 8),
-                            Text('Duplicate'),
-                          ],
-                        ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.play_arrow),
+                        onPressed: () => _startPerformance(setList),
+                        tooltip: 'Start performance',
                       ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Delete', style: TextStyle(color: Colors.red)),
-                          ],
-                        ),
+                      PopupMenuButton<String>(
+                        onSelected: (value) {
+                          switch (value) {
+                            case 'duplicate':
+                              _duplicateSetList(setList);
+                              break;
+                            case 'delete':
+                              _deleteSetList(setList);
+                              break;
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'duplicate',
+                            child: Row(
+                              children: [
+                                Icon(Icons.copy),
+                                SizedBox(width: 8),
+                                Text('Duplicate'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Delete',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
