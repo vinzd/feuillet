@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Git pre-commit hook to ensure code is formatted before committing
+# Git pre-commit hook to ensure code is formatted and passes analysis before committing
 #
 
 echo "Running dart format check..."
@@ -22,4 +22,17 @@ if ! dart format --set-exit-if-changed lib/ test/ > /dev/null 2>&1; then
 fi
 
 echo "✓ Code formatting is correct"
+
+echo ""
+echo "Running flutter analyze..."
+
+# Run flutter analyze
+if ! flutter analyze; then
+    echo ""
+    echo "❌ Flutter analyze found issues!"
+    echo "Please fix the issues above before committing."
+    exit 1
+fi
+
+echo "✓ Flutter analyze passed"
 exit 0
