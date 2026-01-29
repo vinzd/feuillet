@@ -264,31 +264,6 @@ class PerformanceDocumentViewState extends State<PerformanceDocumentView> {
     }
   }
 
-  void setPage(int page) {
-    final clampedPage = page.clamp(1, widget.document.pageCount);
-    if (widget.viewMode == PdfViewMode.single) {
-      _pageController?.jumpToPage(clampedPage - 1);
-    } else {
-      final spread = PageSpreadCalculator.getPagesForSpread(
-        widget.viewMode,
-        PageSpreadCalculator.getSpreadForPage(
-          widget.viewMode,
-          clampedPage,
-          widget.document.pageCount,
-        ),
-        widget.document.pageCount,
-      );
-      _updateCurrentPage(spread.leftPage, spread.rightPage);
-    }
-  }
-
-  int get currentPage => _currentPage;
-
-  ({int left, int? right}) get currentSpread {
-    final spread = _getCurrentSpread();
-    return (left: spread.leftPage, right: spread.rightPage);
-  }
-
   void _updateCurrentPage(int leftPage, int? rightPage) {
     setState(() {
       _currentPage = leftPage;
