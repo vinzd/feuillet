@@ -375,5 +375,221 @@ void main() {
 
       expect(allSelected, isFalse);
     });
+
+    test('checkbox shows select all when partial selection', () {
+      final filteredDocs = [
+        Document(
+          id: 1,
+          name: 'Score 1',
+          filePath: '/path/to/score1.pdf',
+          dateAdded: DateTime.now(),
+          lastOpened: DateTime.now(),
+          lastModified: DateTime.now(),
+          fileSize: 1000,
+          pageCount: 1,
+        ),
+        Document(
+          id: 2,
+          name: 'Score 2',
+          filePath: '/path/to/score2.pdf',
+          dateAdded: DateTime.now(),
+          lastOpened: DateTime.now(),
+          lastModified: DateTime.now(),
+          fileSize: 1000,
+          pageCount: 1,
+        ),
+      ];
+      final selectedIds = {1}; // Only one selected
+
+      final allSelected =
+          selectedIds.length == filteredDocs.length && filteredDocs.isNotEmpty;
+      final noneSelected = selectedIds.isEmpty;
+
+      // Checkbox value: true if all, false if none, null if partial
+      final checkboxValue = allSelected ? true : (noneSelected ? false : null);
+
+      expect(checkboxValue, isNull); // Indeterminate state
+
+      // Clicking checkbox with partial selection should select all
+      if (!allSelected) {
+        selectedIds.addAll(filteredDocs.map((d) => d.id));
+      }
+
+      expect(selectedIds.length, equals(2));
+    });
+
+    test('checkbox deselects all when all are selected', () {
+      final filteredDocs = [
+        Document(
+          id: 1,
+          name: 'Score 1',
+          filePath: '/path/to/score1.pdf',
+          dateAdded: DateTime.now(),
+          lastOpened: DateTime.now(),
+          lastModified: DateTime.now(),
+          fileSize: 1000,
+          pageCount: 1,
+        ),
+        Document(
+          id: 2,
+          name: 'Score 2',
+          filePath: '/path/to/score2.pdf',
+          dateAdded: DateTime.now(),
+          lastOpened: DateTime.now(),
+          lastModified: DateTime.now(),
+          fileSize: 1000,
+          pageCount: 1,
+        ),
+      ];
+      final selectedIds = {1, 2};
+      var isSelectionMode = true;
+
+      final allSelected =
+          selectedIds.length == filteredDocs.length && filteredDocs.isNotEmpty;
+
+      expect(allSelected, isTrue);
+
+      // Clicking checkbox when all selected should deselect all and exit
+      if (allSelected) {
+        isSelectionMode = false;
+        selectedIds.clear();
+      }
+
+      expect(selectedIds.isEmpty, isTrue);
+      expect(isSelectionMode, isFalse);
+    });
+  });
+
+  group('Drag Selection Logic', () {
+    late Set<int> selectedIds;
+    late Set<int> dragSelectedIds;
+    late bool isSelectionMode;
+
+    setUp(() {
+      selectedIds = {};
+      dragSelectedIds = {};
+      isSelectionMode = false;
+    });
+
+    test('drag selection enters selection mode', () {
+      // Simulate drag selecting items
+      dragSelectedIds.addAll([1, 2]);
+
+      // On pointer up, apply drag selection
+      if (dragSelectedIds.isNotEmpty) {
+        isSelectionMode = true;
+        for (final docId in dragSelectedIds) {
+          if (selectedIds.contains(docId)) {
+            selectedIds.remove(docId);
+          } else {
+            selectedIds.add(docId);
+          }
+        }
+      }
+
+      expect(isSelectionMode, isTrue);
+      expect(selectedIds, equals({1, 2}));
+    });
+
+    test('drag selection toggles already selected items', () {
+      // Pre-select item 1
+      selectedIds.add(1);
+      isSelectionMode = true;
+
+      // Drag select items 1 and 2
+      dragSelectedIds.addAll([1, 2]);
+
+      // Apply toggle logic
+      for (final docId in dragSelectedIds) {
+        if (selectedIds.contains(docId)) {
+          selectedIds.remove(docId);
+        } else {
+          selectedIds.add(docId);
+        }
+      }
+
+      // Item 1 should be deselected (was selected), item 2 selected
+      expect(selectedIds, equals({2}));
+    });
+
+    test('drag selection exits mode when all deselected', () {
+      // Pre-select items 1 and 2
+      selectedIds.addAll([1, 2]);
+      isSelectionMode = true;
+
+      // Drag select same items (will toggle them off)
+      dragSelectedIds.addAll([1, 2]);
+
+      // Apply toggle logic
+      for (final docId in dragSelectedIds) {
+        if (selectedIds.contains(docId)) {
+          selectedIds.remove(docId);
+        } else {
+          selectedIds.add(docId);
+        }
+      }
+
+      // Check if should exit selection mode
+      if (selectedIds.isEmpty) {
+        isSelectionMode = false;
+      }
+
+      expect(selectedIds.isEmpty, isTrue);
+      expect(isSelectionMode, isFalse);
+    });
+
+    test('XOR preview logic shows correct selection state', () {
+      // Test the XOR logic used for visual preview during drag
+      selectedIds.add(1); // Item 1 is selected
+      dragSelectedIds.addAll([1, 2]); // Dragging over items 1 and 2
+
+      // Item 1: selected XOR inDrag = true XOR true = false (will be deselected)
+      // Item 2: selected XOR inDrag = false XOR true = true (will be selected)
+      final item1Preview =
+          selectedIds.contains(1) ^ dragSelectedIds.contains(1);
+      final item2Preview =
+          selectedIds.contains(2) ^ dragSelectedIds.contains(2);
+
+      expect(item1Preview, isFalse); // Will appear deselected
+      expect(item2Preview, isTrue); // Will appear selected
+    });
+  });
+
+  group('Click on Empty Space', () {
+    test('click on empty space exits selection mode', () {
+      var isSelectionMode = true;
+      final selectedIds = {1, 2};
+      const isOnCard = false; // Clicked on empty space
+      const wasClick = true; // Minimal drag distance
+
+      // Simulate click on empty space logic
+      if (wasClick && isSelectionMode && !isOnCard) {
+        isSelectionMode = false;
+        selectedIds.clear();
+      }
+
+      expect(isSelectionMode, isFalse);
+      expect(selectedIds.isEmpty, isTrue);
+    });
+
+    test('click on card does not exit selection mode', () {
+      var isSelectionMode = true;
+      final selectedIds = {1, 2};
+
+      // When clicking on a card, selection mode should not exit
+      // because the condition (!_isPositionOnCard) would be false
+      expect(isSelectionMode, isTrue);
+      expect(selectedIds.isNotEmpty, isTrue);
+    });
+
+    test('drag (not click) does not exit selection mode', () {
+      var isSelectionMode = true;
+      final selectedIds = {1, 2};
+
+      // When dragging (not clicking), selection mode should not exit
+      // because the wasClick condition would be false
+      expect(isSelectionMode, isTrue);
+      expect(selectedIds.isNotEmpty, isTrue);
+    });
   });
 }

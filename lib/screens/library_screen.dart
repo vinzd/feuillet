@@ -42,6 +42,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   bool _isSelectionMode = false;
   final Set<int> _selectedDocumentIds = {};
 
+  // Drag selection state
+  bool _isDragSelecting = false;
+  Offset? _dragStart;
+  Offset? _dragCurrent;
+  final Map<int, GlobalKey> _cardKeys = {};
+  final Set<int> _dragSelectedIds = {};
+
   @override
   void initState() {
     super.initState();
@@ -231,9 +238,39 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   }
 
   void _deselectAll() {
-    setState(() {
-      _selectedDocumentIds.clear();
-    });
+    _exitSelectionMode();
+  }
+
+  bool? _getSelectAllCheckboxState(List<Document> filteredDocs) {
+    if (_selectedDocumentIds.isEmpty) return false;
+    if (_selectedDocumentIds.length == filteredDocs.length &&
+        filteredDocs.isNotEmpty) {
+      return true;
+    }
+    return null; // Indeterminate state
+  }
+
+  Widget _buildSelectionTitle(List<Document> filteredDocs) {
+    final checkboxState = _getSelectAllCheckboxState(filteredDocs);
+    final allSelected = checkboxState == true;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Checkbox(
+          value: checkboxState,
+          tristate: true,
+          onChanged: (_) {
+            if (allSelected) {
+              _deselectAll();
+            } else {
+              _selectAll(filteredDocs);
+            }
+          },
+        ),
+        Text('${_selectedDocumentIds.length} selected'),
+      ],
+    );
   }
 
   void _handleDocumentTap(Document document) {
@@ -242,6 +279,126 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     } else {
       _openPdf(document);
     }
+  }
+
+  // Drag selection methods
+  final GlobalKey _gridKey = GlobalKey();
+
+  GlobalKey _getKeyForDocument(int docId) {
+    return _cardKeys.putIfAbsent(docId, () => GlobalKey());
+  }
+
+  /// Returns the bounding rect of a card relative to the grid, or null if unavailable.
+  Rect? _getCardRect(int docId) {
+    final key = _cardKeys[docId];
+    if (key?.currentContext == null) return null;
+
+    final renderBox = key!.currentContext!.findRenderObject() as RenderBox?;
+    if (renderBox == null || !renderBox.attached) return null;
+
+    final gridRenderBox =
+        _gridKey.currentContext?.findRenderObject() as RenderBox?;
+    if (gridRenderBox == null) return null;
+
+    final cardPosition = renderBox.localToGlobal(
+      Offset.zero,
+      ancestor: gridRenderBox,
+    );
+    return cardPosition & renderBox.size;
+  }
+
+  bool _isPositionOnCard(Offset position, List<Document> docs) {
+    for (final doc in docs) {
+      final cardRect = _getCardRect(doc.id);
+      if (cardRect != null && cardRect.contains(position)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void _onPointerDown(PointerDownEvent event, List<Document> docs) {
+    // Only start drag selection if not starting on a card
+    if (!_isPositionOnCard(event.localPosition, docs)) {
+      setState(() {
+        _isDragSelecting = true;
+        _dragStart = event.localPosition;
+        _dragCurrent = event.localPosition;
+        _dragSelectedIds.clear();
+      });
+    }
+  }
+
+  void _onPointerMove(PointerMoveEvent event, List<Document> docs) {
+    if (_isDragSelecting) {
+      setState(() {
+        _dragCurrent = event.localPosition;
+        _updateDragSelection(docs);
+      });
+    }
+  }
+
+  void _onPointerUp(PointerUpEvent event, List<Document> docs) {
+    if (!_isDragSelecting) return;
+
+    final wasClick =
+        _dragStart != null &&
+        _dragCurrent != null &&
+        (_dragStart! - _dragCurrent!).distance < 5;
+
+    if (_dragSelectedIds.isNotEmpty) {
+      _applyDragSelection();
+    } else if (wasClick &&
+        _isSelectionMode &&
+        !_isPositionOnCard(event.localPosition, docs)) {
+      _exitSelectionMode();
+    }
+
+    _resetDragState();
+  }
+
+  void _applyDragSelection() {
+    setState(() {
+      _isSelectionMode = true;
+      for (final docId in _dragSelectedIds) {
+        if (_selectedDocumentIds.contains(docId)) {
+          _selectedDocumentIds.remove(docId);
+        } else {
+          _selectedDocumentIds.add(docId);
+        }
+      }
+      if (_selectedDocumentIds.isEmpty) {
+        _isSelectionMode = false;
+      }
+    });
+  }
+
+  void _resetDragState() {
+    setState(() {
+      _isDragSelecting = false;
+      _dragStart = null;
+      _dragCurrent = null;
+      _dragSelectedIds.clear();
+    });
+  }
+
+  void _updateDragSelection(List<Document> docs) {
+    if (_dragStart == null || _dragCurrent == null) return;
+
+    final selectionRect = Rect.fromPoints(_dragStart!, _dragCurrent!);
+    _dragSelectedIds.clear();
+
+    for (final doc in docs) {
+      final cardRect = _getCardRect(doc.id);
+      if (cardRect != null && selectionRect.overlaps(cardRect)) {
+        _dragSelectedIds.add(doc.id);
+      }
+    }
+  }
+
+  Rect? get _selectionRect {
+    if (_dragStart == null || _dragCurrent == null) return null;
+    return Rect.fromPoints(_dragStart!, _dragCurrent!);
   }
 
   // Bulk action methods
@@ -446,26 +603,56 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   Widget _buildDocumentList(List<Document> documents) {
     if (_isGridView) {
-      return GridView.builder(
-        padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 200,
-          childAspectRatio: 0.7,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
+      return Listener(
+        key: _gridKey,
+        onPointerDown: (event) => _onPointerDown(event, documents),
+        onPointerMove: (event) => _onPointerMove(event, documents),
+        onPointerUp: (event) => _onPointerUp(event, documents),
+        onPointerCancel: (_) => _onPointerUp(const PointerUpEvent(), documents),
+        child: Stack(
+          children: [
+            GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 200,
+                childAspectRatio: 0.7,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+              ),
+              itemCount: documents.length,
+              itemBuilder: (context, index) {
+                final doc = documents[index];
+                final isInDragSelection = _dragSelectedIds.contains(doc.id);
+                final isCurrentlySelected = _selectedDocumentIds.contains(
+                  doc.id,
+                );
+                // Show as selected if either already selected or in current drag
+                // but not both (XOR for toggle preview)
+                final showSelected = isCurrentlySelected ^ isInDragSelection;
+                return PdfCard(
+                  key: _getKeyForDocument(doc.id),
+                  document: doc,
+                  onTap: () => _handleDocumentTap(doc),
+                  onLongPress: () => _enterSelectionMode(doc),
+                  onCheckboxTap: () => _handleCheckboxTap(doc),
+                  isSelectionMode: _isSelectionMode || _isDragSelecting,
+                  isSelected: showSelected,
+                );
+              },
+            ),
+            if (_isDragSelecting && _selectionRect != null)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: _SelectionRectPainter(
+                      rect: _selectionRect!,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
-        itemCount: documents.length,
-        itemBuilder: (context, index) {
-          final doc = documents[index];
-          return PdfCard(
-            document: doc,
-            onTap: () => _handleDocumentTap(doc),
-            onLongPress: () => _enterSelectionMode(doc),
-            onCheckboxTap: () => _handleCheckboxTap(doc),
-            isSelectionMode: _isSelectionMode,
-            isSelected: _selectedDocumentIds.contains(doc.id),
-          );
-        },
       );
     } else {
       return ListView.builder(
@@ -511,29 +698,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           onPressed: _exitSelectionMode,
           tooltip: 'Cancel selection',
         ),
-        title: Text('${_selectedDocumentIds.length} selected'),
-        actions: [
-          documentsAsync.whenOrNull(
-                data: (documents) {
-                  final filteredDocs = _filterDocuments(documents);
-                  final allSelected =
-                      _selectedDocumentIds.length == filteredDocs.length &&
-                      filteredDocs.isNotEmpty;
-                  return IconButton(
-                    icon: Icon(allSelected ? Icons.deselect : Icons.select_all),
-                    onPressed: () {
-                      if (allSelected) {
-                        _deselectAll();
-                      } else {
-                        _selectAll(filteredDocs);
-                      }
-                    },
-                    tooltip: allSelected ? 'Deselect all' : 'Select all',
-                  );
-                },
-              ) ??
-              const SizedBox.shrink(),
-        ],
+        title:
+            documentsAsync.whenOrNull(
+              data: (documents) {
+                final filteredDocs = _filterDocuments(documents);
+                return _buildSelectionTitle(filteredDocs);
+              },
+            ) ??
+            Text('${_selectedDocumentIds.length} selected'),
       );
     }
 
@@ -953,5 +1125,34 @@ class _PdfListTileState extends State<PdfListTile> {
     if (bytes < 1024) return '$bytes B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+}
+
+/// Custom painter for the selection rectangle
+class _SelectionRectPainter extends CustomPainter {
+  final Rect rect;
+  final Color color;
+
+  _SelectionRectPainter({required this.rect, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Draw filled rectangle with low opacity
+    final fillPaint = Paint()
+      ..color = color.withAlpha(30)
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(rect, fillPaint);
+
+    // Draw border
+    final borderPaint = Paint()
+      ..color = color.withAlpha(180)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    canvas.drawRect(rect, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(_SelectionRectPainter oldDelegate) {
+    return rect != oldDelegate.rect || color != oldDelegate.color;
   }
 }
