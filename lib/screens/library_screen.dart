@@ -1,12 +1,13 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../models/database.dart';
+import '../router/app_router.dart';
 import '../services/database_service.dart';
 import '../services/pdf_service.dart';
 import '../services/version_service.dart';
 import '../widgets/pdf_card.dart';
-import 'pdf_viewer_screen.dart';
 
 /// Provider for the list of documents
 final documentsProvider = StreamProvider<List<Document>>((ref) {
@@ -143,16 +144,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   }
 
   Future<void> _openPdf(Document document) async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PdfViewerScreen(document: document),
-      ),
-    );
-
     // Update last opened timestamp
     final updatedDoc = document.copyWith(lastOpened: Value(DateTime.now()));
     await ref.read(databaseProvider).updateDocument(updatedDoc);
+
+    if (mounted) {
+      context.go(AppRoutes.documentPath(document.id));
+    }
   }
 
   List<Document> _filterDocuments(List<Document> documents) {

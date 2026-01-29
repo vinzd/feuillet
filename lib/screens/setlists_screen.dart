@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../models/database.dart';
+import '../router/app_router.dart';
 import '../services/database_service.dart';
 import '../services/setlist_service.dart';
-import 'setlist_detail_screen.dart';
-import 'setlist_performance_screen.dart';
 
 /// Provider for set lists
 final setListsProvider = StreamProvider<List<SetList>>((ref) {
@@ -80,12 +80,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
       );
 
       if (mounted) {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SetListDetailScreen(setListId: id),
-          ),
-        );
+        context.go(AppRoutes.setlistDetailPath(id));
       }
     }
   }
@@ -139,15 +134,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
     }
 
     if (mounted) {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => SetListPerformanceScreen(
-            setListId: setList.id,
-            documents: documents,
-          ),
-        ),
-      );
+      context.go(AppRoutes.setlistPerformancePath(setList.id));
     }
   }
 
@@ -251,13 +238,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
                     ],
                   ),
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            SetListDetailScreen(setListId: setList.id),
-                      ),
-                    );
+                    context.go(AppRoutes.setlistDetailPath(setList.id));
                   },
                 ),
               );

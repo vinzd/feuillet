@@ -1,28 +1,45 @@
 import 'package:flutter/material.dart';
-import 'library_screen.dart';
-import 'setlists_screen.dart';
+import 'package:go_router/go_router.dart';
+import '../router/app_router.dart';
 
-/// Home screen with bottom navigation
+/// Home screen with bottom navigation.
+/// Uses ShellRoute from go_router to display Library or SetLists based on URL.
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final int initialIndex;
+  final Widget? child;
+
+  const HomeScreen({super.key, this.initialIndex = 0, this.child});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
+  late int _currentIndex;
 
-  final List<Widget> _screens = const [LibraryScreen(), SetListsScreen()];
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
+
+  @override
+  void didUpdateWidget(HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialIndex != oldWidget.initialIndex) {
+      _currentIndex = widget.initialIndex;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: widget.child,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {
           setState(() => _currentIndex = index);
+          context.go(index == 0 ? AppRoutes.library : AppRoutes.setlists);
         },
         destinations: const [
           NavigationDestination(

@@ -1,12 +1,16 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'screens/home_screen.dart';
+import 'router/app_router.dart';
 import 'services/file_watcher_service.dart';
 import 'services/pdf_service.dart';
+import 'web_url_strategy.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Use path-based URLs on web (e.g., /document/3 instead of /#/document/3)
+  configureUrlStrategy();
 
   // Skip file system operations on web (for development iteration only)
   if (!kIsWeb) {
@@ -20,22 +24,26 @@ void main() async {
   runApp(const ProviderScope(child: OpenScoreApp()));
 }
 
-class OpenScoreApp extends StatelessWidget {
+class OpenScoreApp extends ConsumerWidget {
   const OpenScoreApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Open Score',
-      debugShowCheckedModeBanner: false,
-      theme: _buildTheme(Brightness.light),
-      darkTheme: _buildTheme(Brightness.dark),
-      themeMode: ThemeMode.system,
-      home: const AppLifecycleManager(child: HomeScreen()),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+
+    return AppLifecycleManager(
+      child: MaterialApp.router(
+        title: 'Open Score',
+        debugShowCheckedModeBanner: false,
+        theme: _buildTheme(Brightness.light),
+        darkTheme: _buildTheme(Brightness.dark),
+        themeMode: ThemeMode.system,
+        routerConfig: router,
+      ),
     );
   }
 
-  ThemeData _buildTheme(Brightness brightness) {
+  static ThemeData _buildTheme(Brightness brightness) {
     return ThemeData(
       colorScheme: ColorScheme.fromSeed(
         seedColor: Colors.deepPurple,

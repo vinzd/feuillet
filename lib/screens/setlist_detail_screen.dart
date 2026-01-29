@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/database.dart';
+import '../router/app_router.dart';
 import '../services/database_service.dart';
 import '../services/setlist_service.dart';
-import 'setlist_performance_screen.dart';
-import 'pdf_viewer_screen.dart';
 
 /// Screen for viewing and editing a set list
 class SetListDetailScreen extends StatefulWidget {
@@ -107,15 +107,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
       return;
     }
 
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SetListPerformanceScreen(
-          setListId: widget.setListId,
-          documents: _documents,
-        ),
-      ),
-    );
+    context.go(AppRoutes.setlistPerformancePath(widget.setListId));
   }
 
   @override
@@ -201,13 +193,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
                               IconButton(
                                 icon: const Icon(Icons.visibility),
                                 onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          PdfViewerScreen(document: doc),
-                                    ),
-                                  );
+                                  context.go(AppRoutes.documentPath(doc.id));
                                 },
                                 tooltip: 'View',
                               ),
