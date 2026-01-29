@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:watcher/watcher.dart';
 import 'package:path/path.dart' as p;
+import 'app_settings_service.dart';
 
 /// Service to monitor file system changes for Syncthing compatibility
 /// Watches the database and PDF directory for external modifications
@@ -46,16 +47,19 @@ class FileWatcherService {
     }
 
     try {
-      // Get the PDF directory path
+      // Get the PDF directory path from settings (may be custom)
+      _pdfDirectoryPath = await AppSettingsService.instance
+          .getPdfDirectoryPath();
+
+      // Database path always stays in app documents
       final appDocDir = await getApplicationDocumentsDirectory();
-      _pdfDirectoryPath = p.join(appDocDir.path, 'open_score', 'pdfs');
       _databasePath = p.join(
         appDocDir.path,
         'open_score',
         'open_score_db.sqlite',
       );
 
-      // Create directories if they don't exist
+      // Create PDF directory if it doesn't exist
       final pdfDir = Directory(_pdfDirectoryPath!);
       if (!await pdfDir.exists()) {
         await pdfDir.create(recursive: true);
@@ -180,7 +184,7 @@ class FileWatcherService {
         fileName.startsWith('.~');
   }
 
-  /// Get the PDF directory path
+  /// Get the PDF directory path (from settings or default)
   Future<String> getPdfDirectoryPath() async {
     // Return a placeholder path on web (for development iteration only)
     if (kIsWeb) {
@@ -191,8 +195,8 @@ class FileWatcherService {
       return _pdfDirectoryPath!;
     }
 
-    final appDocDir = await getApplicationDocumentsDirectory();
-    _pdfDirectoryPath = p.join(appDocDir.path, 'open_score', 'pdfs');
+    // Delegate to AppSettingsService for configurable path
+    _pdfDirectoryPath = await AppSettingsService.instance.getPdfDirectoryPath();
 
     // Create directory if it doesn't exist
     final pdfDir = Directory(_pdfDirectoryPath!);
@@ -201,6 +205,14 @@ class FileWatcherService {
     }
 
     return _pdfDirectoryPath!;
+  }
+
+  /// Update the watched directory path and restart watching
+  /// Call this after changing the PDF directory in settings
+  Future<void> updatePdfDirectoryPath() async {
+    _pdfDirectoryPath = null; // Clear cached path
+    AppSettingsService.instance.invalidateCache();
+    await restartWatching();
   }
 
   /// Get the database directory path (for Syncthing configuration)

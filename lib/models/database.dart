@@ -80,6 +80,14 @@ class SetListItems extends Table {
   TextColumn get notes => text().nullable()();
 }
 
+// App-wide settings stored as key-value pairs
+class AppSettings extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get key => text().withLength(min: 1, max: 100).unique()();
+  TextColumn get value => text()();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+}
+
 // Database implementation
 @DriftDatabase(
   tables: [
@@ -89,6 +97,7 @@ class SetListItems extends Table {
     Annotations,
     SetLists,
     SetListItems,
+    AppSettings,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -98,7 +107,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration {
@@ -114,6 +123,10 @@ class AppDatabase extends _$AppDatabase {
         if (from < 3) {
           // Add viewMode column for two-page view support
           await m.addColumn(documentSettings, documentSettings.viewMode);
+        }
+        if (from < 4) {
+          // Add app settings table for configurable PDF directory
+          await m.createTable(appSettings);
         }
       },
       beforeOpen: (details) async {
@@ -264,6 +277,30 @@ class AppDatabase extends _$AppDatabase {
     if (docIds.isEmpty) return [];
 
     return (select(documents)..where((d) => d.id.isIn(docIds))).get();
+  }
+
+  // App settings operations
+  Future<String?> getAppSetting(String key) async {
+    final result =
+        await (select(appSettings)
+              ..where((s) => s.key.equals(key))
+              ..limit(1))
+            .getSingleOrNull();
+    return result?.value;
+  }
+
+  Future<void> setAppSetting(String key, String value) async {
+    await into(appSettings).insertOnConflictUpdate(
+      AppSettingsCompanion(
+        key: Value(key),
+        value: Value(value),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  Future<void> deleteAppSetting(String key) async {
+    await (delete(appSettings)..where((s) => s.key.equals(key))).go();
   }
 }
 
