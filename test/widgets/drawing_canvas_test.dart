@@ -5,46 +5,41 @@ import 'package:open_score/widgets/drawing_canvas.dart';
 
 void main() {
   group('DrawingCanvas Widget', () {
-    testWidgets('renders without error', (WidgetTester tester) async {
-      final strokes = <DrawingStroke>[];
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: DrawingCanvas(
-              layerId: 1,
-              pageNumber: 0,
-              existingStrokes: strokes,
-              toolType: AnnotationType.pen,
-              color: Colors.red,
-              thickness: 3.0,
-              onStrokeCompleted: () {},
-            ),
+    Widget buildDrawingCanvas({
+      int layerId = 1,
+      int pageNumber = 0,
+      List<DrawingStroke>? existingStrokes,
+      AnnotationType toolType = AnnotationType.pen,
+      Color color = Colors.red,
+      double thickness = 3.0,
+      bool isEnabled = true,
+      Key? key,
+    }) {
+      return MaterialApp(
+        home: Scaffold(
+          body: DrawingCanvas(
+            key: key,
+            layerId: layerId,
+            pageNumber: pageNumber,
+            existingStrokes: existingStrokes ?? [],
+            toolType: toolType,
+            color: color,
+            thickness: thickness,
+            onStrokeCompleted: () {},
+            isEnabled: isEnabled,
           ),
         ),
       );
+    }
 
+    testWidgets('renders without error', (WidgetTester tester) async {
+      await tester.pumpWidget(buildDrawingCanvas());
       expect(find.byType(DrawingCanvas), findsOneWidget);
     });
 
     testWidgets('accepts different tools', (WidgetTester tester) async {
       for (final tool in AnnotationType.values) {
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: DrawingCanvas(
-                layerId: 1,
-                pageNumber: 0,
-                existingStrokes: [],
-                toolType: tool,
-                color: Colors.blue,
-                thickness: 2.0,
-                onStrokeCompleted: () {},
-              ),
-            ),
-          ),
-        );
-
+        await tester.pumpWidget(buildDrawingCanvas(toolType: tool));
         expect(find.byType(DrawingCanvas), findsOneWidget);
       }
     });
@@ -59,22 +54,7 @@ void main() {
       ];
 
       for (final color in colors) {
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: DrawingCanvas(
-                layerId: 1,
-                pageNumber: 0,
-                existingStrokes: [],
-                toolType: AnnotationType.pen,
-                color: color,
-                thickness: 2.0,
-                onStrokeCompleted: () {},
-              ),
-            ),
-          ),
-        );
-
+        await tester.pumpWidget(buildDrawingCanvas(color: color));
         expect(find.byType(DrawingCanvas), findsOneWidget);
       }
     });
@@ -85,27 +65,46 @@ void main() {
       final thicknesses = [1.0, 2.0, 3.0, 5.0, 10.0];
 
       for (final thickness in thicknesses) {
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Scaffold(
-              body: DrawingCanvas(
-                layerId: 1,
-                pageNumber: 0,
-                existingStrokes: [],
-                toolType: AnnotationType.pen,
-                color: Colors.red,
-                thickness: thickness,
-                onStrokeCompleted: () {},
-              ),
-            ),
-          ),
-        );
-
+        await tester.pumpWidget(buildDrawingCanvas(thickness: thickness));
         expect(find.byType(DrawingCanvas), findsOneWidget);
       }
     });
 
-    // Note: Testing actual drawing gestures would require more complex setup
-    // with gesture simulation and verification of the onStrokeCompleted callback
+    testWidgets('isEnabled controls gesture detection', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(buildDrawingCanvas(isEnabled: false));
+
+      expect(find.byType(DrawingCanvas), findsOneWidget);
+      expect(find.byType(GestureDetector), findsOneWidget);
+    });
+
+    testWidgets('rebuilds when layerId changes', (WidgetTester tester) async {
+      await tester.pumpWidget(buildDrawingCanvas(layerId: 1));
+      await tester.pumpWidget(buildDrawingCanvas(layerId: 2));
+      expect(find.byType(DrawingCanvas), findsOneWidget);
+    });
+
+    testWidgets('rebuilds when pageNumber changes', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(buildDrawingCanvas(pageNumber: 0));
+      await tester.pumpWidget(buildDrawingCanvas(pageNumber: 1));
+      expect(find.byType(DrawingCanvas), findsOneWidget);
+    });
+
+    testWidgets('uses ValueKey for proper widget recreation', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        buildDrawingCanvas(key: const ValueKey('1-0'), layerId: 1),
+      );
+      expect(find.byType(DrawingCanvas), findsOneWidget);
+
+      await tester.pumpWidget(
+        buildDrawingCanvas(key: const ValueKey('2-0'), layerId: 2),
+      );
+      expect(find.byType(DrawingCanvas), findsOneWidget);
+    });
   });
 }

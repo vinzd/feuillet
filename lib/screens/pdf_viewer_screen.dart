@@ -13,8 +13,7 @@ import '../utils/page_spread_calculator.dart';
 import '../widgets/cached_pdf_view.dart';
 import '../widgets/cached_pdf_page.dart';
 import '../widgets/drawing_canvas.dart';
-import '../widgets/layer_panel.dart';
-import '../widgets/annotation_toolbar.dart';
+import '../widgets/floating_annotations_panel.dart';
 import '../widgets/display_settings_panel.dart';
 import '../widgets/pdf_bottom_controls.dart';
 import '../widgets/two_page_pdf_view.dart';
@@ -49,6 +48,8 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
 
   // Annotation settings
   bool _annotationMode = false;
+  bool _showFloatingLayerPanel = false;
+  Offset? _layerPanelPosition;
   final _annotationService = AnnotationService();
   List<AnnotationLayer> _layers = [];
   int? _selectedLayerId;
@@ -361,6 +362,28 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     _preRenderPages();
   }
 
+  Future<void> _toggleAnnotationMode() async {
+    if (!_annotationMode && _selectedLayerId != null) {
+      // Entering annotation mode - ensure active layer is visible
+      final activeLayer = _layers.firstWhere(
+        (l) => l.id == _selectedLayerId,
+        orElse: () => _layers.first,
+      );
+      if (!activeLayer.isVisible) {
+        await _annotationService.toggleLayerVisibility(activeLayer);
+        await _loadLayers();
+        await _loadPageAnnotations();
+      }
+    }
+    setState(() {
+      _annotationMode = !_annotationMode;
+      // Show floating layer panel when entering annotation mode
+      if (_annotationMode) {
+        _showFloatingLayerPanel = true;
+      }
+    });
+  }
+
   /// Get the current spread info for two-page modes
   ({int leftPage, int? rightPage}) _getCurrentSpread() {
     return PageSpreadCalculator.getPagesForSpread(
@@ -483,17 +506,15 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                     ),
                     IconButton(
                       icon: Icon(
-                        _annotationMode ? Icons.edit : Icons.edit_outlined,
+                        _showFloatingLayerPanel
+                            ? Icons.brush
+                            : Icons.brush_outlined,
                       ),
-                      onPressed: () {
-                        setState(() => _annotationMode = !_annotationMode);
-                      },
+                      onPressed: () => setState(
+                        () =>
+                            _showFloatingLayerPanel = !_showFloatingLayerPanel,
+                      ),
                       tooltip: 'Annotations',
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.layers),
-                      onPressed: _showLayerPanel,
-                      tooltip: 'Layers',
                     ),
                     IconButton(
                       icon: const Icon(Icons.tune),
@@ -504,14 +525,17 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                 ),
               ),
 
-              // Annotation toolbar (when in annotation mode)
-              if (_annotationMode)
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 300),
-                  top: _showControls ? 80 : -200,
-                  left: 0,
-                  right: 0,
-                  child: AnnotationToolbar(
+              // Floating annotations panel (layers + tools)
+              if (_showFloatingLayerPanel)
+                Positioned(
+                  top: _layerPanelPosition?.dy ?? (_showControls ? 80 : 60),
+                  right: _layerPanelPosition != null ? null : 16,
+                  left: _layerPanelPosition?.dx,
+                  child: FloatingAnnotationsPanel(
+                    documentId: widget.document.id,
+                    selectedLayerId: _selectedLayerId,
+                    isAnnotationMode: _annotationMode,
+                    onAnnotationModeToggle: _toggleAnnotationMode,
                     currentTool: _currentTool,
                     annotationColor: _annotationColor,
                     annotationThickness: _annotationThickness,
@@ -521,6 +545,17 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                         setState(() => _annotationColor = color),
                     onThicknessChanged: (thickness) =>
                         setState(() => _annotationThickness = thickness),
+                    onLayerSelected: (layerId) {
+                      setState(() => _selectedLayerId = layerId);
+                      _loadPageAnnotations();
+                    },
+                    onLayersChanged: () {
+                      _loadLayers();
+                      _loadPageAnnotations();
+                    },
+                    onClose: () =>
+                        setState(() => _showFloatingLayerPanel = false),
+                    onDrag: (delta) => _updateLayerPanelPosition(delta),
                   ),
                 ),
 
@@ -644,9 +679,21 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     );
   }
 
+  /// Update the layer panel position when dragged
+  void _updateLayerPanelPosition(Offset delta) {
+    setState(() {
+      final size = MediaQuery.of(context).size;
+      final defaultPosition = Offset(size.width - 236, _showControls ? 80 : 60);
+      final currentPos = _layerPanelPosition ?? defaultPosition;
+      _layerPanelPosition = Offset(
+        (currentPos.dx + delta.dx).clamp(0, size.width - 220),
+        (currentPos.dy + delta.dy).clamp(0, size.height - 100),
+      );
+    });
+  }
+
   /// Create a color matrix for brightness and contrast adjustment
   List<double> _createColorMatrix() {
-    // Brightness and contrast matrix
     final double b = _brightness * 255;
     final double c = _contrast;
 
@@ -656,27 +703,5 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
       0, 0, c, 0, b, // Blue
       0, 0, 0, 1, 0, // Alpha
     ];
-  }
-
-  /// Show layer management panel
-  void _showLayerPanel() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => LayerPanel(
-        documentId: widget.document.id,
-        selectedLayerId: _selectedLayerId,
-        onLayerSelected: (layerId) {
-          setState(() {
-            _selectedLayerId = layerId;
-          });
-          _loadPageAnnotations();
-        },
-        onLayersChanged: () {
-          _loadLayers();
-          _loadPageAnnotations();
-        },
-      ),
-    );
   }
 }
