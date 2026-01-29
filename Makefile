@@ -9,7 +9,7 @@ help:
 	@echo ""
 	@echo "Setup & Dependencies:"
 	@echo "  make setup           - Install dependencies and setup project from scratch"
-	@echo "  make install-hooks   - Install git hooks (pre-commit formatting check)"
+	@echo "  make install-hooks   - Install git hooks (pre-commit formatting and analysis check)"
 	@echo "  make web-worker      - Compile drift_worker.dart for web support"
 	@echo "  make db-gen          - Generate database code from schema"
 	@echo ""
@@ -52,17 +52,18 @@ setup:
 	@echo ""
 	@echo "✅ Setup complete! Use 'make run-web' or 'make run-macos' to start developing."
 
-# Install git hooks
+# Install git hooks (handles both regular repos and worktrees)
 install-hooks:
 	@echo "Installing git hooks..."
-	@mkdir -p .git/hooks
-	@if [ -f .git/hooks/pre-commit ]; then \
+	@HOOKS_DIR=$$(git rev-parse --git-path hooks); \
+	mkdir -p "$$HOOKS_DIR"; \
+	if [ -f "$$HOOKS_DIR/pre-commit" ]; then \
 		echo "⚠️  pre-commit hook already exists, backing up to pre-commit.backup"; \
-		cp .git/hooks/pre-commit .git/hooks/pre-commit.backup; \
-	fi
-	@cp hooks/pre-commit .git/hooks/pre-commit
-	@chmod +x .git/hooks/pre-commit
-	@echo "✓ Pre-commit hook installed (formats code before each commit)"
+		cp "$$HOOKS_DIR/pre-commit" "$$HOOKS_DIR/pre-commit.backup"; \
+	fi; \
+	cp hooks/pre-commit "$$HOOKS_DIR/pre-commit"; \
+	chmod +x "$$HOOKS_DIR/pre-commit"; \
+	echo "✓ Pre-commit hook installed (formats code and runs flutter analyze before each commit)"
 
 # Generate database code using drift
 db-gen:
