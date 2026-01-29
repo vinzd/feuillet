@@ -5,6 +5,7 @@ import '../screens/home_screen.dart';
 import '../screens/library_screen.dart';
 import '../screens/setlist_detail_screen.dart';
 import '../screens/setlists_screen.dart';
+import '../screens/settings_screen.dart';
 import '../screens/wrappers/pdf_viewer_wrapper.dart';
 import '../screens/wrappers/setlist_performance_wrapper.dart';
 import '../widgets/error_placeholder_screen.dart';
@@ -13,6 +14,7 @@ import '../widgets/error_placeholder_screen.dart';
 class AppRoutes {
   static const library = '/library';
   static const setlists = '/setlists';
+  static const settings = '/settings';
   static const document = '/document/:documentId';
   static const setlistDetail = '/setlist/:setListId';
   static const setlistPerformance = '/setlist/:setListId/perform';
@@ -77,6 +79,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           final setListId = int.parse(state.pathParameters['setListId']!);
           return SetListPerformanceWrapper(setListId: setListId);
         },
+      ),
+
+      // Settings
+      GoRoute(
+        path: AppRoutes.settings,
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
 

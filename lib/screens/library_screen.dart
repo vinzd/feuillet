@@ -571,7 +571,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         IconButton(
           icon: const Icon(Icons.settings),
           onPressed: () {
-            // TODO: Navigate to settings
+            context.push(AppRoutes.settings);
           },
           tooltip: 'Settings',
         ),
