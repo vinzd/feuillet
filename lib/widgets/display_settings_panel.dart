@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../utils/display_settings.dart';
+
 /// Panel for brightness and contrast adjustments
 class DisplaySettingsPanel extends StatefulWidget {
   final double brightness;
@@ -54,8 +56,8 @@ class _DisplaySettingsPanelState extends State<DisplaySettingsPanel> {
           const Text('Brightness', style: TextStyle(color: Colors.white70)),
           Slider(
             value: _brightness,
-            min: -0.5,
-            max: 0.5,
+            min: DisplaySettings.minBrightness,
+            max: DisplaySettings.maxBrightness,
             onChanged: (value) {
               setState(() => _brightness = value);
               widget.onBrightnessChanged(value);
@@ -68,8 +70,8 @@ class _DisplaySettingsPanelState extends State<DisplaySettingsPanel> {
           const Text('Contrast', style: TextStyle(color: Colors.white70)),
           Slider(
             value: _contrast,
-            min: 0.5,
-            max: 2.0,
+            min: DisplaySettings.minContrast,
+            max: DisplaySettings.maxContrast,
             onChanged: (value) {
               setState(() => _contrast = value);
               widget.onContrastChanged(value);

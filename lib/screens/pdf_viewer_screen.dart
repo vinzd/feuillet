@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +8,8 @@ import '../models/view_mode.dart';
 import '../services/database_service.dart';
 import '../services/annotation_service.dart';
 import '../services/pdf_page_cache_service.dart';
+import '../utils/auto_hide_controller.dart';
+import '../utils/display_settings.dart';
 import '../utils/page_spread_calculator.dart';
 import '../widgets/cached_pdf_view.dart';
 import '../widgets/cached_pdf_page.dart';
@@ -33,15 +34,12 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   PageController? _singlePageController;
   DocumentSetting? _settings;
   final FocusNode _focusNode = FocusNode();
+  late final AutoHideController _autoHideController;
 
   bool _isLoading = true;
-  bool _showControls = true;
-  Timer? _hideControlsTimer;
 
   // View settings
-  double _zoomLevel = 1.0;
-  double _brightness = 0.0;
-  double _contrast = 1.0;
+  DisplaySettings _displaySettings = DisplaySettings.defaults;
   int _currentPage = 1;
   PdfViewMode _viewMode = PdfViewMode.single;
   PdfDocument? _pdfDocument;
@@ -62,6 +60,10 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   @override
   void initState() {
     super.initState();
+    _autoHideController = AutoHideController()
+      ..addListener(() {
+        if (mounted) setState(() {});
+      });
     _initializePdf();
   }
 
@@ -72,9 +74,11 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
       // Load settings first (fast operation)
       _settings = await db.getDocumentSettings(widget.document.id);
       if (_settings != null) {
-        _zoomLevel = _settings!.zoomLevel;
-        _brightness = _settings!.brightness;
-        _contrast = _settings!.contrast;
+        _displaySettings = DisplaySettings(
+          zoomLevel: _settings!.zoomLevel,
+          brightness: _settings!.brightness,
+          contrast: _settings!.contrast,
+        );
         _currentPage = _settings!.currentPage + 1; // Convert to 1-based
         _viewMode = PdfViewMode.fromStorageString(_settings!.viewMode);
       }
@@ -182,34 +186,18 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     await db.insertOrUpdateDocumentSettings(
       DocumentSettingsCompanion(
         documentId: drift.Value(widget.document.id),
-        zoomLevel: drift.Value(_zoomLevel),
-        brightness: drift.Value(_brightness),
-        contrast: drift.Value(_contrast),
+        zoomLevel: drift.Value(_displaySettings.zoomLevel),
+        brightness: drift.Value(_displaySettings.brightness),
+        contrast: drift.Value(_displaySettings.contrast),
         currentPage: drift.Value(_currentPage - 1), // Convert to 0-based
         viewMode: drift.Value(_viewMode.toStorageString()),
       ),
     );
   }
 
-  void _resetControlsTimer() {
-    _hideControlsTimer?.cancel();
-    _hideControlsTimer = Timer(const Duration(seconds: 3), () {
-      if (mounted) {
-        setState(() => _showControls = false);
-      }
-    });
-  }
-
-  void _toggleControls() {
-    setState(() => _showControls = !_showControls);
-    if (_showControls) {
-      _resetControlsTimer();
-    }
-  }
-
   @override
   void dispose() {
-    _hideControlsTimer?.cancel();
+    _autoHideController.dispose();
     _pdfController?.dispose();
     _singlePageController?.dispose();
     _focusNode.dispose();
@@ -448,16 +436,16 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
       child: Scaffold(
         backgroundColor: Colors.black,
         body: GestureDetector(
-          onTap: _toggleControls,
+          onTap: _autoHideController.toggle,
           child: Stack(
             children: [
               // PDF viewer - single or two-page mode
               // Annotations are handled internally for both modes
               Center(
                 child: ColorFiltered(
-                  colorFilter: ColorFilter.matrix(_createColorMatrix()),
+                  colorFilter: _displaySettings.colorFilter,
                   child: Transform.scale(
-                    scale: _zoomLevel,
+                    scale: _displaySettings.zoomLevel,
                     child: _viewMode == PdfViewMode.single
                         ? _buildSinglePageView()
                         : _buildTwoPageView(),
@@ -468,7 +456,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
               // Top app bar
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 300),
-                top: _showControls ? 0 : -100,
+                top: _autoHideController.isVisible ? 0 : -100,
                 left: 0,
                 right: 0,
                 child: AppBar(
@@ -523,7 +511,9 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
               // Floating annotations panel (layers + tools)
               if (_showFloatingLayerPanel)
                 Positioned(
-                  top: _layerPanelPosition?.dy ?? (_showControls ? 80 : 60),
+                  top:
+                      _layerPanelPosition?.dy ??
+                      (_autoHideController.isVisible ? 80 : 60),
                   right: _layerPanelPosition != null ? null : 16,
                   left: _layerPanelPosition?.dx,
                   child: FloatingAnnotationsPanel(
@@ -557,7 +547,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
               // Bottom controls
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 300),
-                bottom: _showControls ? 0 : -100,
+                bottom: _autoHideController.isVisible ? 0 : -100,
                 left: 0,
                 right: 0,
                 child: Builder(
@@ -568,15 +558,18 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                       rightPage: spread.rightPage,
                       totalPages: widget.document.pageCount,
                       viewMode: _viewMode,
-                      zoomLevel: _zoomLevel,
+                      zoomLevel: _displaySettings.zoomLevel,
                       onPreviousPage: _canGoToPrevious()
                           ? _goToPreviousPage
                           : null,
                       onNextPage: _canGoToNext() ? _goToNextPage : null,
-                      onZoomChanged: (value) =>
-                          setState(() => _zoomLevel = value),
+                      onZoomChanged: (value) => setState(
+                        () => _displaySettings = _displaySettings.copyWith(
+                          zoomLevel: value,
+                        ),
+                      ),
                       onZoomChangeEnd: (value) => _saveSettings(),
-                      onInteraction: _resetControlsTimer,
+                      onInteraction: _autoHideController.resetTimer,
                     );
                   },
                 ),
@@ -659,14 +652,20 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
       context: context,
       backgroundColor: Colors.grey[900],
       builder: (context) => DisplaySettingsPanel(
-        brightness: _brightness,
-        contrast: _contrast,
-        onBrightnessChanged: (value) => setState(() => _brightness = value),
-        onContrastChanged: (value) => setState(() => _contrast = value),
+        brightness: _displaySettings.brightness,
+        contrast: _displaySettings.contrast,
+        onBrightnessChanged: (value) => setState(
+          () => _displaySettings = _displaySettings.copyWith(brightness: value),
+        ),
+        onContrastChanged: (value) => setState(
+          () => _displaySettings = _displaySettings.copyWith(contrast: value),
+        ),
         onReset: () {
           setState(() {
-            _brightness = 0.0;
-            _contrast = 1.0;
+            _displaySettings = _displaySettings.copyWith(
+              brightness: 0.0,
+              contrast: 1.0,
+            );
           });
           _saveSettings();
         },
@@ -674,29 +673,18 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     );
   }
 
-  /// Update the layer panel position when dragged
   void _updateLayerPanelPosition(Offset delta) {
     setState(() {
       final size = MediaQuery.of(context).size;
-      final defaultPosition = Offset(size.width - 236, _showControls ? 80 : 60);
+      final defaultPosition = Offset(
+        size.width - 236,
+        _autoHideController.isVisible ? 80 : 60,
+      );
       final currentPos = _layerPanelPosition ?? defaultPosition;
       _layerPanelPosition = Offset(
         (currentPos.dx + delta.dx).clamp(0, size.width - 220),
         (currentPos.dy + delta.dy).clamp(0, size.height - 100),
       );
     });
-  }
-
-  /// Create a color matrix for brightness and contrast adjustment
-  List<double> _createColorMatrix() {
-    final double b = _brightness * 255;
-    final double c = _contrast;
-
-    return [
-      c, 0, 0, 0, b, // Red
-      0, c, 0, 0, b, // Green
-      0, 0, c, 0, b, // Blue
-      0, 0, 0, 1, 0, // Alpha
-    ];
   }
 }

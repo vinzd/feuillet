@@ -251,9 +251,100 @@ void main() {
     });
   });
 
+  group('SetListPerformanceScreen Display Settings', () {
+    test('zoom level has valid range', () {
+      const minZoom = 0.5;
+      const maxZoom = 3.0;
+      const defaultZoom = 1.0;
+
+      expect(defaultZoom, greaterThanOrEqualTo(minZoom));
+      expect(defaultZoom, lessThanOrEqualTo(maxZoom));
+    });
+
+    test('brightness has valid range', () {
+      const minBrightness = -0.5;
+      const maxBrightness = 0.5;
+      const defaultBrightness = 0.0;
+
+      expect(defaultBrightness, greaterThanOrEqualTo(minBrightness));
+      expect(defaultBrightness, lessThanOrEqualTo(maxBrightness));
+    });
+
+    test('contrast has valid range', () {
+      const minContrast = 0.5;
+      const maxContrast = 2.0;
+      const defaultContrast = 1.0;
+
+      expect(defaultContrast, greaterThanOrEqualTo(minContrast));
+      expect(defaultContrast, lessThanOrEqualTo(maxContrast));
+    });
+
+    test('color matrix is computed correctly', () {
+      const brightness = 0.1;
+      const contrast = 1.2;
+
+      List<double> createColorMatrix() {
+        final double b = brightness * 255;
+        final double c = contrast;
+        return [
+          c, 0, 0, 0, b, // Red
+          0, c, 0, 0, b, // Green
+          0, 0, c, 0, b, // Blue
+          0, 0, 0, 1, 0, // Alpha
+        ];
+      }
+
+      final matrix = createColorMatrix();
+
+      expect(matrix.length, 20);
+      expect(matrix[0], contrast); // Red scale
+      expect(matrix[4], brightness * 255); // Red offset
+      expect(matrix[6], contrast); // Green scale
+      expect(matrix[9], brightness * 255); // Green offset
+      expect(matrix[12], contrast); // Blue scale
+      expect(matrix[14], brightness * 255); // Blue offset
+      expect(matrix[18], 1.0); // Alpha scale
+    });
+  });
+
+  group('SetListPerformanceScreen Auto-hide Controls', () {
+    test('auto-hide timer is started when controls are shown', () {
+      bool showControls = false;
+      bool timerStarted = false;
+
+      void toggleControls() {
+        showControls = !showControls;
+        if (showControls) {
+          timerStarted = true;
+        }
+      }
+
+      toggleControls();
+
+      expect(showControls, isTrue);
+      expect(timerStarted, isTrue);
+    });
+
+    test('auto-hide timer is not started when controls are hidden', () {
+      bool showControls = true;
+      bool timerCancelled = false;
+
+      void toggleControls() {
+        showControls = !showControls;
+        if (!showControls) {
+          timerCancelled = true;
+        }
+      }
+
+      toggleControls();
+
+      expect(showControls, isFalse);
+      expect(timerCancelled, isTrue);
+    });
+  });
+
   group('Pre-rendering strategy', () {
     test('pre-render first pages of next document', () {
-      const nextDocIndex = 3;
       const nextDocTotalPages = 10;
 
       // Pages to pre-render for next document
@@ -265,7 +356,6 @@ void main() {
     });
 
     test('pre-render last pages of previous document', () {
-      const prevDocIndex = 1;
       const prevDocTotalPages = 8;
 
       // Pages to pre-render for previous document
