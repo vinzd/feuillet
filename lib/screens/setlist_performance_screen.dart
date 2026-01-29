@@ -1,9 +1,19 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pdfx/pdfx.dart';
 import '../models/database.dart';
+import '../models/view_mode.dart';
+import '../services/pdf_page_cache_service.dart';
+import '../widgets/performance_bottom_controls.dart';
+import '../widgets/performance_document_view.dart';
 
-/// Performance mode for set lists with quick navigation
+/// Performance mode for set lists with quick navigation.
+///
+/// Features:
+/// - Multiple view modes (single, booklet, continuous double)
+/// - Keyboard navigation (arrow keys for pages, shift+arrows for documents)
+/// - Pre-rendering for faster page loads
+/// - Read-only annotation display
 class SetListPerformanceScreen extends StatefulWidget {
   final int setListId;
   final List<Document> documents;
@@ -20,58 +30,188 @@ class SetListPerformanceScreen extends StatefulWidget {
 }
 
 class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
-  late PageController _pageController;
-  int _currentIndex = 0;
-  final Map<int, PdfController> _pdfControllers = {};
+  late PageController _documentPageController;
+  int _currentDocIndex = 0;
+
+  final Map<int, PdfDocument> _pdfDocuments = {};
+  final Map<int, bool> _documentLoading = {};
+  final Map<int, int> _currentPages = {};
+  final Map<int, GlobalKey<PerformanceDocumentViewState>> _documentViewKeys =
+      {};
+
+  PdfViewMode _viewMode = PdfViewMode.single;
   bool _showControls = true;
+  final FocusNode _focusNode = FocusNode();
+
+  int _currentPage = 1;
+  int? _currentRightPage;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
-    _initializePdfControllers();
+    _documentPageController = PageController();
+    _initializeDocuments();
   }
 
-  Future<void> _initializePdfControllers() async {
-    for (int i = 0; i < widget.documents.length; i++) {
-      final doc = widget.documents[i];
+  Future<void> _initializeDocuments() async {
+    // Load the first document immediately
+    await _ensureDocumentLoaded(0);
 
-      // Use bytes on web, file path on native
-      final Future<PdfDocument> pdfDocument;
+    // Pre-load adjacent documents
+    _preloadAdjacentDocuments();
+  }
+
+  Future<PdfDocument?> _ensureDocumentLoaded(int index) async {
+    if (index < 0 || index >= widget.documents.length) return null;
+
+    // Return if already loaded
+    if (_pdfDocuments.containsKey(index)) {
+      return _pdfDocuments[index];
+    }
+
+    // Return if already loading
+    if (_documentLoading[index] == true) {
+      // Wait for it to finish
+      while (_documentLoading[index] == true) {
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+      return _pdfDocuments[index];
+    }
+
+    // Start loading
+    _documentLoading[index] = true;
+
+    try {
+      final doc = widget.documents[index];
+      final PdfDocument pdfDocument;
+
       if (doc.pdfBytes != null) {
         // Copy bytes to avoid detached ArrayBuffer issue on web
         final bytesCopy = Uint8List.fromList(doc.pdfBytes!);
-        pdfDocument = PdfDocument.openData(bytesCopy);
+        pdfDocument = await PdfDocument.openData(bytesCopy);
       } else {
-        pdfDocument = PdfDocument.openFile(doc.filePath);
+        pdfDocument = await PdfDocument.openFile(doc.filePath);
       }
 
-      _pdfControllers[i] = PdfController(document: pdfDocument);
+      _pdfDocuments[index] = pdfDocument;
+
+      // Initialize page tracking for this document
+      _currentPages[index] = 1;
+
+      // Create a key for the view
+      _documentViewKeys[index] = GlobalKey<PerformanceDocumentViewState>();
+
+      if (mounted) setState(() {});
+
+      return pdfDocument;
+    } catch (e) {
+      debugPrint('Error loading document $index: $e');
+      return null;
+    } finally {
+      _documentLoading[index] = false;
     }
-    setState(() {});
+  }
+
+  void _preloadAdjacentDocuments() {
+    final cacheService = PdfPageCacheService.instance;
+
+    // Pre-load next document and pre-render its first pages in background
+    if (_currentDocIndex < widget.documents.length - 1) {
+      final nextDocIndex = _currentDocIndex + 1;
+      _ensureDocumentLoaded(nextDocIndex).then((pdfDoc) {
+        if (pdfDoc != null) {
+          final totalPages = widget.documents[nextDocIndex].pageCount;
+
+          // Pre-render page 1 first (this is what will be shown immediately)
+          cacheService.renderAndCachePage(document: pdfDoc, pageNumber: 1);
+
+          // Pre-render page 2 for two-page modes
+          if (totalPages > 1) {
+            cacheService.renderAndCachePage(document: pdfDoc, pageNumber: 2);
+          }
+
+          // Then pre-render additional pages in background
+          cacheService.preRenderPages(
+            document: pdfDoc,
+            currentPage: 1,
+            totalPages: totalPages,
+          );
+        }
+      });
+    }
+
+    // Pre-load previous document and pre-render its last pages
+    if (_currentDocIndex > 0) {
+      final prevDocIndex = _currentDocIndex - 1;
+      _ensureDocumentLoaded(prevDocIndex).then((pdfDoc) {
+        if (pdfDoc != null) {
+          final totalPages = widget.documents[prevDocIndex].pageCount;
+
+          // Pre-render last page first (this is what will be shown immediately)
+          cacheService.renderAndCachePage(
+            document: pdfDoc,
+            pageNumber: totalPages,
+          );
+
+          // Pre-render second-to-last page for two-page modes
+          if (totalPages > 1) {
+            cacheService.renderAndCachePage(
+              document: pdfDoc,
+              pageNumber: totalPages - 1,
+            );
+          }
+
+          // Then pre-render additional pages in background
+          cacheService.preRenderPages(
+            document: pdfDoc,
+            currentPage: totalPages,
+            totalPages: totalPages,
+          );
+        }
+      });
+    }
+
+    // Clean up distant documents (more than 2 positions away)
+    _cleanupDistantDocuments();
+  }
+
+  void _cleanupDistantDocuments() {
+    final keysToRemove = <int>[];
+    for (final index in _pdfDocuments.keys) {
+      if ((index - _currentDocIndex).abs() > 2) {
+        keysToRemove.add(index);
+      }
+    }
+    for (final index in keysToRemove) {
+      // Clear the cache for this document
+      final pdfDoc = _pdfDocuments[index];
+      if (pdfDoc != null) {
+        PdfPageCacheService.instance.clearDocument(pdfDoc.id);
+      }
+      _pdfDocuments.remove(index);
+      _documentViewKeys.remove(index);
+    }
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
-    for (final controller in _pdfControllers.values) {
-      controller.dispose();
-    }
+    _documentPageController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
-  void _nextDocument() {
-    if (_currentIndex < widget.documents.length - 1) {
-      _pageController.nextPage(
+  void _goToNextDocument() {
+    if (_currentDocIndex < widget.documents.length - 1) {
+      _documentPageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
     }
   }
 
-  void _previousDocument() {
-    if (_currentIndex > 0) {
-      _pageController.previousPage(
+  void _goToPreviousDocument() {
+    if (_currentDocIndex > 0) {
+      _documentPageController.previousPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
@@ -79,154 +219,231 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
   }
 
   void _goToDocument(int index) {
-    _pageController.animateToPage(
+    _documentPageController.animateToPage(
       index,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
   }
 
+  void _onDocumentChanged(int index) {
+    setState(() {
+      _currentDocIndex = index;
+      // Restore the page position for this document
+      _currentPage = _currentPages[index] ?? 1;
+      _currentRightPage = null; // Will be updated by onPageChanged callback
+    });
+    _preloadAdjacentDocuments();
+  }
+
+  void _onPageChanged(int docIndex, ({int left, int? right}) spread) {
+    if (docIndex == _currentDocIndex) {
+      setState(() {
+        _currentPage = spread.left;
+        _currentRightPage = spread.right;
+        _currentPages[docIndex] = spread.left;
+      });
+    } else {
+      _currentPages[docIndex] = spread.left;
+    }
+  }
+
+  void _goToNextPage() {
+    final viewKey = _documentViewKeys[_currentDocIndex];
+    viewKey?.currentState?.goToNext();
+  }
+
+  void _goToPreviousPage() {
+    final viewKey = _documentViewKeys[_currentDocIndex];
+    viewKey?.currentState?.goToPrevious();
+  }
+
+  void _onReachedDocumentStart() {
+    // At first page, go to previous document's last page
+    if (_currentDocIndex > 0) {
+      _goToPreviousDocument();
+      // After the document change animation, jump to the last page
+      Future.delayed(const Duration(milliseconds: 350), () {
+        final viewKey = _documentViewKeys[_currentDocIndex];
+        viewKey?.currentState?.goToLast();
+      });
+    }
+  }
+
+  void _onReachedDocumentEnd() {
+    // At last page, go to next document
+    if (_currentDocIndex < widget.documents.length - 1) {
+      _goToNextDocument();
+    }
+  }
+
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent) {
+      return KeyEventResult.ignored;
+    }
+
+    final key = event.logicalKey;
+    final isShiftPressed = HardwareKeyboard.instance.isShiftPressed;
+
+    // Shift+arrow for document navigation
+    if (isShiftPressed) {
+      if (key == LogicalKeyboardKey.arrowLeft) {
+        _goToPreviousDocument();
+        return KeyEventResult.handled;
+      }
+      if (key == LogicalKeyboardKey.arrowRight) {
+        _goToNextDocument();
+        return KeyEventResult.handled;
+      }
+    }
+
+    switch (key) {
+      case LogicalKeyboardKey.arrowUp:
+        _goToPreviousDocument();
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowDown:
+        _goToNextDocument();
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowLeft:
+      case LogicalKeyboardKey.pageUp:
+        _goToPreviousPage();
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowRight:
+      case LogicalKeyboardKey.pageDown:
+      case LogicalKeyboardKey.space:
+        _goToNextPage();
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.home:
+        _documentViewKeys[_currentDocIndex]?.currentState?.goToFirst();
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.end:
+        _documentViewKeys[_currentDocIndex]?.currentState?.goToLast();
+        return KeyEventResult.handled;
+      default:
+        return KeyEventResult.ignored;
+    }
+  }
+
+  void _toggleControls() {
+    setState(() => _showControls = !_showControls);
+  }
+
+  void _onViewModeChanged(PdfViewMode mode) {
+    setState(() => _viewMode = mode);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: GestureDetector(
-        onTap: () {
-          setState(() => _showControls = !_showControls);
-        },
-        child: Stack(
-          children: [
-            // PDF page view
-            PageView.builder(
-              controller: _pageController,
-              itemCount: widget.documents.length,
-              onPageChanged: (index) {
-                setState(() => _currentIndex = index);
-              },
-              itemBuilder: (context, index) {
-                final pdfController = _pdfControllers[index];
-                if (pdfController == null) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+    return Focus(
+      focusNode: _focusNode,
+      autofocus: true,
+      onKeyEvent: _handleKeyEvent,
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: GestureDetector(
+          onTap: _toggleControls,
+          child: Stack(
+            children: [
+              PageView.builder(
+                controller: _documentPageController,
+                itemCount: widget.documents.length,
+                onPageChanged: _onDocumentChanged,
+                physics:
+                    const NeverScrollableScrollPhysics(), // Disable swipe, use buttons only
+                itemBuilder: (context, index) {
+                  final pdfDocument = _pdfDocuments[index];
+                  if (pdfDocument == null) {
+                    return const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    );
+                  }
 
-                return PdfView(
-                  controller: pdfController,
-                  scrollDirection: Axis.horizontal,
-                  pageSnapping: true,
-                );
-              },
-            ),
-
-            // Top controls
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              top: _showControls ? 0 : -100,
-              left: 0,
-              right: 0,
-              child: AppBar(
-                backgroundColor: Colors.black.withValues(alpha: 0.7),
-                title: Text(
-                  widget.documents[_currentIndex].name,
-                  style: const TextStyle(color: Colors.white),
-                ),
-                iconTheme: const IconThemeData(color: Colors.white),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.list),
-                    onPressed: _showDocumentList,
-                    tooltip: 'Document list',
-                  ),
-                ],
+                  return PerformanceDocumentView(
+                    key: _documentViewKeys[index],
+                    document: widget.documents[index],
+                    pdfDocument: pdfDocument,
+                    viewMode: _viewMode,
+                    initialPage: _currentPages[index] ?? 1,
+                    onReachedStart: _onReachedDocumentStart,
+                    onReachedEnd: _onReachedDocumentEnd,
+                    onPageChanged: (spread) => _onPageChanged(index, spread),
+                  );
+                },
               ),
-            ),
 
-            // Bottom navigation
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              bottom: _showControls ? 0 : -100,
-              left: 0,
-              right: 0,
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.7),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Progress indicator
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '${_currentIndex + 1} of ${widget.documents.length}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Navigation buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.skip_previous, size: 36),
-                          color: Colors.white,
-                          onPressed: _currentIndex > 0
-                              ? _previousDocument
-                              : null,
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.chevron_left, size: 48),
-                          color: Colors.white,
-                          onPressed: _currentIndex > 0
-                              ? _previousDocument
-                              : null,
-                        ),
-                        Container(
-                          width: 80,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: Colors.white24,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: FractionallySizedBox(
-                            alignment: Alignment.centerLeft,
-                            widthFactor: (widget.documents.length > 1)
-                                ? (_currentIndex + 1) / widget.documents.length
-                                : 1.0,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.blue,
-                                borderRadius: BorderRadius.circular(4),
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                top: _showControls ? 0 : -100,
+                left: 0,
+                right: 0,
+                child: AppBar(
+                  backgroundColor: Colors.black.withValues(alpha: 0.7),
+                  title: Text(
+                    widget.documents[_currentDocIndex].name,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  iconTheme: const IconThemeData(color: Colors.white),
+                  actions: [
+                    // View mode selector
+                    PopupMenuButton<PdfViewMode>(
+                      icon: Icon(_viewMode.icon, color: Colors.white),
+                      tooltip: 'View mode',
+                      onSelected: _onViewModeChanged,
+                      itemBuilder: (context) => PdfViewMode.values
+                          .map(
+                            (mode) => PopupMenuItem(
+                              value: mode,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    mode.icon,
+                                    color: mode == _viewMode
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(mode.displayName),
+                                ],
                               ),
                             ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.chevron_right, size: 48),
-                          color: Colors.white,
-                          onPressed: _currentIndex < widget.documents.length - 1
-                              ? _nextDocument
-                              : null,
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.skip_next, size: 36),
-                          color: Colors.white,
-                          onPressed: _currentIndex < widget.documents.length - 1
-                              ? _nextDocument
-                              : null,
-                        ),
-                      ],
+                          )
+                          .toList(),
+                    ),
+                    // Document list
+                    IconButton(
+                      icon: const Icon(Icons.list),
+                      onPressed: _showDocumentList,
+                      tooltip: 'Document list',
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                bottom: _showControls ? 0 : -200,
+                left: 0,
+                right: 0,
+                child: PerformanceBottomControls(
+                  currentDocIndex: _currentDocIndex,
+                  totalDocs: widget.documents.length,
+                  currentDocName: widget.documents[_currentDocIndex].name,
+                  currentPage: _currentPage,
+                  rightPage: _currentRightPage,
+                  totalPages: widget.documents[_currentDocIndex].pageCount,
+                  viewMode: _viewMode,
+                  onPrevDoc: _currentDocIndex > 0
+                      ? _goToPreviousDocument
+                      : null,
+                  onNextDoc: _currentDocIndex < widget.documents.length - 1
+                      ? _goToNextDocument
+                      : null,
+                  onPrevPage: _goToPreviousPage,
+                  onNextPage: _goToNextPage,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -256,11 +473,13 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
                 itemCount: widget.documents.length,
                 itemBuilder: (context, index) {
                   final doc = widget.documents[index];
-                  final isCurrent = index == _currentIndex;
+                  final isCurrent = index == _currentDocIndex;
 
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: isCurrent ? Colors.blue : Colors.grey,
+                      backgroundColor: isCurrent
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey,
                       child: Text(
                         '${index + 1}',
                         style: const TextStyle(color: Colors.white),
@@ -269,7 +488,9 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
                     title: Text(
                       doc.name,
                       style: TextStyle(
-                        color: isCurrent ? Colors.blue : Colors.white,
+                        color: isCurrent
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.white,
                         fontWeight: isCurrent
                             ? FontWeight.bold
                             : FontWeight.normal,
