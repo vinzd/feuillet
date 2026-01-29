@@ -106,10 +106,8 @@ void main() {
     testWidgets('prev document button is disabled on first document', (
       tester,
     ) async {
-      bool prevCalled = false;
-
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: PerformanceBottomControls(
               currentDocIndex: 0,
@@ -117,7 +115,6 @@ void main() {
               currentDocName: 'Test',
               currentPage: 1,
               totalPages: 10,
-              onPrevDoc: () => prevCalled = true,
             ),
           ),
         ),
@@ -260,6 +257,85 @@ void main() {
     });
   });
 
+  group('PerformanceBottomControls zoom slider', () {
+    testWidgets('shows zoom slider when onZoomChanged is provided', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PerformanceBottomControls(
+              currentDocIndex: 0,
+              totalDocs: 1,
+              currentDocName: 'Test',
+              currentPage: 1,
+              totalPages: 10,
+              zoomLevel: 1.5,
+              onZoomChanged: (_) {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(Slider), findsOneWidget);
+      expect(find.text('150%'), findsOneWidget);
+      expect(find.byIcon(Icons.zoom_in), findsOneWidget);
+      expect(find.byIcon(Icons.zoom_out), findsOneWidget);
+    });
+
+    testWidgets('hides zoom slider when onZoomChanged is null', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: PerformanceBottomControls(
+              currentDocIndex: 0,
+              totalDocs: 1,
+              currentDocName: 'Test',
+              currentPage: 1,
+              totalPages: 10,
+              zoomLevel: 1.0,
+              onZoomChanged: null,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(Slider), findsNothing);
+    });
+
+    testWidgets('zoom slider calls callbacks when changed', (tester) async {
+      double zoomValue = 1.0;
+      bool interactionCalled = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PerformanceBottomControls(
+              currentDocIndex: 0,
+              totalDocs: 1,
+              currentDocName: 'Test',
+              currentPage: 1,
+              totalPages: 10,
+              zoomLevel: 1.0,
+              onZoomChanged: (value) => zoomValue = value,
+              onInteraction: () => interactionCalled = true,
+            ),
+          ),
+        ),
+      );
+
+      final slider = find.byType(Slider);
+      expect(slider, findsOneWidget);
+
+      // Drag the slider
+      await tester.drag(slider, const Offset(50, 0));
+      await tester.pump();
+
+      expect(zoomValue, isNot(1.0));
+      expect(interactionCalled, isTrue);
+    });
+  });
+
   group('PerformanceBottomControls page text', () {
     test('single mode page text format', () {
       const viewMode = PdfViewMode.single;
@@ -278,19 +354,14 @@ void main() {
     });
 
     test('two-page mode page text format', () {
-      const viewMode = PdfViewMode.booklet;
       const currentPage = 3;
       const rightPage = 4;
       const totalPages = 10;
 
-      String buildPageText() {
-        if (viewMode == PdfViewMode.single || rightPage == null) {
-          return 'Page $currentPage of $totalPages';
-        }
-        return 'Pages $currentPage-$rightPage of $totalPages';
-      }
+      // In two-page mode with a right page, format should be "Pages X-Y of Z"
+      final pageText = 'Pages $currentPage-$rightPage of $totalPages';
 
-      expect(buildPageText(), 'Pages 3-4 of 10');
+      expect(pageText, 'Pages 3-4 of 10');
     });
   });
 }

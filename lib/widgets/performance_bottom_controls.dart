@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/view_mode.dart';
+import 'zoom_slider.dart';
 
 /// Bottom controls for setlist performance mode.
 ///
@@ -14,10 +15,13 @@ class PerformanceBottomControls extends StatelessWidget {
     required this.totalPages,
     this.rightPage,
     this.viewMode = PdfViewMode.single,
+    this.zoomLevel = 1.0,
     this.onPrevDoc,
     this.onNextDoc,
     this.onPrevPage,
     this.onNextPage,
+    this.onZoomChanged,
+    this.onInteraction,
     super.key,
   });
 
@@ -42,6 +46,9 @@ class PerformanceBottomControls extends StatelessWidget {
   /// Current view mode
   final PdfViewMode viewMode;
 
+  /// Current zoom level (0.5 to 3.0)
+  final double zoomLevel;
+
   /// Called when previous document is requested
   final VoidCallback? onPrevDoc;
 
@@ -53,6 +60,12 @@ class PerformanceBottomControls extends StatelessWidget {
 
   /// Called when next page is requested
   final VoidCallback? onNextPage;
+
+  /// Called when zoom level changes
+  final ValueChanged<double>? onZoomChanged;
+
+  /// Called when user interacts with controls (for auto-hide timer reset)
+  final VoidCallback? onInteraction;
 
   String get _pageText {
     final hasRightPage = viewMode != PdfViewMode.single && rightPage != null;
@@ -143,6 +156,16 @@ class PerformanceBottomControls extends StatelessWidget {
               ),
             ],
           ),
+
+          // Zoom slider
+          if (onZoomChanged != null) ...[
+            const SizedBox(height: 8),
+            ZoomSlider(
+              value: zoomLevel,
+              onChanged: onZoomChanged!,
+              onInteraction: onInteraction,
+            ),
+          ],
         ],
       ),
     );

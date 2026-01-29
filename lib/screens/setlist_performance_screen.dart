@@ -4,6 +4,9 @@ import 'package:pdfx/pdfx.dart';
 import '../models/database.dart';
 import '../models/view_mode.dart';
 import '../services/pdf_page_cache_service.dart';
+import '../utils/auto_hide_controller.dart';
+import '../utils/display_settings.dart';
+import '../widgets/display_settings_panel.dart';
 import '../widgets/performance_bottom_controls.dart';
 import '../widgets/performance_document_view.dart';
 
@@ -40,8 +43,11 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
       {};
 
   PdfViewMode _viewMode = PdfViewMode.single;
-  bool _showControls = true;
+  late final AutoHideController _autoHideController;
   final FocusNode _focusNode = FocusNode();
+
+  // Display settings
+  DisplaySettings _displaySettings = DisplaySettings.defaults;
 
   int _currentPage = 1;
   int? _currentRightPage;
@@ -49,6 +55,10 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
   @override
   void initState() {
     super.initState();
+    _autoHideController = AutoHideController()
+      ..addListener(() {
+        if (mounted) setState(() {});
+      });
     _documentPageController = PageController();
     _initializeDocuments();
   }
@@ -195,6 +205,7 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
 
   @override
   void dispose() {
+    _autoHideController.dispose();
     _documentPageController.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -324,12 +335,33 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
     }
   }
 
-  void _toggleControls() {
-    setState(() => _showControls = !_showControls);
-  }
-
   void _onViewModeChanged(PdfViewMode mode) {
     setState(() => _viewMode = mode);
+  }
+
+  void _showDisplaySettings() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.grey[900],
+      builder: (context) => DisplaySettingsPanel(
+        brightness: _displaySettings.brightness,
+        contrast: _displaySettings.contrast,
+        onBrightnessChanged: (value) => setState(
+          () => _displaySettings = _displaySettings.copyWith(brightness: value),
+        ),
+        onContrastChanged: (value) => setState(
+          () => _displaySettings = _displaySettings.copyWith(contrast: value),
+        ),
+        onReset: () {
+          setState(() {
+            _displaySettings = _displaySettings.copyWith(
+              brightness: 0.0,
+              contrast: 1.0,
+            );
+          });
+        },
+      ),
+    );
   }
 
   @override
@@ -341,39 +373,46 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
       child: Scaffold(
         backgroundColor: Colors.black,
         body: GestureDetector(
-          onTap: _toggleControls,
+          onTap: _autoHideController.toggle,
           child: Stack(
             children: [
-              PageView.builder(
-                controller: _documentPageController,
-                itemCount: widget.documents.length,
-                onPageChanged: _onDocumentChanged,
-                physics:
-                    const NeverScrollableScrollPhysics(), // Disable swipe, use buttons only
-                itemBuilder: (context, index) {
-                  final pdfDocument = _pdfDocuments[index];
-                  if (pdfDocument == null) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: Colors.white),
-                    );
-                  }
+              ColorFiltered(
+                colorFilter: _displaySettings.colorFilter,
+                child: Transform.scale(
+                  scale: _displaySettings.zoomLevel,
+                  child: PageView.builder(
+                    controller: _documentPageController,
+                    itemCount: widget.documents.length,
+                    onPageChanged: _onDocumentChanged,
+                    physics:
+                        const NeverScrollableScrollPhysics(), // Disable swipe, use buttons only
+                    itemBuilder: (context, index) {
+                      final pdfDocument = _pdfDocuments[index];
+                      if (pdfDocument == null) {
+                        return const Center(
+                          child: CircularProgressIndicator(color: Colors.white),
+                        );
+                      }
 
-                  return PerformanceDocumentView(
-                    key: _documentViewKeys[index],
-                    document: widget.documents[index],
-                    pdfDocument: pdfDocument,
-                    viewMode: _viewMode,
-                    initialPage: _currentPages[index] ?? 1,
-                    onReachedStart: _onReachedDocumentStart,
-                    onReachedEnd: _onReachedDocumentEnd,
-                    onPageChanged: (spread) => _onPageChanged(index, spread),
-                  );
-                },
+                      return PerformanceDocumentView(
+                        key: _documentViewKeys[index],
+                        document: widget.documents[index],
+                        pdfDocument: pdfDocument,
+                        viewMode: _viewMode,
+                        initialPage: _currentPages[index] ?? 1,
+                        onReachedStart: _onReachedDocumentStart,
+                        onReachedEnd: _onReachedDocumentEnd,
+                        onPageChanged: (spread) =>
+                            _onPageChanged(index, spread),
+                      );
+                    },
+                  ),
+                ),
               ),
 
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 300),
-                top: _showControls ? 0 : -100,
+                top: _autoHideController.isVisible ? 0 : -100,
                 left: 0,
                 right: 0,
                 child: AppBar(
@@ -409,6 +448,12 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
                           )
                           .toList(),
                     ),
+                    // Display settings
+                    IconButton(
+                      icon: const Icon(Icons.tune, color: Colors.white),
+                      onPressed: _showDisplaySettings,
+                      tooltip: 'Display settings',
+                    ),
                     // Document list
                     IconButton(
                       icon: const Icon(Icons.list),
@@ -421,7 +466,7 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
 
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 300),
-                bottom: _showControls ? 0 : -200,
+                bottom: _autoHideController.isVisible ? 0 : -200,
                 left: 0,
                 right: 0,
                 child: PerformanceBottomControls(
@@ -432,6 +477,7 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
                   rightPage: _currentRightPage,
                   totalPages: widget.documents[_currentDocIndex].pageCount,
                   viewMode: _viewMode,
+                  zoomLevel: _displaySettings.zoomLevel,
                   onPrevDoc: _currentDocIndex > 0
                       ? _goToPreviousDocument
                       : null,
@@ -440,6 +486,12 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen> {
                       : null,
                   onPrevPage: _goToPreviousPage,
                   onNextPage: _goToNextPage,
+                  onZoomChanged: (value) => setState(
+                    () => _displaySettings = _displaySettings.copyWith(
+                      zoomLevel: value,
+                    ),
+                  ),
+                  onInteraction: _autoHideController.resetTimer,
                 ),
               ),
             ],

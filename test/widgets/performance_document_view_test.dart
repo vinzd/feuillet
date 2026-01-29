@@ -10,7 +10,6 @@ void main() {
     group('Single page mode navigation', () {
       test('can go to previous when not on first page', () {
         const currentPage = 5;
-        const totalPages = 10;
 
         final canGoPrevious = currentPage > 1;
 

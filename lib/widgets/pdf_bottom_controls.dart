@@ -1,8 +1,23 @@
 import 'package:flutter/material.dart';
 import '../models/view_mode.dart';
+import 'zoom_slider.dart';
 
 /// Bottom controls for PDF viewer (page navigation and zoom)
 class PdfBottomControls extends StatelessWidget {
+  const PdfBottomControls({
+    required this.currentPage,
+    required this.totalPages,
+    required this.zoomLevel,
+    required this.onZoomChanged,
+    required this.onInteraction,
+    this.rightPage,
+    this.viewMode = PdfViewMode.single,
+    this.onPreviousPage,
+    this.onNextPage,
+    this.onZoomChangeEnd,
+    super.key,
+  });
+
   final int currentPage;
   final int? rightPage;
   final int totalPages;
@@ -11,28 +26,14 @@ class PdfBottomControls extends StatelessWidget {
   final VoidCallback? onPreviousPage;
   final VoidCallback? onNextPage;
   final ValueChanged<double> onZoomChanged;
-  final ValueChanged<double> onZoomChangeEnd;
+  final ValueChanged<double>? onZoomChangeEnd;
   final VoidCallback onInteraction;
 
-  const PdfBottomControls({
-    super.key,
-    required this.currentPage,
-    this.rightPage,
-    required this.totalPages,
-    required this.zoomLevel,
-    this.viewMode = PdfViewMode.single,
-    this.onPreviousPage,
-    this.onNextPage,
-    required this.onZoomChanged,
-    required this.onZoomChangeEnd,
-    required this.onInteraction,
-  });
-
-  String _buildPageText() {
-    if (viewMode == PdfViewMode.single || rightPage == null) {
-      return 'Page $currentPage of $totalPages';
-    }
-    return 'Pages $currentPage-$rightPage of $totalPages';
+  String get _pageText {
+    final hasRightPage = viewMode != PdfViewMode.single && rightPage != null;
+    return hasRightPage
+        ? 'Pages $currentPage-$rightPage of $totalPages'
+        : 'Page $currentPage of $totalPages';
   }
 
   @override
@@ -51,10 +52,7 @@ class PdfBottomControls extends StatelessWidget {
                 icon: const Icon(Icons.chevron_left, color: Colors.white),
                 onPressed: onPreviousPage,
               ),
-              Text(
-                _buildPageText(),
-                style: const TextStyle(color: Colors.white),
-              ),
+              Text(_pageText, style: const TextStyle(color: Colors.white)),
               IconButton(
                 icon: const Icon(Icons.chevron_right, color: Colors.white),
                 onPressed: onNextPage,
@@ -63,28 +61,12 @@ class PdfBottomControls extends StatelessWidget {
           ),
 
           // Zoom slider
-          Row(
-            children: [
-              const Icon(Icons.zoom_out, color: Colors.white, size: 20),
-              Expanded(
-                child: Slider(
-                  value: zoomLevel,
-                  min: 0.5,
-                  max: 3.0,
-                  onChanged: (value) {
-                    onZoomChanged(value);
-                    onInteraction();
-                  },
-                  onChangeEnd: onZoomChangeEnd,
-                ),
-              ),
-              const Icon(Icons.zoom_in, color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                '${(zoomLevel * 100).toInt()}%',
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
-            ],
+          ZoomSlider(
+            value: zoomLevel,
+            onChanged: onZoomChanged,
+            onChangeEnd: onZoomChangeEnd,
+            onInteraction: onInteraction,
+            width: MediaQuery.of(context).size.width - 150,
           ),
         ],
       ),
