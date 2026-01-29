@@ -18,6 +18,7 @@ import '../widgets/floating_annotations_panel.dart';
 import '../widgets/display_settings_panel.dart';
 import '../widgets/pdf_bottom_controls.dart';
 import '../widgets/two_page_pdf_view.dart';
+import '../widgets/export_pdf_dialog.dart';
 
 /// PDF Viewer screen with zoom, pan, and contrast controls
 class PdfViewerScreen extends ConsumerStatefulWidget {
@@ -504,6 +505,16 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                       onPressed: () => _showControlsPanel(),
                       tooltip: 'Display settings',
                     ),
+                    if (_pdfDocument != null)
+                      IconButton(
+                        icon: const Icon(Icons.ios_share),
+                        onPressed: () => ExportPdfDialog.show(
+                          context: context,
+                          document: widget.document,
+                          pdfDocument: _pdfDocument!,
+                        ),
+                        tooltip: 'Export PDF',
+                      ),
                   ],
                 ),
               ),
