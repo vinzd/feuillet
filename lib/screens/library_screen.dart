@@ -1,13 +1,22 @@
 import 'package:drift/drift.dart' hide Column;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pdfx/pdfx.dart';
 import '../models/database.dart';
 import '../router/app_router.dart';
+import '../services/annotation_service.dart';
 import '../services/database_service.dart';
+import '../services/pdf_export_service.dart';
 import '../services/pdf_service.dart';
+import '../services/setlist_service.dart';
 import '../services/version_service.dart';
 import '../widgets/pdf_card.dart';
+import '../widgets/setlist_picker_dialog.dart';
+import '../widgets/export_pdf_dialog_web.dart'
+    if (dart.library.io) '../widgets/export_pdf_dialog_native.dart'
+    as platform;
 
 /// Provider for the list of documents
 final documentsProvider = StreamProvider<List<Document>>((ref) {
@@ -28,6 +37,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   String _searchQuery = '';
   bool _isLoading = false;
   String? _importProgress;
+
+  // Selection mode state
+  bool _isSelectionMode = false;
+  final Set<int> _selectedDocumentIds = {};
 
   @override
   void initState() {
@@ -104,13 +117,26 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     );
   }
 
+  String _pluralize(int count, String singular, {String? plural}) {
+    return count == 1 ? singular : (plural ?? '${singular}s');
+  }
+
   String _formatSuccessMessage(int count) {
-    return count == 1 ? 'Imported 1 PDF' : 'Imported $count PDFs';
+    return 'Imported $count ${_pluralize(count, 'PDF')}';
   }
 
   String _formatFailureMessage(int count) {
-    final plural = count == 1 ? '' : 's';
-    return 'Failed to import $count PDF$plural';
+    return 'Failed to import $count ${_pluralize(count, 'PDF')}';
+  }
+
+  String _formatAddToSetListMessage(int addedCount, int skippedCount) {
+    if (skippedCount > 0 && addedCount > 0) {
+      return 'Added $addedCount, skipped $skippedCount (already in set list)';
+    }
+    if (skippedCount > 0) {
+      return 'All selected documents already in set list';
+    }
+    return 'Added $addedCount ${_pluralize(addedCount, 'document')} to set list';
   }
 
   void _showImportFailuresDialog(List<PdfImportResult> failures) {
@@ -162,6 +188,235 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     }).toList();
   }
 
+  // Selection mode methods
+  void _enterSelectionMode(Document document) {
+    setState(() {
+      _isSelectionMode = true;
+      _selectedDocumentIds.add(document.id);
+    });
+  }
+
+  void _handleCheckboxTap(Document document) {
+    if (_isSelectionMode) {
+      _toggleSelection(document);
+    } else {
+      _enterSelectionMode(document);
+    }
+  }
+
+  void _exitSelectionMode() {
+    setState(() {
+      _isSelectionMode = false;
+      _selectedDocumentIds.clear();
+    });
+  }
+
+  void _toggleSelection(Document document) {
+    setState(() {
+      if (_selectedDocumentIds.contains(document.id)) {
+        _selectedDocumentIds.remove(document.id);
+        if (_selectedDocumentIds.isEmpty) {
+          _isSelectionMode = false;
+        }
+      } else {
+        _selectedDocumentIds.add(document.id);
+      }
+    });
+  }
+
+  void _selectAll(List<Document> documents) {
+    setState(() {
+      _selectedDocumentIds.addAll(documents.map((d) => d.id));
+    });
+  }
+
+  void _deselectAll() {
+    setState(() {
+      _selectedDocumentIds.clear();
+    });
+  }
+
+  void _handleDocumentTap(Document document) {
+    if (_isSelectionMode) {
+      _toggleSelection(document);
+    } else {
+      _openPdf(document);
+    }
+  }
+
+  // Bulk action methods
+  Future<void> _addSelectedToSetList() async {
+    final setListId = await SetListPickerDialog.show(context);
+    if (setListId == null || !mounted) return;
+
+    final setListService = SetListService();
+
+    // Get existing documents in the target set list to avoid duplicates
+    final existingDocs = await setListService.getSetListDocuments(setListId);
+    final existingDocIds = existingDocs.map((d) => d.id).toSet();
+
+    int addedCount = 0;
+    int skippedCount = 0;
+
+    for (final docId in _selectedDocumentIds) {
+      if (existingDocIds.contains(docId)) {
+        skippedCount++;
+      } else {
+        await setListService.addDocumentToSetList(
+          setListId: setListId,
+          documentId: docId,
+        );
+        addedCount++;
+      }
+    }
+
+    await setListService.touchSetList(setListId);
+
+    if (mounted) {
+      final message = _formatAddToSetListMessage(addedCount, skippedCount);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+      _exitSelectionMode();
+    }
+  }
+
+  Future<void> _deleteSelected() async {
+    final count = _selectedDocumentIds.length;
+    final deleteFiles = await _showDeleteConfirmationDialog(count);
+
+    if (deleteFiles == null || !mounted) return;
+
+    for (final docId in _selectedDocumentIds) {
+      await PdfService.instance.deletePdf(docId, deleteFile: deleteFiles);
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Deleted $count ${_pluralize(count, 'document')}'),
+        ),
+      );
+      _exitSelectionMode();
+    }
+  }
+
+  Future<void> _exportSelected() async {
+    final documents = await ref.read(databaseProvider).getAllDocuments();
+    final selectedDocs = documents
+        .where((d) => _selectedDocumentIds.contains(d.id))
+        .toList();
+
+    if (selectedDocs.isEmpty) return;
+
+    // Show export progress dialog
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => _BulkExportDialog(documents: selectedDocs),
+    );
+
+    if (mounted) {
+      _exitSelectionMode();
+    }
+  }
+
+  Future<bool?> _showDeleteConfirmationDialog(int count) async {
+    bool deleteFiles = false;
+
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Delete Documents'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Are you sure you want to delete $count ${_pluralize(count, 'document')}?',
+              ),
+              const SizedBox(height: 16),
+              CheckboxListTile(
+                value: deleteFiles,
+                onChanged: (value) {
+                  setDialogState(() => deleteFiles = value ?? false);
+                },
+                title: const Text('Also delete PDF files from disk'),
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, deleteFiles),
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Delete'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectionActionBar() {
+    final hasSelection = _selectedDocumentIds.isNotEmpty;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(25),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: hasSelection ? _addSelectedToSetList : null,
+                icon: const Icon(Icons.playlist_add),
+                label: const Text('Add to Set List'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: hasSelection ? _exportSelected : null,
+                icon: const Icon(Icons.ios_share),
+                label: const Text('Export'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: hasSelection ? _deleteSelected : null,
+                icon: const Icon(Icons.delete),
+                label: const Text('Delete'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: hasSelection ? Colors.red : null,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmptyState(bool isLibraryEmpty) {
     return Center(
       child: Column(
@@ -201,9 +456,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         ),
         itemCount: documents.length,
         itemBuilder: (context, index) {
+          final doc = documents[index];
           return PdfCard(
-            document: documents[index],
-            onTap: () => _openPdf(documents[index]),
+            document: doc,
+            onTap: () => _handleDocumentTap(doc),
+            onLongPress: () => _enterSelectionMode(doc),
+            onCheckboxTap: () => _handleCheckboxTap(doc),
+            isSelectionMode: _isSelectionMode,
+            isSelected: _selectedDocumentIds.contains(doc.id),
           );
         },
       );
@@ -212,9 +472,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         padding: const EdgeInsets.all(16),
         itemCount: documents.length,
         itemBuilder: (context, index) {
+          final doc = documents[index];
           return PdfListTile(
-            document: documents[index],
-            onTap: () => _openPdf(documents[index]),
+            document: doc,
+            onTap: () => _handleDocumentTap(doc),
+            onLongPress: () => _enterSelectionMode(doc),
+            isSelectionMode: _isSelectionMode,
+            isSelected: _selectedDocumentIds.contains(doc.id),
           );
         },
       );
@@ -235,6 +499,86 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     );
   }
 
+  PreferredSizeWidget _buildAppBar(
+    BuildContext context,
+    AsyncValue<List<Document>> documentsAsync,
+    AsyncValue<VersionInfo> versionInfo,
+  ) {
+    if (_isSelectionMode) {
+      return AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: _exitSelectionMode,
+          tooltip: 'Cancel selection',
+        ),
+        title: Text('${_selectedDocumentIds.length} selected'),
+        actions: [
+          documentsAsync.whenOrNull(
+                data: (documents) {
+                  final filteredDocs = _filterDocuments(documents);
+                  final allSelected =
+                      _selectedDocumentIds.length == filteredDocs.length &&
+                      filteredDocs.isNotEmpty;
+                  return IconButton(
+                    icon: Icon(allSelected ? Icons.deselect : Icons.select_all),
+                    onPressed: () {
+                      if (allSelected) {
+                        _deselectAll();
+                      } else {
+                        _selectAll(filteredDocs);
+                      }
+                    },
+                    tooltip: allSelected ? 'Deselect all' : 'Select all',
+                  );
+                },
+              ) ??
+              const SizedBox.shrink(),
+        ],
+      );
+    }
+
+    return AppBar(
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('Open Score'),
+          const SizedBox(width: 8),
+          versionInfo.when(
+            data: (info) => Text(
+              info.displayString,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
+              ),
+            ),
+            loading: () => const SizedBox.shrink(),
+            error: (error, stack) => const SizedBox.shrink(),
+          ),
+        ],
+      ),
+      actions: [
+        IconButton(
+          icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view),
+          onPressed: () {
+            setState(() => _isGridView = !_isGridView);
+          },
+          tooltip: _isGridView ? 'List view' : 'Grid view',
+        ),
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: _syncLibrary,
+          tooltip: 'Sync library',
+        ),
+        IconButton(
+          icon: const Icon(Icons.settings),
+          onPressed: () {
+            // TODO: Navigate to settings
+          },
+          tooltip: 'Settings',
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final documentsAsync = ref.watch(documentsProvider);
@@ -242,46 +586,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final versionInfo = ref.watch(versionInfoProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Open Score'),
-            const SizedBox(width: 8),
-            versionInfo.when(
-              data: (info) => Text(
-                info.displayString,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
-                ),
-              ),
-              loading: () => const SizedBox.shrink(),
-              error: (error, stack) => const SizedBox.shrink(),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view),
-            onPressed: () {
-              setState(() => _isGridView = !_isGridView);
-            },
-            tooltip: _isGridView ? 'List view' : 'Grid view',
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _syncLibrary,
-            tooltip: 'Sync library',
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              // TODO: Navigate to settings
-            },
-            tooltip: 'Settings',
-          ),
-        ],
-      ),
+      appBar: _buildAppBar(context, documentsAsync, versionInfo),
       body: Column(
         children: [
           // Search bar
@@ -316,20 +621,201 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               error: (error, stack) => _buildErrorState(error),
             ),
           ),
+
+          // Selection action bar
+          if (_isSelectionMode) _buildSelectionActionBar(),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isLoading ? null : _importPdfs,
-        tooltip: 'Import PDFs',
-        icon: _isLoading
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.add),
-        label: Text(_importProgress ?? 'Import'),
-      ),
+      floatingActionButton: _isSelectionMode
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _isLoading ? null : _importPdfs,
+              tooltip: 'Import PDFs',
+              icon: _isLoading
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.add),
+              label: Text(_importProgress ?? 'Import'),
+            ),
+    );
+  }
+}
+
+/// Dialog for bulk exporting PDFs with annotations
+class _BulkExportDialog extends StatefulWidget {
+  final List<Document> documents;
+
+  const _BulkExportDialog({required this.documents});
+
+  @override
+  State<_BulkExportDialog> createState() => _BulkExportDialogState();
+}
+
+class _BulkExportDialogState extends State<_BulkExportDialog> {
+  final _exportService = PdfExportService.instance;
+  final _annotationService = AnnotationService();
+
+  bool _isExporting = false;
+  int _currentDocIndex = 0;
+  int _currentPage = 0;
+  int _totalPages = 0;
+  String _currentDocName = '';
+  int _successCount = 0;
+  int _failCount = 0;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _startExport();
+  }
+
+  Future<void> _startExport() async {
+    setState(() {
+      _isExporting = true;
+      _error = null;
+    });
+
+    for (int i = 0; i < widget.documents.length; i++) {
+      if (!mounted) return;
+
+      final doc = widget.documents[i];
+      setState(() {
+        _currentDocIndex = i;
+        _currentDocName = doc.name;
+        _currentPage = 0;
+        _totalPages = doc.pageCount;
+      });
+
+      try {
+        await _exportDocument(doc);
+        _successCount++;
+      } catch (e) {
+        debugPrint('Failed to export ${doc.name}: $e');
+        _failCount++;
+      }
+    }
+
+    if (mounted) {
+      setState(() => _isExporting = false);
+    }
+  }
+
+  Future<void> _exportDocument(Document doc) async {
+    // Load the PDF document
+    PdfDocument pdfDoc;
+    if (kIsWeb && doc.pdfBytes != null) {
+      final bytesCopy = Uint8List.fromList(doc.pdfBytes!);
+      pdfDoc = await PdfDocument.openData(bytesCopy);
+    } else {
+      pdfDoc = await PdfDocument.openFile(doc.filePath);
+    }
+
+    try {
+      // Get visible layers for this document
+      final layers = await _annotationService.getLayers(doc.id);
+      final visibleLayerIds = layers
+          .where((l) => l.isVisible)
+          .map((l) => l.id)
+          .toList();
+
+      // Export with visible layers
+      final pdfBytes = await _exportService.exportPdfWithAnnotations(
+        document: doc,
+        pdfDoc: pdfDoc,
+        selectedLayerIds: visibleLayerIds,
+        onProgress: (current, total) {
+          if (mounted) {
+            setState(() {
+              _currentPage = current;
+              _totalPages = total;
+            });
+          }
+        },
+      );
+
+      // Generate filename
+      final baseName = doc.name.replaceAll('.pdf', '');
+      final fileName = '${baseName}_annotated.pdf';
+
+      if (kIsWeb) {
+        platform.downloadPdf(pdfBytes, fileName);
+      } else {
+        await _exportService.sharePdf(pdfBytes, fileName);
+      }
+    } finally {
+      await pdfDoc.close();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(_isExporting ? 'Exporting...' : 'Export Complete'),
+      content: SizedBox(width: 300, child: _buildContent()),
+      actions: [
+        if (!_isExporting)
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Done'),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildContent() {
+    if (_error != null) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(
+          _error!,
+          style: TextStyle(color: Theme.of(context).colorScheme.error),
+        ),
+      );
+    }
+
+    if (_isExporting) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(
+            'Document ${_currentDocIndex + 1} of ${widget.documents.length}',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: 8),
+          Text(_currentDocName, maxLines: 1, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 4),
+          Text(
+            'Page $_currentPage of $_totalPages',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ],
+      );
+    }
+
+    // Export complete
+    final hasFailures = _failCount > 0;
+    final documentLabel = _successCount == 1 ? 'document' : 'documents';
+    final resultMessage = hasFailures
+        ? 'Exported $_successCount, failed $_failCount'
+        : 'Exported $_successCount $documentLabel';
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          hasFailures ? Icons.warning : Icons.check_circle,
+          size: 48,
+          color: hasFailures ? Colors.orange : Colors.green,
+        ),
+        const SizedBox(height: 16),
+        Text(resultMessage),
+      ],
     );
   }
 }
@@ -338,8 +824,18 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 class PdfListTile extends StatefulWidget {
   final Document document;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final bool isSelectionMode;
+  final bool isSelected;
 
-  const PdfListTile({super.key, required this.document, required this.onTap});
+  const PdfListTile({
+    super.key,
+    required this.document,
+    required this.onTap,
+    this.onLongPress,
+    this.isSelectionMode = false,
+    this.isSelected = false,
+  });
 
   @override
   State<PdfListTile> createState() => _PdfListTileState();
@@ -418,15 +914,37 @@ class _PdfListTileState extends State<PdfListTile> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
+      shape: widget.isSelected
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: colorScheme.primary, width: 2),
+            )
+          : null,
       child: ListTile(
-        leading: _buildLeadingWidget(),
+        leading: widget.isSelectionMode
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Checkbox(
+                    value: widget.isSelected,
+                    onChanged: (_) => widget.onTap(),
+                  ),
+                  _buildLeadingWidget(),
+                ],
+              )
+            : _buildLeadingWidget(),
         title: Text(widget.document.name),
         subtitle: Text(
           '${widget.document.pageCount} pages • ${_formatFileSize(widget.document.fileSize)}',
         ),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: widget.isSelectionMode
+            ? null
+            : const Icon(Icons.chevron_right),
         onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
       ),
     );
   }

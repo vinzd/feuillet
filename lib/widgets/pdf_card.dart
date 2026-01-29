@@ -7,8 +7,20 @@ import '../services/pdf_service.dart';
 class PdfCard extends StatefulWidget {
   final Document document;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final VoidCallback? onCheckboxTap;
+  final bool isSelectionMode;
+  final bool isSelected;
 
-  const PdfCard({super.key, required this.document, required this.onTap});
+  const PdfCard({
+    super.key,
+    required this.document,
+    required this.onTap,
+    this.onLongPress,
+    this.onCheckboxTap,
+    this.isSelectionMode = false,
+    this.isSelected = false,
+  });
 
   @override
   State<PdfCard> createState() => _PdfCardState();
@@ -18,6 +30,7 @@ class _PdfCardState extends State<PdfCard> {
   Uint8List? _thumbnailBytes;
   bool _isLoading = true;
   bool _hasFailed = false;
+  bool _isHovered = false;
 
   @override
   void initState() {
@@ -93,43 +106,95 @@ class _PdfCardState extends State<PdfCard> {
     );
   }
 
+  Widget _buildSelectionCheckbox(ColorScheme colorScheme) {
+    return Positioned(
+      top: 8,
+      left: 8,
+      child: GestureDetector(
+        onTap: widget.onCheckboxTap,
+        child: Container(
+          decoration: BoxDecoration(
+            color: widget.isSelected
+                ? colorScheme.primary
+                : colorScheme.surface.withAlpha(230),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: widget.isSelected
+                  ? colorScheme.primary
+                  : colorScheme.outline,
+              width: 2,
+            ),
+          ),
+          padding: const EdgeInsets.all(2),
+          child: Icon(
+            Icons.check,
+            size: 18,
+            color: widget.isSelected
+                ? colorScheme.onPrimary
+                : Colors.transparent,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoSection(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.document.name,
+            style: textTheme.titleSmall,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${widget.document.pageCount} pages',
+            style: textTheme.bodySmall?.copyWith(
+              color: textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: widget.onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Thumbnail area
-            Expanded(child: _buildThumbnailArea(context)),
+    final colorScheme = Theme.of(context).colorScheme;
+    final showCheckbox = widget.isSelectionMode || _isHovered;
 
-            // PDF info
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        shape: widget.isSelected
+            ? RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: colorScheme.primary, width: 3),
+              )
+            : null,
+        child: InkWell(
+          onTap: widget.onTap,
+          onLongPress: widget.onLongPress,
+          child: Stack(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    widget.document.name,
-                    style: Theme.of(context).textTheme.titleSmall,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${widget.document.pageCount} pages',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
-                    ),
-                  ),
+                  Expanded(child: _buildThumbnailArea(context)),
+                  _buildInfoSection(context),
                 ],
               ),
-            ),
-          ],
+              if (showCheckbox) _buildSelectionCheckbox(colorScheme),
+            ],
+          ),
         ),
       ),
     );
