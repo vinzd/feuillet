@@ -7,6 +7,9 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:watcher/watcher.dart';
+// cross_file is used for the XFile type from desktop_drop
+// ignore: depend_on_referenced_packages
+import 'package:cross_file/cross_file.dart' show XFile;
 import '../models/database.dart';
 import 'database_service.dart';
 import 'file_watcher_service.dart';
@@ -218,6 +221,82 @@ class PdfService {
     }
     final first = result.results.first;
     return first.success ? first.filePath : null;
+  }
+
+  /// Import PDFs from dropped files (desktop_drop integration)
+  ///
+  /// For native platforms, uses file paths. For web, uses file bytes.
+  /// Returns a [PdfImportBatchResult] with results for each file.
+  ///
+  /// Optional [onProgress] callback is called after each file is processed
+  /// with (currentIndex, totalCount, currentFileName).
+  Future<PdfImportBatchResult> importPdfsFromDroppedFiles(
+    List<XFile> files, {
+    void Function(int current, int total, String fileName)? onProgress,
+  }) async {
+    final results = <PdfImportResult>[];
+    final total = files.length;
+
+    for (var i = 0; i < files.length; i++) {
+      final file = files[i];
+      final fileName = file.name;
+
+      onProgress?.call(i + 1, total, fileName);
+      results.add(await _importDroppedFile(file));
+    }
+
+    return PdfImportBatchResult(results);
+  }
+
+  /// Import a single dropped file
+  Future<PdfImportResult> _importDroppedFile(XFile file) async {
+    final fileName = file.name;
+
+    if (!fileName.toLowerCase().endsWith('.pdf')) {
+      return PdfImportResult(
+        fileName: fileName,
+        success: false,
+        error: 'Not a PDF file',
+      );
+    }
+
+    if (kIsWeb) {
+      return _importDroppedFileFromBytes(file);
+    }
+    return _importDroppedFileFromPath(file);
+  }
+
+  /// Import a dropped file using bytes (web platform)
+  Future<PdfImportResult> _importDroppedFileFromBytes(XFile file) async {
+    final bytes = await file.readAsBytes();
+    final path = await _addPdfFromBytes(file.name, bytes);
+    return PdfImportResult(
+      fileName: file.name,
+      success: path != null,
+      filePath: path,
+      error: path == null ? 'Failed to add PDF' : null,
+    );
+  }
+
+  /// Import a dropped file using file path (native platforms)
+  Future<PdfImportResult> _importDroppedFileFromPath(XFile file) async {
+    final filePath = file.path;
+    if (filePath.isEmpty) {
+      return PdfImportResult(
+        fileName: file.name,
+        success: false,
+        error: 'No file path available',
+      );
+    }
+
+    final destPath = await _copyToPdfDirectory(filePath);
+    final addedPath = await addPdfToLibrary(destPath);
+    return PdfImportResult(
+      fileName: file.name,
+      success: addedPath != null,
+      filePath: addedPath,
+      error: addedPath == null ? 'Failed to add PDF to library' : null,
+    );
   }
 
   /// Import a single file from the file picker result
