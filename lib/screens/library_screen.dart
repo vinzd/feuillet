@@ -626,8 +626,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             Text(
               'or drag and drop PDF files here',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
-                  ),
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
+              ),
             ),
           ],
         ],
@@ -669,8 +669,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 Text(
                   'Drop PDF files here',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ],
             ),

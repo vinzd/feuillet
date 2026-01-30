@@ -196,16 +196,25 @@ void main() {
       final failedFileNames = results.failures.map((f) => f.fileName).toList();
       expect(failedFileNames, ['image.png', 'notes.txt']);
 
-      final allFailuresAreNotPdf =
-          results.failures.every((f) => f.error == 'Not a PDF file');
+      final allFailuresAreNotPdf = results.failures.every(
+        (f) => f.error == 'Not a PDF file',
+      );
       expect(allFailuresAreNotPdf, isTrue);
     });
 
     test('filters only failures from results', () {
       const results = PdfImportBatchResult([
         PdfImportResult(fileName: 'a.pdf', success: true, filePath: '/a.pdf'),
-        PdfImportResult(fileName: 'b.txt', success: false, error: 'Not a PDF file'),
-        PdfImportResult(fileName: 'c.pdf', success: false, error: 'Failed to add PDF'),
+        PdfImportResult(
+          fileName: 'b.txt',
+          success: false,
+          error: 'Not a PDF file',
+        ),
+        PdfImportResult(
+          fileName: 'c.pdf',
+          success: false,
+          error: 'Failed to add PDF',
+        ),
       ]);
 
       final failures = results.failures;
