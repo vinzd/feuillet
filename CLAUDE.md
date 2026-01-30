@@ -150,7 +150,7 @@ class ServiceName {
 ```
 
 **Services:**
-- `PdfService` - PDF import, library scanning, file management
+- `PdfService` - PDF import (file picker + drag-and-drop), library scanning, file management
 - `AnnotationService` - Drawing stroke CRUD, JSON serialization
 - `SetListService` - Set list CRUD, document ordering
 - `FileWatcherService` - Monitors PDF directory and database for Syncthing changes
@@ -178,6 +178,20 @@ Annotations use a **multi-layer system**:
 4. `DrawingCanvas` widget handles real-time drawing with gesture detection
 
 **Important:** Use `Color.toARGB32()` for serialization (not the deprecated `.value` property).
+
+### PDF Import
+
+PDFs can be imported two ways:
+1. **File Picker** - Via the import button, supports multi-select
+2. **Drag-and-Drop** - Drag files from Finder/file manager directly into the library screen (desktop only)
+
+Both methods use `PdfService` which handles:
+- Copying files to the PDF directory with unique naming
+- Adding entries to the database with metadata
+- Validation (rejects non-PDF files with error feedback)
+- Progress callbacks for batch imports
+
+The drag-and-drop feature uses the `desktop_drop` package with `DropTarget` widget wrapping the library screen body.
 
 ### PDF Viewing Pipeline
 
@@ -211,6 +225,14 @@ When changes detected:
 When using Drift in screens, there's a naming conflict with Flutter's `Column` widget:
 ```dart
 import 'package:drift/drift.dart' hide Column;
+```
+
+### cross_file Import for desktop_drop
+
+The `desktop_drop` package uses `XFile` from `cross_file`. Import it with a lint ignore:
+```dart
+// ignore: depend_on_referenced_packages
+import 'package:cross_file/cross_file.dart' show XFile;
 ```
 
 ### DateTime with Drift's Value Wrapper
@@ -291,6 +313,13 @@ feuillet/
 1. **pdfx doesn't support `addListener()`** - removed page change listener code
 2. **Watcher package uses `WatchEvent` not `FileSystemEvent`** - ensure correct type usage
 3. **Timer pending in tests** - skip tests that initialize full app with FileWatcherService
+4. **share_plus v12 API change** - Use `ShareParams` instead of deprecated positional arguments:
+   ```dart
+   // Old (deprecated)
+   Share.shareXFiles([file], subject: 'title');
+   // New
+   Share.shareXFiles(ShareParams(files: [file], subject: 'title'));
+   ```
 
 ## Future Architecture Considerations
 
