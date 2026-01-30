@@ -18,6 +18,7 @@ void main() {
     //
     // These would include tests for:
     // - importPdfs
+    // - importPdfsFromDroppedFiles
     // - scanAndSyncLibrary
     // - _handleNewPdf
     // - _handleRemovedPdf
@@ -27,10 +28,32 @@ void main() {
   });
 
   group('PDF File Operations', () {
-    test('validates PDF extension', () {
+    test('validates PDF extension - lowercase', () {
       expect('file.pdf'.toLowerCase().endsWith('.pdf'), isTrue);
+    });
+
+    test('validates PDF extension - uppercase', () {
       expect('file.PDF'.toLowerCase().endsWith('.pdf'), isTrue);
+    });
+
+    test('validates PDF extension - mixed case', () {
+      expect('file.Pdf'.toLowerCase().endsWith('.pdf'), isTrue);
+    });
+
+    test('rejects non-PDF extensions', () {
       expect('file.txt'.toLowerCase().endsWith('.pdf'), isFalse);
+      expect('file.doc'.toLowerCase().endsWith('.pdf'), isFalse);
+      expect('file.png'.toLowerCase().endsWith('.pdf'), isFalse);
+      expect('file.jpg'.toLowerCase().endsWith('.pdf'), isFalse);
+    });
+
+    test('rejects files without extension', () {
+      expect('file'.toLowerCase().endsWith('.pdf'), isFalse);
+    });
+
+    test('rejects files with pdf in name but wrong extension', () {
+      expect('pdf_document.txt'.toLowerCase().endsWith('.pdf'), isFalse);
+      expect('my.pdf.backup'.toLowerCase().endsWith('.pdf'), isFalse);
     });
   });
 
@@ -57,6 +80,28 @@ void main() {
       expect(result.success, isFalse);
       expect(result.filePath, isNull);
       expect(result.error, 'File not found');
+    });
+
+    test('creates non-PDF file error result', () {
+      const result = PdfImportResult(
+        fileName: 'document.txt',
+        success: false,
+        error: 'Not a PDF file',
+      );
+      expect(result.fileName, 'document.txt');
+      expect(result.success, isFalse);
+      expect(result.error, 'Not a PDF file');
+    });
+
+    test('creates empty path error result', () {
+      const result = PdfImportResult(
+        fileName: 'test.pdf',
+        success: false,
+        error: 'No file path available',
+      );
+      expect(result.fileName, 'test.pdf');
+      expect(result.success, isFalse);
+      expect(result.error, 'No file path available');
     });
   });
 
@@ -114,6 +159,70 @@ void main() {
       expect(results.failureCount, 0);
       expect(results.allSucceeded, isTrue);
       expect(results.hasFailures, isFalse);
+    });
+
+    test('handles mixed file types from drag-drop', () {
+      // Simulates dropping a mix of PDF and non-PDF files
+      const results = PdfImportBatchResult([
+        PdfImportResult(
+          fileName: 'doc1.pdf',
+          success: true,
+          filePath: '/doc1.pdf',
+        ),
+        PdfImportResult(
+          fileName: 'image.png',
+          success: false,
+          error: 'Not a PDF file',
+        ),
+        PdfImportResult(
+          fileName: 'doc2.pdf',
+          success: true,
+          filePath: '/doc2.pdf',
+        ),
+        PdfImportResult(
+          fileName: 'notes.txt',
+          success: false,
+          error: 'Not a PDF file',
+        ),
+      ]);
+
+      expect(results.totalCount, 4);
+      expect(results.successCount, 2);
+      expect(results.failureCount, 2);
+      expect(results.allSucceeded, isFalse);
+      expect(results.hasFailures, isTrue);
+      expect(results.failures.length, 2);
+
+      final failedFileNames = results.failures.map((f) => f.fileName).toList();
+      expect(failedFileNames, ['image.png', 'notes.txt']);
+
+      final allFailuresAreNotPdf = results.failures.every(
+        (f) => f.error == 'Not a PDF file',
+      );
+      expect(allFailuresAreNotPdf, isTrue);
+    });
+
+    test('filters only failures from results', () {
+      const results = PdfImportBatchResult([
+        PdfImportResult(fileName: 'a.pdf', success: true, filePath: '/a.pdf'),
+        PdfImportResult(
+          fileName: 'b.txt',
+          success: false,
+          error: 'Not a PDF file',
+        ),
+        PdfImportResult(
+          fileName: 'c.pdf',
+          success: false,
+          error: 'Failed to add PDF',
+        ),
+      ]);
+
+      final failures = results.failures;
+      expect(failures.length, 2);
+      expect(failures[0].fileName, 'b.txt');
+      expect(failures[0].error, 'Not a PDF file');
+      expect(failures[1].fileName, 'c.pdf');
+      expect(failures[1].error, 'Failed to add PDF');
     });
   });
 }

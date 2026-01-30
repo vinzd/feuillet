@@ -1,3 +1,4 @@
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -49,6 +50,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   final Map<int, GlobalKey> _cardKeys = {};
   final Set<int> _dragSelectedIds = {};
 
+  // File drop state
+  bool _isDraggingFiles = false;
+
   @override
   void initState() {
     super.initState();
@@ -61,6 +65,25 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     setState(() => _isLoading = false);
   }
 
+  void _onImportProgress(int current, int total, String fileName) {
+    if (mounted) {
+      setState(() => _importProgress = 'Importing $current of $total...');
+    }
+  }
+
+  void _onImportComplete(PdfImportBatchResult? result) {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+      _importProgress = null;
+    });
+
+    if (result != null && result.totalCount > 0) {
+      _showImportResult(result);
+    }
+  }
+
   Future<void> _importPdfs() async {
     setState(() {
       _isLoading = true;
@@ -68,25 +91,27 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     });
 
     final result = await PdfService.instance.importPdfs(
-      onProgress: (current, total, fileName) {
-        if (mounted) {
-          setState(() {
-            _importProgress = 'Importing $current of $total...';
-          });
-        }
-      },
+      onProgress: _onImportProgress,
     );
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        _importProgress = null;
-      });
+    _onImportComplete(result);
+  }
 
-      if (result != null && result.totalCount > 0) {
-        _showImportResult(result);
-      }
-    }
+  Future<void> _handleDroppedFiles(DropDoneDetails details) async {
+    if (details.files.isEmpty) return;
+
+    setState(() {
+      _isLoading = true;
+      _importProgress = null;
+      _isDraggingFiles = false;
+    });
+
+    final result = await PdfService.instance.importPdfsFromDroppedFiles(
+      details.files,
+      onProgress: _onImportProgress,
+    );
+
+    _onImportComplete(result);
   }
 
   void _showImportResult(PdfImportBatchResult result) {
@@ -596,7 +621,61 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               icon: const Icon(Icons.add),
               label: const Text('Import PDFs'),
             ),
+          if (isLibraryEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              'or drag and drop PDF files here',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
+              ),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildDropZoneOverlay() {
+    return Positioned.fill(
+      child: Container(
+        color: Theme.of(context).colorScheme.primary.withAlpha(30),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 32),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(25),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.file_download,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Drop PDF files here',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -759,44 +838,56 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
     return Scaffold(
       appBar: _buildAppBar(context, documentsAsync, versionInfo),
-      body: Column(
-        children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search PDFs...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+      body: DropTarget(
+        onDragDone: _handleDroppedFiles,
+        onDragEntered: (_) => setState(() => _isDraggingFiles = true),
+        onDragExited: (_) => setState(() => _isDraggingFiles = false),
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                // Search bar
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search PDFs...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      filled: true,
+                    ),
+                    onChanged: (value) {
+                      setState(() => _searchQuery = value);
+                    },
+                  ),
                 ),
-                filled: true,
-              ),
-              onChanged: (value) {
-                setState(() => _searchQuery = value);
-              },
-            ),
-          ),
 
-          // Document grid/list
-          Expanded(
-            child: documentsAsync.when(
-              data: (documents) {
-                final filteredDocs = _filterDocuments(documents);
-                if (filteredDocs.isEmpty) {
-                  return _buildEmptyState(documents.isEmpty);
-                }
-                return _buildDocumentList(filteredDocs);
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => _buildErrorState(error),
-            ),
-          ),
+                // Document grid/list
+                Expanded(
+                  child: documentsAsync.when(
+                    data: (documents) {
+                      final filteredDocs = _filterDocuments(documents);
+                      if (filteredDocs.isEmpty) {
+                        return _buildEmptyState(documents.isEmpty);
+                      }
+                      return _buildDocumentList(filteredDocs);
+                    },
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (error, stack) => _buildErrorState(error),
+                  ),
+                ),
 
-          // Selection action bar
-          if (_isSelectionMode) _buildSelectionActionBar(),
-        ],
+                // Selection action bar
+                if (_isSelectionMode) _buildSelectionActionBar(),
+              ],
+            ),
+            // Drop zone overlay
+            if (_isDraggingFiles) _buildDropZoneOverlay(),
+          ],
+        ),
       ),
       floatingActionButton: _isSelectionMode
           ? null
