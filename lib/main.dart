@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'router/app_router.dart';
+import 'services/database_service.dart';
 import 'services/file_watcher_service.dart';
 import 'services/pdf_service.dart';
 import 'web_url_strategy.dart';
@@ -91,7 +92,17 @@ class _AppLifecycleManagerState extends State<AppLifecycleManager>
         PdfService.instance.scanAndSyncLibrary();
         break;
       case AppLifecycleState.paused:
-        // Stop file watching when app goes to background to save resources
+        // Stop file watching when app goes to background
+        FileWatcherService.instance.stopWatching();
+        break;
+      case AppLifecycleState.detached:
+        // App is closing - clean up all resources
+        FileWatcherService.instance.dispose();
+        PdfService.instance.dispose();
+        DatabaseService.instance.dispose();
+        break;
+      case AppLifecycleState.hidden:
+        // macOS: window minimized or hidden, stop watching to save resources
         FileWatcherService.instance.stopWatching();
         break;
       default:
