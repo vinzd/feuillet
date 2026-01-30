@@ -222,8 +222,11 @@ class PdfExportService {
     final file = File(filePath);
     await file.writeAsBytes(pdfBytes);
 
-    await Share.shareXFiles([
-      XFile(filePath, mimeType: 'application/pdf'),
-    ], subject: fileName);
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(filePath, mimeType: 'application/pdf')],
+        subject: fileName,
+      ),
+    );
   }
 }
