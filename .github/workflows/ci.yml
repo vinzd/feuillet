@@ -22,6 +22,16 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Cache pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -39,6 +49,13 @@ jobs:
 
       - name: Generate database code
         run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Upload generated code
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-code
+          path: lib/models/database.g.dart
+          retention-days: 1
 
       - name: Run tests
         run: flutter test --coverage
@@ -66,11 +83,24 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Cache pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: pub-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            pub-${{ runner.os }}-
+
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Generate database code
-        run: dart run build_runner build --delete-conflicting-outputs
+      - name: Download generated code
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-code
+          path: lib/models
 
       - name: Compile drift worker
         run: dart compile js -O4 web/drift_worker.dart -o web/drift_worker.js
