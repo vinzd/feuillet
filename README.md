@@ -1,7 +1,7 @@
-# Open Score
+# Feuillet
 
-[![CI](https://github.com/vinzd/open_score/workflows/CI/badge.svg)](https://github.com/vinzd/open_score/actions/workflows/ci.yml)
-[![Build](https://github.com/vinzd/open_score/workflows/Build%20All%20Platforms/badge.svg)](https://github.com/vinzd/open_score/actions/workflows/build.yml)
+[![CI](https://github.com/vinzd/feuillet/workflows/CI/badge.svg)](https://github.com/vinzd/feuillet/actions/workflows/ci.yml)
+[![Build](https://github.com/vinzd/feuillet/workflows/Build%20All%20Platforms/badge.svg)](https://github.com/vinzd/feuillet/actions/workflows/build.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Flutter](https://img.shields.io/badge/Flutter-3.38.8-02569B?logo=flutter)](https://flutter.dev)
 
@@ -9,7 +9,7 @@ A forScore clone built with Flutter - a powerful PDF sheet music reader with ann
 
 ## 🌐 Try It Online
 
-**[Launch Web Demo](https://vinzd.github.io/open_score/)** - Test Open Score directly in your browser
+**[Launch Web Demo](https://vinzd.github.io/feuillet/)** - Test Feuillet directly in your browser
 
 > **Note:** The web version has limitations - PDFs are stored in browser storage (not file system), and Syncthing integration is not available. For full functionality, use the native macOS, iOS, or Android apps.
 
@@ -126,7 +126,7 @@ make build-web      # Build for web
 
 1. **Clone the repository**
    ```bash
-   cd open_score
+   cd feuillet
    ```
 
 2. **Install dependencies**
@@ -181,22 +181,22 @@ make build-web      # Build for web
 - **Android**: Install from [Google Play](https://play.google.com/store/apps/details?id=com.nutomic.syncthingandroid)
 - **iOS**: Use [Möbius Sync](https://apps.apple.com/app/mobius-sync/id1539203216)
 
-### 2. Locate Open Score Data Directory
+### 2. Locate Feuillet Data Directory
 
 The app stores data in:
-- **macOS**: `~/Library/Application Support/com.openscore.openScore/open_score/`
-- **Android**: `/data/data/com.openscore.open_score/app_flutter/open_score/`
+- **macOS**: `~/Library/Application Support/com.feuillet.app/feuillet/`
+- **Android**: `/data/data/com.feuillet.feuillet/app_flutter/feuillet/`
 - **iOS**: App's Documents directory
 
 You can find the exact path in the app by checking debug logs or settings.
 
 ### 3. Configure Syncthing
 
-1. Create a new folder in Syncthing pointing to the Open Score directory
+1. Create a new folder in Syncthing pointing to the Feuillet directory
 2. Share this folder with your other devices
 3. The folder contains:
    - `pdfs/` - Your PDF files
-   - `open_score_db.sqlite` - The database
+   - `feuillet_db.sqlite` - The database
    - Database WAL files (`.sqlite-wal`, `.sqlite-shm`)
 
 ### 4. Important Syncthing Settings
@@ -207,7 +207,7 @@ You can find the exact path in the app by checking debug logs or settings.
 
 ### 5. How It Works
 
-1. Open Score monitors the PDF directory and database file
+1. Feuillet monitors the PDF directory and database file
 2. When Syncthing syncs changes, the file watcher detects them
 3. The app automatically:
    - Reloads the database
@@ -225,7 +225,7 @@ You can find the exact path in the app by checking debug logs or settings.
 ### Importing PDFs
 1. Tap the **+** button in the Library screen
 2. Select a PDF file from your device
-3. The file is copied to Open Score's managed directory
+3. The file is copied to Feuillet's managed directory
 4. Alternatively, add PDFs directly via Syncthing
 
 ### Viewing PDFs

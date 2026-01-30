@@ -1,6 +1,6 @@
-# Contributing to Open Score
+# Contributing to Feuillet
 
-Thank you for your interest in contributing to Open Score! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to Feuillet! This document provides guidelines and instructions for contributing.
 
 ## Code of Conduct
 
@@ -13,8 +13,8 @@ Thank you for your interest in contributing to Open Score! This document provide
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/open_score.git
-   cd open_score
+   git clone https://github.com/YOUR_USERNAME/feuillet.git
+   cd feuillet
    ```
 3. **Set up the project**:
    ```bash

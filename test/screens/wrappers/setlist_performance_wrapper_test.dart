@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_score/screens/wrappers/setlist_performance_wrapper.dart';
+import 'package:feuillet/screens/wrappers/setlist_performance_wrapper.dart';
 
 void main() {
   group('setListWithDocumentsProvider', () {

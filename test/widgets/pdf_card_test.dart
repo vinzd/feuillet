@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_score/models/database.dart';
-import 'package:open_score/widgets/pdf_card.dart';
+import 'package:feuillet/models/database.dart';
+import 'package:feuillet/widgets/pdf_card.dart';
 
 void main() {
   group('PdfCard Widget', () {

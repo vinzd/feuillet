@@ -44,8 +44,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Open Score specific - Local data directory
-open_score/
+# Feuillet specific - Local data directory
+feuillet/
 *.sqlite
 *.sqlite-wal
 *.sqlite-shm

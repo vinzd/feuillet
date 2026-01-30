@@ -307,7 +307,7 @@ class AppDatabase extends _$AppDatabase {
 // Connection configuration with WAL mode for better Syncthing compatibility
 QueryExecutor _openConnection() {
   return driftDatabase(
-    name: 'open_score_db',
+    name: 'feuillet_db',
     web: DriftWebOptions(
       sqlite3Wasm: Uri.parse('sqlite3.wasm'),
       driftWorker: Uri.parse('drift_worker.js'),

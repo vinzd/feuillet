@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_score/utils/auto_hide_controller.dart';
+import 'package:feuillet/utils/auto_hide_controller.dart';
 
 void main() {
   group('AutoHideController', () {

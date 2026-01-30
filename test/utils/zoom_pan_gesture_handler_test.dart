@@ -1,8 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_score/utils/display_settings.dart';
-import 'package:open_score/utils/zoom_pan_gesture_handler.dart';
+import 'package:feuillet/utils/display_settings.dart';
+import 'package:feuillet/utils/zoom_pan_gesture_handler.dart';
 
 void main() {
   group('ZoomPanState', () {

@@ -1,6 +1,6 @@
-# Open Score Test Suite
+# Feuillet Test Suite
 
-This document describes the comprehensive test suite for Open Score.
+This document describes the comprehensive test suite for Feuillet.
 
 ## Test Structure
 
@@ -212,7 +212,7 @@ These areas require additional test infrastructure (mocks, test databases, etc.)
 
 ```dart
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_score/path/to/component.dart';
+import 'package:feuillet/path/to/component.dart';
 
 void main() {
   group('ComponentName', () {
@@ -246,7 +246,7 @@ void main() {
 ```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_score/widgets/my_widget.dart';
+import 'package:feuillet/widgets/my_widget.dart';
 
 void main() {
   testWidgets('MyWidget displays correctly', (WidgetTester tester) async {

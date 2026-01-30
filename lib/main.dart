@@ -22,11 +22,11 @@ void main() async {
     PdfService.instance;
   }
 
-  runApp(const ProviderScope(child: OpenScoreApp()));
+  runApp(const ProviderScope(child: FeuilletApp()));
 }
 
-class OpenScoreApp extends ConsumerWidget {
-  const OpenScoreApp({super.key});
+class FeuilletApp extends ConsumerWidget {
+  const FeuilletApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,7 +34,7 @@ class OpenScoreApp extends ConsumerWidget {
 
     return AppLifecycleManager(
       child: MaterialApp.router(
-        title: 'Open Score',
+        title: 'Feuillet',
         debugShowCheckedModeBanner: false,
         theme: _buildTheme(Brightness.light),
         darkTheme: _buildTheme(Brightness.dark),

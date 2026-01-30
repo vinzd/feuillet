@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_score/models/database.dart';
+import 'package:feuillet/models/database.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

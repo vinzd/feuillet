@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_score/widgets/setlist_picker_dialog.dart';
+import 'package:feuillet/widgets/setlist_picker_dialog.dart';
 
 void main() {
   group('SetListPickerDialog', () {

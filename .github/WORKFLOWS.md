@@ -52,20 +52,20 @@ This document describes all GitHub Actions workflows in this repository.
 2. **Build macOS**
    - Runs on: macOS
    - Builds: Release .app
-   - Output: `OpenScore-macOS.zip`
+   - Output: `Feuillet-macOS.zip`
    - Retention: 30 days
 
 3. **Build iOS**
    - Runs on: macOS
    - Builds: Release .app (no codesign)
-   - Output: `OpenScore-iOS.zip`
+   - Output: `Feuillet-iOS.zip`
    - Retention: 30 days
    - Note: Requires signing before installation
 
 4. **Build Web**
    - Runs on: Ubuntu
    - Builds: Release web bundle
-   - Output: `OpenScore-Web.zip`
+   - Output: `Feuillet-Web.zip`
    - Retention: 30 days
 
 ### 3. Release Workflow (`release.yml`)
@@ -80,9 +80,9 @@ This document describes all GitHub Actions workflows in this repository.
 
 **Artifacts:**
 - `app-release.apk` - Android APK
-- `OpenScore-macOS.zip` - macOS app bundle
-- `OpenScore-iOS.zip` - iOS app (needs signing)
-- `OpenScore-Web.zip` - Web build
+- `Feuillet-macOS.zip` - macOS app bundle
+- `Feuillet-iOS.zip` - iOS app (needs signing)
+- `Feuillet-Web.zip` - Web build
 
 **Usage:**
 ```bash
@@ -107,7 +107,7 @@ git push origin v1.0.0
 2. Set source to "GitHub Actions"
 
 **Result:**
-- Web app accessible at: `https://YOUR_USERNAME.github.io/open_score/`
+- Web app accessible at: `https://YOUR_USERNAME.github.io/feuillet/`
 
 ## Secrets Configuration
 

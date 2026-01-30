@@ -713,7 +713,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('Open Score'),
+          const Text('Feuillet'),
           const SizedBox(width: 8),
           versionInfo.when(
             data: (info) => Text(

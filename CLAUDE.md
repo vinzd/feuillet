@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Open Score is a forScore clone built with Flutter - a PDF sheet music reader with multi-layer annotation support and set list management. The app is designed for **local-only operation** with Syncthing for cross-device synchronization.
+Feuillet is a forScore clone built with Flutter - a PDF sheet music reader with multi-layer annotation support and set list management. The app is designed for **local-only operation** with Syncthing for cross-device synchronization.
 
 ## Essential Commands
 
@@ -192,7 +192,7 @@ Annotations use a **multi-layer system**:
 
 `FileWatcherService` monitors two directories:
 - PDF directory (`pdfs/`)
-- Database file (`open_score_db.sqlite` + WAL files)
+- Database file (`feuillet_db.sqlite` + WAL files)
 
 **Filters Syncthing temporary files:**
 - `.syncthing.*`
@@ -273,17 +273,17 @@ Annotations are **JSON-serialized** in the database. To add new annotation types
 
 ## Data Storage Locations
 
-- **macOS**: `~/Library/Application Support/com.openscore.openScore/open_score/`
-- **Android**: `/data/data/com.openscore.open_score/app_flutter/open_score/`
+- **macOS**: `~/Library/Application Support/com.feuillet.app/feuillet/`
+- **Android**: `/data/data/com.feuillet.feuillet/app_flutter/feuillet/`
 - **iOS**: App Documents directory
 
 Structure:
 ```
-open_score/
+feuillet/
 ├── pdfs/                    # PDF files
-├── open_score_db.sqlite     # Main database
-├── open_score_db.sqlite-wal # WAL file
-└── open_score_db.sqlite-shm # Shared memory file
+├── feuillet_db.sqlite     # Main database
+├── feuillet_db.sqlite-wal # WAL file
+└── feuillet_db.sqlite-shm # Shared memory file
 ```
 
 ## Known Issues & Workarounds

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_score/utils/display_settings.dart';
+import 'package:feuillet/utils/display_settings.dart';
 
 void main() {
   group('DisplaySettings', () {
