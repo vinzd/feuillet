@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_score/web_url_strategy.dart';
+import 'package:feuillet/web_url_strategy.dart';
 
 void main() {
   group('configureUrlStrategy', () {

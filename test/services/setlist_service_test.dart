@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_score/services/setlist_service.dart';
+import 'package:feuillet/services/setlist_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

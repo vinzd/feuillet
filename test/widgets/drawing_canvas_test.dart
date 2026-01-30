@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_score/services/annotation_service.dart';
-import 'package:open_score/widgets/drawing_canvas.dart';
+import 'package:feuillet/services/annotation_service.dart';
+import 'package:feuillet/widgets/drawing_canvas.dart';
 
 void main() {
   group('DrawingCanvas Widget', () {

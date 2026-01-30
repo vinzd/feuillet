@@ -72,13 +72,13 @@ jobs:
         run: |
           mkdir -p dist
           cd build/macos/Build/Products/Release
-          zip -r "$GITHUB_WORKSPACE/dist/OpenScore-macOS.zip" open_score.app
+          zip -r "$GITHUB_WORKSPACE/dist/Feuillet-macOS.zip" feuillet.app
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v6
         with:
           name: macos-app
-          path: dist/OpenScore-macOS.zip
+          path: dist/Feuillet-macOS.zip
           retention-days: 30
 
   build-ios:
@@ -109,13 +109,13 @@ jobs:
         run: |
           mkdir -p dist
           cd build/ios/iphoneos
-          zip -r "$GITHUB_WORKSPACE/dist/OpenScore-iOS.zip" Runner.app
+          zip -r "$GITHUB_WORKSPACE/dist/Feuillet-iOS.zip" Runner.app
 
       - name: Upload iOS artifact
         uses: actions/upload-artifact@v6
         with:
           name: ios-app
-          path: dist/OpenScore-iOS.zip
+          path: dist/Feuillet-iOS.zip
           retention-days: 30
 
   build-web:
@@ -152,11 +152,11 @@ jobs:
       - name: Create web archive
         run: |
           cd build
-          zip -r ../OpenScore-Web.zip web/
+          zip -r ../Feuillet-Web.zip web/
 
       - name: Upload web artifact
         uses: actions/upload-artifact@v6
         with:
           name: web-build
-          path: OpenScore-Web.zip
+          path: Feuillet-Web.zip
           retention-days: 30

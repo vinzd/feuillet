@@ -31,15 +31,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Open Score v${{ steps.get_version.outputs.version }}
+          release_name: Feuillet v${{ steps.get_version.outputs.version }}
           body: |
-            ## Open Score v${{ steps.get_version.outputs.version }}
+            ## Feuillet v${{ steps.get_version.outputs.version }}
 
             ### Downloads
             - **Android**: `app-release.apk`
-            - **macOS**: `OpenScore-macOS.zip`
-            - **iOS**: `OpenScore-iOS.zip` (requires signing)
-            - **Web**: `OpenScore-Web.zip`
+            - **macOS**: `Feuillet-macOS.zip`
+            - **iOS**: `Feuillet-iOS.zip` (requires signing)
+            - **Web**: `Feuillet-Web.zip`
 
             ### Installation
             - **Android**: Download and install the APK
@@ -68,22 +68,22 @@ jobs:
           - os: macos-latest
             platform: macos
             build-cmd: flutter build macos --release
-            artifact-path: OpenScore-macOS.zip
-            artifact-name: OpenScore-macOS.zip
+            artifact-path: Feuillet-macOS.zip
+            artifact-name: Feuillet-macOS.zip
             content-type: application/zip
 
           - os: macos-latest
             platform: ios
             build-cmd: flutter build ios --release --no-codesign
-            artifact-path: OpenScore-iOS.zip
-            artifact-name: OpenScore-iOS.zip
+            artifact-path: Feuillet-iOS.zip
+            artifact-name: Feuillet-iOS.zip
             content-type: application/zip
 
           - os: ubuntu-latest
             platform: web
             build-cmd: flutter build web --release
-            artifact-path: OpenScore-Web.zip
-            artifact-name: OpenScore-Web.zip
+            artifact-path: Feuillet-Web.zip
+            artifact-name: Feuillet-Web.zip
             content-type: application/zip
 
     runs-on: ${{ matrix.os }}
@@ -123,20 +123,20 @@ jobs:
         if: matrix.platform == 'macos'
         run: |
           cd build/macos/Build/Products/Release
-          zip -r "$GITHUB_WORKSPACE/OpenScore-macOS.zip" open_score.app
+          zip -r "$GITHUB_WORKSPACE/Feuillet-macOS.zip" feuillet.app
 
       - name: Prepare iOS artifact
         if: matrix.platform == 'ios'
         run: |
           cd build/ios/iphoneos
-          zip -r "$GITHUB_WORKSPACE/OpenScore-iOS.zip" Runner.app
+          zip -r "$GITHUB_WORKSPACE/Feuillet-iOS.zip" Runner.app
 
       - name: Prepare web artifact
         if: matrix.platform == 'web'
         run: |
           cp -f web/sqlite3.wasm web/drift_worker.js build/web/
           cd build
-          zip -r ../OpenScore-Web.zip web/
+          zip -r ../Feuillet-Web.zip web/
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1

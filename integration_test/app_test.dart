@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:open_score/main.dart';
+import 'package:feuillet/main.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -10,7 +10,7 @@ void main() {
       // Note: These tests require proper initialization of services
       // which may need to be mocked or configured for testing
 
-      await tester.pumpWidget(const OpenScoreApp());
+      await tester.pumpWidget(const FeuilletApp());
       await tester.pumpAndSettle();
 
       // Verify basic navigation is present
@@ -19,7 +19,7 @@ void main() {
     });
 
     testWidgets('can navigate between tabs', (WidgetTester tester) async {
-      await tester.pumpWidget(const OpenScoreApp());
+      await tester.pumpWidget(const FeuilletApp());
       await tester.pumpAndSettle();
 
       // Start on Library tab

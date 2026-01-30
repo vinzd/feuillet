@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_score/services/pdf_service.dart';
+import 'package:feuillet/services/pdf_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -5,7 +5,7 @@ GIT_HASH := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
 # Default target
 help:
-	@echo "Open Score - Development Makefile"
+	@echo "Feuillet - Development Makefile"
 	@echo ""
 	@echo "Setup & Dependencies:"
 	@echo "  make setup           - Install dependencies and setup project from scratch"
@@ -38,7 +38,7 @@ help:
 
 # Setup project from scratch
 setup:
-	@echo "🔧 Setting up Open Score project..."
+	@echo "🔧 Setting up Feuillet project..."
 	flutter pub get
 	@echo ""
 	@echo "🗄️  Generating database code..."

@@ -53,11 +53,7 @@ class FileWatcherService {
 
       // Database path always stays in app documents
       final appDocDir = await getApplicationDocumentsDirectory();
-      _databasePath = p.join(
-        appDocDir.path,
-        'open_score',
-        'open_score_db.sqlite',
-      );
+      _databasePath = p.join(appDocDir.path, 'feuillet', 'feuillet_db.sqlite');
 
       // Create PDF directory if it doesn't exist
       final pdfDir = Directory(_pdfDirectoryPath!);
@@ -223,7 +219,7 @@ class FileWatcherService {
     }
 
     final appDocDir = await getApplicationDocumentsDirectory();
-    return p.join(appDocDir.path, 'open_score');
+    return p.join(appDocDir.path, 'feuillet');
   }
 
   /// Dispose resources

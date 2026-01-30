@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_score/widgets/export_pdf_dialog.dart';
+import 'package:feuillet/widgets/export_pdf_dialog.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

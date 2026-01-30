@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.openscore.open_score"
+    namespace = "com.feuillet.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.openscore.open_score"
+        applicationId = "com.feuillet.app"
         // minSdk 24 required for drift_flutter/sqlite3_flutter_libs
         minSdk = 24
         targetSdk = flutter.targetSdkVersion

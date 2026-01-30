@@ -52,7 +52,7 @@ class AppSettingsService {
 
     // Return default path
     final appDocDir = await getApplicationDocumentsDirectory();
-    _cachedPdfPath = p.join(appDocDir.path, 'open_score', 'pdfs');
+    _cachedPdfPath = p.join(appDocDir.path, 'feuillet', 'pdfs');
     return _cachedPdfPath!;
   }
 

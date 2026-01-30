@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:open_score/models/view_mode.dart';
-import 'package:open_score/widgets/two_page_pdf_view.dart';
+import 'package:feuillet/models/view_mode.dart';
+import 'package:feuillet/widgets/two_page_pdf_view.dart';
 
 /// TwoPagePdfView widget tests.
 ///
