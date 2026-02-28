@@ -775,7 +775,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         itemCount: documents.length,
         itemBuilder: (context, index) {
           final doc = documents[index];
-          return PdfListTile(
+          return DocumentListTile(
             document: doc,
             onTap: () => _handleDocumentTap(doc),
             onLongPress: () => _enterSelectionMode(doc),
@@ -1194,14 +1194,14 @@ class _BulkExportDialogState extends State<_BulkExportDialog> {
 }
 
 /// List tile widget for list view
-class PdfListTile extends StatefulWidget {
+class DocumentListTile extends StatefulWidget {
   final Document document;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final bool isSelectionMode;
   final bool isSelected;
 
-  const PdfListTile({
+  const DocumentListTile({
     super.key,
     required this.document,
     required this.onTap,
@@ -1211,10 +1211,10 @@ class PdfListTile extends StatefulWidget {
   });
 
   @override
-  State<PdfListTile> createState() => _PdfListTileState();
+  State<DocumentListTile> createState() => _DocumentListTileState();
 }
 
-class _PdfListTileState extends State<PdfListTile> {
+class _DocumentListTileState extends State<DocumentListTile> {
   Uint8List? _thumbnailBytes;
   bool _isLoading = true;
 
@@ -1225,7 +1225,7 @@ class _PdfListTileState extends State<PdfListTile> {
   }
 
   @override
-  void didUpdateWidget(PdfListTile oldWidget) {
+  void didUpdateWidget(DocumentListTile oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.document.id != widget.document.id) {
       _loadThumbnail();
@@ -1268,7 +1268,10 @@ class _PdfListTileState extends State<PdfListTile> {
     }
 
     if (_thumbnailBytes == null) {
-      return const Icon(Icons.picture_as_pdf, size: 40);
+      return Icon(
+        widget.document.isImage ? Icons.image : Icons.picture_as_pdf,
+        size: 40,
+      );
     }
 
     return ClipRRect(
@@ -1279,7 +1282,10 @@ class _PdfListTileState extends State<PdfListTile> {
         height: 56,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return const Icon(Icons.picture_as_pdf, size: 40);
+          return Icon(
+        widget.document.isImage ? Icons.image : Icons.picture_as_pdf,
+        size: 40,
+      );
         },
       ),
     );
@@ -1311,7 +1317,9 @@ class _PdfListTileState extends State<PdfListTile> {
             : _buildLeadingWidget(),
         title: Text(widget.document.name),
         subtitle: Text(
-          '${widget.document.pageCount} pages • ${_formatFileSize(widget.document.fileSize)}',
+          widget.document.isImage
+              ? 'Image • ${_formatFileSize(widget.document.fileSize)}'
+              : '${widget.document.pageCount} pages • ${_formatFileSize(widget.document.fileSize)}',
         ),
         trailing: widget.isSelectionMode
             ? null

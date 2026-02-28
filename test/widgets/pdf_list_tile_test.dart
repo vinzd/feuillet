@@ -4,7 +4,7 @@ import 'package:feuillet/models/database.dart';
 import 'package:feuillet/screens/library_screen.dart';
 
 void main() {
-  group('PdfListTile Widget', () {
+  group('DocumentListTile Widget', () {
     late Document testDocument;
 
     setUp(() {
@@ -21,7 +21,7 @@ void main() {
       );
     });
 
-    // Note: These tests are skipped because PdfListTile loads thumbnails
+    // Note: These tests are skipped because DocumentListTile loads thumbnails
     // asynchronously, which creates timers that don't complete before
     // test teardown. The widget is tested manually as part of the app's
     // library screen.
@@ -30,7 +30,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfListTile(document: testDocument, onTap: () {}),
+            body: DocumentListTile(document: testDocument, onTap: () {}),
           ),
         ),
       );
@@ -44,7 +44,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfListTile(document: testDocument, onTap: () {}),
+            body: DocumentListTile(document: testDocument, onTap: () {}),
           ),
         ),
       );
@@ -58,7 +58,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfListTile(document: testDocument, onTap: () {}),
+            body: DocumentListTile(document: testDocument, onTap: () {}),
           ),
         ),
       );
@@ -75,7 +75,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfListTile(
+            body: DocumentListTile(
               document: testDocument,
               onTap: () {
                 tapped = true;
@@ -86,7 +86,7 @@ void main() {
       );
 
       await tester.pump();
-      await tester.tap(find.byType(PdfListTile));
+      await tester.tap(find.byType(DocumentListTile));
       await tester.pump();
 
       expect(tapped, isTrue);
@@ -100,7 +100,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfListTile(
+            body: DocumentListTile(
               document: testDocument,
               onTap: () {},
               onLongPress: () {
@@ -112,7 +112,7 @@ void main() {
       );
 
       await tester.pump();
-      await tester.longPress(find.byType(PdfListTile));
+      await tester.longPress(find.byType(DocumentListTile));
       await tester.pump();
 
       expect(longPressed, isTrue);
@@ -124,7 +124,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfListTile(
+            body: DocumentListTile(
               document: testDocument,
               onTap: () {},
               isSelectionMode: true,
@@ -145,7 +145,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfListTile(
+            body: DocumentListTile(
               document: testDocument,
               onTap: () {},
               isSelectionMode: true,
@@ -165,7 +165,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfListTile(
+            body: DocumentListTile(
               document: testDocument,
               onTap: () {},
               isSelectionMode: true,
@@ -187,7 +187,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfListTile(
+            body: DocumentListTile(
               document: testDocument,
               onTap: () {},
               isSelectionMode: false,
@@ -203,7 +203,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfListTile(
+            body: DocumentListTile(
               document: testDocument,
               onTap: () {},
               isSelectionMode: true,
@@ -217,7 +217,7 @@ void main() {
     }, skip: true);
   });
 
-  group('PdfListTile file size formatting', () {
+  group('DocumentListTile file size formatting', () {
     test('formats bytes correctly', () {
       String formatFileSize(int bytes) {
         if (bytes < 1024) return '$bytes B';

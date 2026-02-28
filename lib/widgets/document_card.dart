@@ -90,7 +90,10 @@ class _DocumentCardState extends State<DocumentCard> {
     if (_hasFailed || _thumbnailBytes == null) {
       return Container(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        child: const Icon(Icons.picture_as_pdf, size: 64),
+        child: Icon(
+          widget.document.isImage ? Icons.image : Icons.picture_as_pdf,
+          size: 64,
+        ),
       );
     }
 
@@ -100,7 +103,10 @@ class _DocumentCardState extends State<DocumentCard> {
       errorBuilder: (context, error, stackTrace) {
         return Container(
           color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          child: const Icon(Icons.picture_as_pdf, size: 64),
+          child: Icon(
+            widget.document.isImage ? Icons.image : Icons.picture_as_pdf,
+            size: 64,
+          ),
         );
       },
     );
@@ -154,7 +160,9 @@ class _DocumentCardState extends State<DocumentCard> {
           ),
           const SizedBox(height: 4),
           Text(
-            '${widget.document.pageCount} pages',
+            widget.document.isImage
+                ? 'Image'
+                : '${widget.document.pageCount} pages',
             style: textTheme.bodySmall?.copyWith(
               color: textTheme.bodySmall?.color?.withValues(alpha: 0.6),
             ),
