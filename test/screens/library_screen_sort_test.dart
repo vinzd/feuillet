@@ -29,6 +29,18 @@ List<Document> sortDocuments(
             ? a.dateAdded.compareTo(b.dateAdded)
             : b.dateAdded.compareTo(a.dateAdded),
       );
+    case LibrarySortField.fileSize:
+      result.sort(
+        (a, b) => sortAscending
+            ? a.fileSize.compareTo(b.fileSize)
+            : b.fileSize.compareTo(a.fileSize),
+      );
+    case LibrarySortField.pageCount:
+      result.sort(
+        (a, b) => sortAscending
+            ? a.pageCount.compareTo(b.pageCount)
+            : b.pageCount.compareTo(a.pageCount),
+      );
   }
   return result;
 }
@@ -166,6 +178,66 @@ void main() {
     });
   });
 
+  group('Library Sort - by file size', () {
+    test('ascending sorts smallest first', () {
+      final sorted = sortDocuments(
+        testDocuments,
+        sortField: LibrarySortField.fileSize,
+        sortAscending: true,
+      );
+
+      expect(sorted.map((d) => d.name).toList(), [
+        'Bach Fugue', // 512000
+        'Beethoven Sonata', // 1024000
+        'Mozart Concerto', // 2048000
+      ]);
+    });
+
+    test('descending sorts largest first', () {
+      final sorted = sortDocuments(
+        testDocuments,
+        sortField: LibrarySortField.fileSize,
+        sortAscending: false,
+      );
+
+      expect(sorted.map((d) => d.name).toList(), [
+        'Mozart Concerto', // 2048000
+        'Beethoven Sonata', // 1024000
+        'Bach Fugue', // 512000
+      ]);
+    });
+  });
+
+  group('Library Sort - by page count', () {
+    test('ascending sorts fewest pages first', () {
+      final sorted = sortDocuments(
+        testDocuments,
+        sortField: LibrarySortField.pageCount,
+        sortAscending: true,
+      );
+
+      expect(sorted.map((d) => d.name).toList(), [
+        'Bach Fugue', // 5
+        'Beethoven Sonata', // 10
+        'Mozart Concerto', // 20
+      ]);
+    });
+
+    test('descending sorts most pages first', () {
+      final sorted = sortDocuments(
+        testDocuments,
+        sortField: LibrarySortField.pageCount,
+        sortAscending: false,
+      );
+
+      expect(sorted.map((d) => d.name).toList(), [
+        'Mozart Concerto', // 20
+        'Beethoven Sonata', // 10
+        'Bach Fugue', // 5
+      ]);
+    });
+  });
+
   group('Library Sort - with search filter', () {
     test('filters then sorts by name ascending', () {
       final sorted = sortDocuments(
@@ -237,6 +309,38 @@ void main() {
 
       expect(sortField, LibrarySortField.name);
       expect(sortAscending, isTrue); // A-Z by default for name
+    });
+
+    test('switching to file size sets largest first by default', () {
+      var sortField = LibrarySortField.name;
+      var sortAscending = true;
+
+      final tappedField = LibrarySortField.fileSize;
+      if (sortField == tappedField) {
+        sortAscending = !sortAscending;
+      } else {
+        sortField = tappedField;
+        sortAscending = tappedField == LibrarySortField.name;
+      }
+
+      expect(sortField, LibrarySortField.fileSize);
+      expect(sortAscending, isFalse); // largest first by default
+    });
+
+    test('switching to page count sets most pages first by default', () {
+      var sortField = LibrarySortField.name;
+      var sortAscending = true;
+
+      final tappedField = LibrarySortField.pageCount;
+      if (sortField == tappedField) {
+        sortAscending = !sortAscending;
+      } else {
+        sortField = tappedField;
+        sortAscending = tappedField == LibrarySortField.name;
+      }
+
+      expect(sortField, LibrarySortField.pageCount);
+      expect(sortAscending, isFalse); // most pages first by default
     });
 
     test('switching to date sets newest first by default', () {

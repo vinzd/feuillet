@@ -33,7 +33,7 @@ class LibraryScreen extends ConsumerStatefulWidget {
   ConsumerState<LibraryScreen> createState() => _LibraryScreenState();
 }
 
-enum LibrarySortField { dateAdded, name }
+enum LibrarySortField { dateAdded, name, fileSize, pageCount }
 
 class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   bool _isGridView = true;
@@ -235,6 +235,18 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           (a, b) => _sortAscending
               ? a.dateAdded.compareTo(b.dateAdded)
               : b.dateAdded.compareTo(a.dateAdded),
+        );
+      case LibrarySortField.fileSize:
+        result.sort(
+          (a, b) => _sortAscending
+              ? a.fileSize.compareTo(b.fileSize)
+              : b.fileSize.compareTo(a.fileSize),
+        );
+      case LibrarySortField.pageCount:
+        result.sort(
+          (a, b) => _sortAscending
+              ? a.pageCount.compareTo(b.pageCount)
+              : b.pageCount.compareTo(a.pageCount),
         );
     }
     return result;
@@ -843,7 +855,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 _sortAscending = !_sortAscending;
               } else {
                 _sortField = field;
-                // Default: A-Z for name, newest first for date
+                // Default: A-Z for name, descending for everything else
                 _sortAscending = field == LibrarySortField.name;
               }
             });
@@ -870,6 +882,36 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 children: [
                   const Expanded(child: Text('Date added')),
                   if (_sortField == LibrarySortField.dateAdded)
+                    Icon(
+                      _sortAscending
+                          ? Icons.arrow_upward
+                          : Icons.arrow_downward,
+                      size: 18,
+                    ),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: LibrarySortField.fileSize,
+              child: Row(
+                children: [
+                  const Expanded(child: Text('File size')),
+                  if (_sortField == LibrarySortField.fileSize)
+                    Icon(
+                      _sortAscending
+                          ? Icons.arrow_upward
+                          : Icons.arrow_downward,
+                      size: 18,
+                    ),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: LibrarySortField.pageCount,
+              child: Row(
+                children: [
+                  const Expanded(child: Text('Page count')),
+                  if (_sortField == LibrarySortField.pageCount)
                     Icon(
                       _sortAscending
                           ? Icons.arrow_upward
