@@ -31,7 +31,8 @@ class DocumentViewerScreen extends ConsumerStatefulWidget {
   const DocumentViewerScreen({super.key, required this.document});
 
   @override
-  ConsumerState<DocumentViewerScreen> createState() => _DocumentViewerScreenState();
+  ConsumerState<DocumentViewerScreen> createState() =>
+      _DocumentViewerScreenState();
 }
 
 class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
@@ -51,6 +52,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
   PdfViewMode _viewMode = PdfViewMode.single;
 
   PdfDocument? _pdfDocument;
+  Uint8List? _imageBytes;
 
   // Annotation settings
   bool _annotationMode = false;
@@ -123,30 +125,45 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
       // Show UI with loading spinner for the PDF area
       setState(() => _isLoading = false);
 
-      // Now load PDF document in background - UI is already visible
+      // Now load document content in background - UI is already visible
       final freshDocument = await db.getDocument(widget.document.id);
       if (freshDocument == null) throw Exception('Document not found');
 
-      _pdfDocument = await FileAccessService.instance.openPdfDocument(
-        freshDocument.filePath,
-        pdfBytes: freshDocument.pdfBytes != null
-            ? Uint8List.fromList(freshDocument.pdfBytes!)
-            : null,
-      );
+      if (freshDocument.isImage) {
+        // Load image bytes directly
+        if (freshDocument.pdfBytes != null) {
+          _imageBytes = Uint8List.fromList(freshDocument.pdfBytes!);
+        } else {
+          _imageBytes = await FileAccessService.instance.readFileBytes(
+            freshDocument.filePath,
+          );
+        }
+        _currentPage = 1;
+        await _loadPageAnnotations();
+        if (mounted) setState(() {});
+      } else {
+        // Existing PDF loading pipeline
+        _pdfDocument = await FileAccessService.instance.openPdfDocument(
+          freshDocument.filePath,
+          pdfBytes: freshDocument.pdfBytes != null
+              ? Uint8List.fromList(freshDocument.pdfBytes!)
+              : null,
+        );
 
-      _pdfController = CachedPdfController(
-        document: Future.value(_pdfDocument),
-        initialPage: _currentPage,
-      );
+        _pdfController = CachedPdfController(
+          document: Future.value(_pdfDocument),
+          initialPage: _currentPage,
+        );
 
-      _singlePageController = PageController(initialPage: _currentPage - 1);
+        _singlePageController = PageController(initialPage: _currentPage - 1);
 
-      await _loadPageAnnotations();
+        await _loadPageAnnotations();
 
-      if (mounted) {
-        setState(() {});
-        // Safe to pre-render here: on-demand renders have priority in the queue.
-        _preRenderPages();
+        if (mounted) {
+          setState(() {});
+          // Safe to pre-render here: on-demand renders have priority in the queue.
+          _preRenderPages();
+        }
       }
     } catch (e) {
       debugPrint('Error initializing PDF: $e');
@@ -447,12 +464,12 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
       );
     }
 
-    // Show error if PDF controller failed to initialize
-    if (_pdfController == null) {
+    // Show error if document failed to initialize
+    if (_pdfController == null && _imageBytes == null) {
       return Scaffold(
         appBar: AppBar(title: Text(widget.document.name)),
         body: const Center(
-          child: Text('Failed to load PDF. Please try again.'),
+          child: Text('Failed to load document. Please try again.'),
         ),
       );
     }
@@ -472,7 +489,9 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                 child: ColorFiltered(
                   colorFilter: zoomPanState.displaySettings.colorFilter,
                   child: buildZoomPanTransform(
-                    child: _viewMode == PdfViewMode.single
+                    child: widget.document.isImage
+                        ? _buildImageView()
+                        : _viewMode == PdfViewMode.single
                         ? _buildSinglePageView()
                         : _buildTwoPageView(),
                   ),
@@ -491,30 +510,33 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                   title: Text(widget.document.name),
                   backgroundColor: ViewerConstants.overlayBackground,
                   actions: [
-                    PopupMenuButton<PdfViewMode>(
-                      icon: Icon(_viewMode.icon),
-                      tooltip: 'View mode',
-                      onSelected: _onViewModeChanged,
-                      itemBuilder: (context) => PdfViewMode.values
-                          .map(
-                            (mode) => PopupMenuItem(
-                              value: mode,
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    mode.icon,
-                                    color: mode == _viewMode
-                                        ? Theme.of(context).colorScheme.primary
-                                        : null,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(mode.displayName),
-                                ],
+                    if (!widget.document.isImage)
+                      PopupMenuButton<PdfViewMode>(
+                        icon: Icon(_viewMode.icon),
+                        tooltip: 'View mode',
+                        onSelected: _onViewModeChanged,
+                        itemBuilder: (context) => PdfViewMode.values
+                            .map(
+                              (mode) => PopupMenuItem(
+                                value: mode,
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      mode.icon,
+                                      color: mode == _viewMode
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primary
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(mode.displayName),
+                                  ],
+                                ),
                               ),
-                            ),
-                          )
-                          .toList(),
-                    ),
+                            )
+                            .toList(),
+                      ),
                     IconButton(
                       icon: Icon(
                         _showFloatingLayerPanel
@@ -532,15 +554,28 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                       onPressed: () => _showControlsPanel(),
                       tooltip: 'Display settings',
                     ),
-                    if (_pdfDocument != null)
+                    if (_pdfDocument != null || _imageBytes != null)
                       IconButton(
                         icon: const Icon(Icons.ios_share),
-                        onPressed: () => ExportPdfDialog.show(
-                          context: context,
-                          document: widget.document,
-                          pdfDocument: _pdfDocument!,
-                        ),
-                        tooltip: 'Export PDF',
+                        onPressed: () {
+                          if (widget.document.isImage) {
+                            // TODO: Image export will be handled in Task 12
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Image export coming soon'),
+                              ),
+                            );
+                          } else {
+                            ExportPdfDialog.show(
+                              context: context,
+                              document: widget.document,
+                              pdfDocument: _pdfDocument!,
+                            );
+                          }
+                        },
+                        tooltip: widget.document.isImage
+                            ? 'Export image'
+                            : 'Export PDF',
                       ),
                   ],
                 ),
@@ -583,41 +618,72 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                 ),
 
               // Bottom controls
-              AnimatedPositioned(
-                duration: ViewerConstants.overlayAnimationDuration,
-                bottom: _autoHideController.isVisible
-                    ? 0
-                    : ViewerConstants.overlayHideOffsetBottom,
-                left: 0,
-                right: 0,
-                child: Builder(
-                  builder: (context) {
-                    final spread = _getCurrentSpread();
-                    return PdfBottomControls(
-                      currentPage: spread.leftPage,
-                      rightPage: spread.rightPage,
-                      totalPages: widget.document.pageCount,
-                      viewMode: _viewMode,
-                      zoomLevel: zoomPanState.displaySettings.zoomLevel,
-                      onPreviousPage: _canGoToPrevious()
-                          ? _goToPreviousPage
-                          : null,
-                      onNextPage: _canGoToNext() ? _goToNextPage : null,
-                      onZoomChanged: (value) => setState(
-                        () => zoomPanState.displaySettings = zoomPanState
-                            .displaySettings
-                            .copyWith(zoomLevel: value),
-                      ),
-                      onZoomChangeEnd: (value) => _saveSettings(),
-                      onInteraction: _autoHideController.resetTimer,
-                    );
-                  },
+              if (!widget.document.isImage)
+                AnimatedPositioned(
+                  duration: ViewerConstants.overlayAnimationDuration,
+                  bottom: _autoHideController.isVisible
+                      ? 0
+                      : ViewerConstants.overlayHideOffsetBottom,
+                  left: 0,
+                  right: 0,
+                  child: Builder(
+                    builder: (context) {
+                      final spread = _getCurrentSpread();
+                      return PdfBottomControls(
+                        currentPage: spread.leftPage,
+                        rightPage: spread.rightPage,
+                        totalPages: widget.document.pageCount,
+                        viewMode: _viewMode,
+                        zoomLevel: zoomPanState.displaySettings.zoomLevel,
+                        onPreviousPage: _canGoToPrevious()
+                            ? _goToPreviousPage
+                            : null,
+                        onNextPage: _canGoToNext() ? _goToNextPage : null,
+                        onZoomChanged: (value) => setState(
+                          () => zoomPanState.displaySettings = zoomPanState
+                              .displaySettings
+                              .copyWith(zoomLevel: value),
+                        ),
+                        onZoomChangeEnd: (value) => _saveSettings(),
+                        onInteraction: _autoHideController.resetTimer,
+                      );
+                    },
+                  ),
                 ),
-              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildImageView() {
+    if (_imageBytes == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // Build annotation overlay
+    Widget? annotationOverlay;
+    if (_selectedLayerId != null) {
+      annotationOverlay = DrawingCanvas(
+        key: ValueKey('$_selectedLayerId-image'),
+        layerId: _selectedLayerId!,
+        pageNumber: 0,
+        toolType: _currentTool,
+        color: _annotationColor,
+        thickness: _annotationThickness,
+        layerAnnotations: _pageAnnotations,
+        onStrokeCompleted: _loadPageAnnotations,
+        isEnabled: _annotationMode,
+      );
+    }
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.memory(_imageBytes!, fit: BoxFit.contain),
+        if (annotationOverlay != null) annotationOverlay,
+      ],
     );
   }
 
