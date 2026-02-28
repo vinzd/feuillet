@@ -14,7 +14,7 @@ import '../services/document_service.dart';
 import '../services/setlist_service.dart';
 import '../services/version_service.dart';
 import '../utils/fuzzy_search.dart';
-import '../widgets/pdf_card.dart';
+import '../widgets/document_card.dart';
 import '../widgets/setlist_picker_dialog.dart';
 import '../widgets/export_pdf_dialog_web.dart'
     if (dart.library.io) '../widgets/export_pdf_dialog_native.dart'
@@ -740,7 +740,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 // Show as selected if either already selected or in current drag
                 // but not both (XOR for toggle preview)
                 final showSelected = isCurrentlySelected ^ isInDragSelection;
-                return PdfCard(
+                return DocumentCard(
                   key: _getKeyForDocument(doc.id),
                   document: doc,
                   onTap: () => _handleDocumentTap(doc),

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/database.dart';
 import '../services/document_service.dart';
 
-/// Card widget to display a PDF in the library grid view
-class PdfCard extends StatefulWidget {
+/// Card widget to display a document in the library grid view
+class DocumentCard extends StatefulWidget {
   final Document document;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
@@ -12,7 +12,7 @@ class PdfCard extends StatefulWidget {
   final bool isSelectionMode;
   final bool isSelected;
 
-  const PdfCard({
+  const DocumentCard({
     super.key,
     required this.document,
     required this.onTap,
@@ -23,10 +23,10 @@ class PdfCard extends StatefulWidget {
   });
 
   @override
-  State<PdfCard> createState() => _PdfCardState();
+  State<DocumentCard> createState() => _DocumentCardState();
 }
 
-class _PdfCardState extends State<PdfCard> {
+class _DocumentCardState extends State<DocumentCard> {
   Uint8List? _thumbnailBytes;
   bool _isLoading = true;
   bool _hasFailed = false;
@@ -39,7 +39,7 @@ class _PdfCardState extends State<PdfCard> {
   }
 
   @override
-  void didUpdateWidget(PdfCard oldWidget) {
+  void didUpdateWidget(DocumentCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.document.id != widget.document.id) {
       _loadThumbnail();
