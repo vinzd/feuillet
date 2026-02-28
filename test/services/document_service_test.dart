@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:feuillet/services/document_service.dart';
+import 'package:feuillet/models/database.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -17,8 +18,8 @@ void main() {
     // - Mocking the file watcher service
     //
     // These would include tests for:
-    // - importPdfs
-    // - importPdfsFromDroppedFiles
+    // - importDocuments
+    // - importDocumentsFromDroppedFiles
     // - scanAndSyncLibrary
     // - _handleNewPdf
     // - _handleRemovedPdf
@@ -27,33 +28,100 @@ void main() {
     // - _generateUniqueFilename
   });
 
-  group('PDF File Operations', () {
+  group('Document File Operations', () {
     test('validates PDF extension - lowercase', () {
-      expect('file.pdf'.toLowerCase().endsWith('.pdf'), isTrue);
+      final ext = 'file.pdf'.split('.').last.toLowerCase();
+      expect(DocumentTypes.allExtensions.contains(ext), isTrue);
     });
 
     test('validates PDF extension - uppercase', () {
-      expect('file.PDF'.toLowerCase().endsWith('.pdf'), isTrue);
+      final ext = 'file.PDF'.split('.').last.toLowerCase();
+      expect(DocumentTypes.allExtensions.contains(ext), isTrue);
     });
 
     test('validates PDF extension - mixed case', () {
-      expect('file.Pdf'.toLowerCase().endsWith('.pdf'), isTrue);
+      final ext = 'file.Pdf'.split('.').last.toLowerCase();
+      expect(DocumentTypes.allExtensions.contains(ext), isTrue);
     });
 
-    test('rejects non-PDF extensions', () {
-      expect('file.txt'.toLowerCase().endsWith('.pdf'), isFalse);
-      expect('file.doc'.toLowerCase().endsWith('.pdf'), isFalse);
-      expect('file.png'.toLowerCase().endsWith('.pdf'), isFalse);
-      expect('file.jpg'.toLowerCase().endsWith('.pdf'), isFalse);
+    test('validates image file extensions as acceptable', () {
+      for (final filename in ['photo.jpg', 'image.jpeg', 'screenshot.png']) {
+        final ext = filename.split('.').last.toLowerCase();
+        expect(
+          DocumentTypes.allExtensions.contains(ext),
+          isTrue,
+          reason: '$filename should be accepted',
+        );
+      }
+    });
+
+    test('validates image extensions are case-insensitive', () {
+      for (final filename in ['photo.JPG', 'image.JPEG', 'screenshot.PNG']) {
+        final ext = filename.split('.').last.toLowerCase();
+        expect(
+          DocumentTypes.allExtensions.contains(ext),
+          isTrue,
+          reason: '$filename should be accepted',
+        );
+      }
+    });
+
+    test('rejects unsupported file types', () {
+      for (final filename in [
+        'file.txt',
+        'file.doc',
+        'file.docx',
+        'file.pptx',
+      ]) {
+        final ext = filename.split('.').last.toLowerCase();
+        expect(
+          DocumentTypes.allExtensions.contains(ext),
+          isFalse,
+          reason: '$filename should be rejected',
+        );
+      }
     });
 
     test('rejects files without extension', () {
-      expect('file'.toLowerCase().endsWith('.pdf'), isFalse);
+      // A file named just 'file' would have ext == 'file'
+      final ext = 'file'.split('.').last.toLowerCase();
+      expect(DocumentTypes.allExtensions.contains(ext), isFalse);
     });
 
     test('rejects files with pdf in name but wrong extension', () {
-      expect('pdf_document.txt'.toLowerCase().endsWith('.pdf'), isFalse);
-      expect('my.pdf.backup'.toLowerCase().endsWith('.pdf'), isFalse);
+      final ext1 = 'pdf_document.txt'.split('.').last.toLowerCase();
+      expect(DocumentTypes.allExtensions.contains(ext1), isFalse);
+
+      final ext2 = 'my.pdf.backup'.split('.').last.toLowerCase();
+      expect(DocumentTypes.allExtensions.contains(ext2), isFalse);
+    });
+  });
+
+  group('DocumentTypes', () {
+    test('fromPath returns pdf for PDF files', () {
+      expect(DocumentTypes.fromPath('file.pdf'), DocumentTypes.pdf);
+      expect(DocumentTypes.fromPath('/path/to/file.pdf'), DocumentTypes.pdf);
+    });
+
+    test('fromPath returns image for image files', () {
+      expect(DocumentTypes.fromPath('photo.jpg'), DocumentTypes.image);
+      expect(DocumentTypes.fromPath('photo.jpeg'), DocumentTypes.image);
+      expect(DocumentTypes.fromPath('photo.png'), DocumentTypes.image);
+    });
+
+    test('fromExtension handles extensions correctly', () {
+      expect(DocumentTypes.fromExtension('pdf'), DocumentTypes.pdf);
+      expect(DocumentTypes.fromExtension('jpg'), DocumentTypes.image);
+      expect(DocumentTypes.fromExtension('jpeg'), DocumentTypes.image);
+      expect(DocumentTypes.fromExtension('png'), DocumentTypes.image);
+      expect(DocumentTypes.fromExtension('.jpg'), DocumentTypes.image);
+    });
+
+    test('allExtensions contains all supported types', () {
+      expect(DocumentTypes.allExtensions, contains('pdf'));
+      expect(DocumentTypes.allExtensions, contains('jpg'));
+      expect(DocumentTypes.allExtensions, contains('jpeg'));
+      expect(DocumentTypes.allExtensions, contains('png'));
     });
   });
 
@@ -82,15 +150,15 @@ void main() {
       expect(result.error, 'File not found');
     });
 
-    test('creates non-PDF file error result', () {
+    test('creates unsupported file type error result', () {
       const result = DocumentImportResult(
         fileName: 'document.txt',
         success: false,
-        error: 'Not a PDF file',
+        error: 'Unsupported file type. Supported: PDF, JPG, PNG',
       );
       expect(result.fileName, 'document.txt');
       expect(result.success, isFalse);
-      expect(result.error, 'Not a PDF file');
+      expect(result.error, 'Unsupported file type. Supported: PDF, JPG, PNG');
     });
 
     test('creates empty path error result', () {
@@ -108,9 +176,21 @@ void main() {
   group('DocumentImportBatchResult', () {
     test('calculates counts correctly for all success', () {
       const results = DocumentImportBatchResult([
-        DocumentImportResult(fileName: 'a.pdf', success: true, filePath: '/a.pdf'),
-        DocumentImportResult(fileName: 'b.pdf', success: true, filePath: '/b.pdf'),
-        DocumentImportResult(fileName: 'c.pdf', success: true, filePath: '/c.pdf'),
+        DocumentImportResult(
+          fileName: 'a.pdf',
+          success: true,
+          filePath: '/a.pdf',
+        ),
+        DocumentImportResult(
+          fileName: 'b.pdf',
+          success: true,
+          filePath: '/b.pdf',
+        ),
+        DocumentImportResult(
+          fileName: 'c.pdf',
+          success: true,
+          filePath: '/c.pdf',
+        ),
       ]);
 
       expect(results.totalCount, 3);
@@ -123,9 +203,21 @@ void main() {
 
     test('calculates counts correctly for partial success', () {
       const results = DocumentImportBatchResult([
-        DocumentImportResult(fileName: 'a.pdf', success: true, filePath: '/a.pdf'),
-        DocumentImportResult(fileName: 'b.pdf', success: false, error: 'Failed'),
-        DocumentImportResult(fileName: 'c.pdf', success: true, filePath: '/c.pdf'),
+        DocumentImportResult(
+          fileName: 'a.pdf',
+          success: true,
+          filePath: '/a.pdf',
+        ),
+        DocumentImportResult(
+          fileName: 'b.pdf',
+          success: false,
+          error: 'Failed',
+        ),
+        DocumentImportResult(
+          fileName: 'c.pdf',
+          success: true,
+          filePath: '/c.pdf',
+        ),
       ]);
 
       expect(results.totalCount, 3);
@@ -139,8 +231,16 @@ void main() {
 
     test('calculates counts correctly for all failures', () {
       const results = DocumentImportBatchResult([
-        DocumentImportResult(fileName: 'a.pdf', success: false, error: 'Error 1'),
-        DocumentImportResult(fileName: 'b.pdf', success: false, error: 'Error 2'),
+        DocumentImportResult(
+          fileName: 'a.pdf',
+          success: false,
+          error: 'Error 1',
+        ),
+        DocumentImportResult(
+          fileName: 'b.pdf',
+          success: false,
+          error: 'Error 2',
+        ),
       ]);
 
       expect(results.totalCount, 2);
@@ -162,7 +262,7 @@ void main() {
     });
 
     test('handles mixed file types from drag-drop', () {
-      // Simulates dropping a mix of PDF and non-PDF files
+      // Simulates dropping a mix of supported and unsupported files
       const results = DocumentImportBatchResult([
         DocumentImportResult(
           fileName: 'doc1.pdf',
@@ -171,8 +271,8 @@ void main() {
         ),
         DocumentImportResult(
           fileName: 'image.png',
-          success: false,
-          error: 'Not a PDF file',
+          success: true,
+          filePath: '/image.png',
         ),
         DocumentImportResult(
           fileName: 'doc2.pdf',
@@ -182,47 +282,49 @@ void main() {
         DocumentImportResult(
           fileName: 'notes.txt',
           success: false,
-          error: 'Not a PDF file',
+          error: 'Unsupported file type. Supported: PDF, JPG, PNG',
         ),
       ]);
 
       expect(results.totalCount, 4);
-      expect(results.successCount, 2);
-      expect(results.failureCount, 2);
+      expect(results.successCount, 3);
+      expect(results.failureCount, 1);
       expect(results.allSucceeded, isFalse);
       expect(results.hasFailures, isTrue);
-      expect(results.failures.length, 2);
+      expect(results.failures.length, 1);
 
       final failedFileNames = results.failures.map((f) => f.fileName).toList();
-      expect(failedFileNames, ['image.png', 'notes.txt']);
-
-      final allFailuresAreNotPdf = results.failures.every(
-        (f) => f.error == 'Not a PDF file',
-      );
-      expect(allFailuresAreNotPdf, isTrue);
+      expect(failedFileNames, ['notes.txt']);
     });
 
     test('filters only failures from results', () {
       const results = DocumentImportBatchResult([
-        DocumentImportResult(fileName: 'a.pdf', success: true, filePath: '/a.pdf'),
+        DocumentImportResult(
+          fileName: 'a.pdf',
+          success: true,
+          filePath: '/a.pdf',
+        ),
         DocumentImportResult(
           fileName: 'b.txt',
           success: false,
-          error: 'Not a PDF file',
+          error: 'Unsupported file type. Supported: PDF, JPG, PNG',
         ),
         DocumentImportResult(
           fileName: 'c.pdf',
           success: false,
-          error: 'Failed to add PDF',
+          error: 'Failed to add document',
         ),
       ]);
 
       final failures = results.failures;
       expect(failures.length, 2);
       expect(failures[0].fileName, 'b.txt');
-      expect(failures[0].error, 'Not a PDF file');
+      expect(
+        failures[0].error,
+        'Unsupported file type. Supported: PDF, JPG, PNG',
+      );
       expect(failures[1].fileName, 'c.pdf');
-      expect(failures[1].error, 'Failed to add PDF');
+      expect(failures[1].error, 'Failed to add document');
     });
   });
 }

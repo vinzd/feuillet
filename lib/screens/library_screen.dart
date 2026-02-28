@@ -89,13 +89,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     }
   }
 
-  Future<void> _importPdfs() async {
+  Future<void> _importDocuments() async {
     setState(() {
       _isLoading = true;
       _importProgress = null;
     });
 
-    final result = await DocumentService.instance.importPdfs(
+    final result = await DocumentService.instance.importDocuments(
       onProgress: _onImportProgress,
     );
 
@@ -111,10 +111,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       _isDraggingFiles = false;
     });
 
-    final result = await DocumentService.instance.importPdfsFromDroppedFiles(
-      details.files,
-      onProgress: _onImportProgress,
-    );
+    final result = await DocumentService.instance
+        .importDocumentsFromDroppedFiles(
+          details.files,
+          onProgress: _onImportProgress,
+        );
 
     _onImportComplete(result);
   }
@@ -502,7 +503,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     if (deleteFiles == null || !mounted) return;
 
     for (final docId in _selectedDocumentIds) {
-      await DocumentService.instance.deletePdf(docId, deleteFile: deleteFiles);
+      await DocumentService.instance.deleteDocument(
+        docId,
+        deleteFile: deleteFiles,
+      );
     }
 
     if (mounted) {
@@ -649,7 +653,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           const SizedBox(height: 8),
           if (isLibraryEmpty)
             ElevatedButton.icon(
-              onPressed: _importPdfs,
+              onPressed: _importDocuments,
               icon: const Icon(Icons.add),
               label: const Text('Import PDFs'),
             ),
@@ -1001,7 +1005,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       floatingActionButton: _isSelectionMode
           ? null
           : FloatingActionButton.extended(
-              onPressed: _isLoading ? null : _importPdfs,
+              onPressed: _isLoading ? null : _importDocuments,
               tooltip: 'Import PDFs',
               icon: _isLoading
                   ? const SizedBox(

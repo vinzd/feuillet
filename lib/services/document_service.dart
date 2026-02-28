@@ -108,7 +108,7 @@ class DocumentService {
       }
 
       // Add to database
-      await addPdfToLibrary(filePath);
+      await addDocumentToLibrary(filePath);
       debugPrint('DocumentService: Added new PDF from Syncthing: $filePath');
     } catch (e) {
       debugPrint('DocumentService: Error handling new PDF: $e');
@@ -160,7 +160,7 @@ class DocumentService {
   }
 
   /// Copy a file to the PDF directory with a unique name if needed
-  Future<String> _copyToPdfDirectory(String sourcePath) async {
+  Future<String> _copyToDocumentDirectory(String sourcePath) async {
     final fileAccess = FileAccessService.instance;
     final pdfDir = await FileWatcherService.instance.getPdfDirectoryPath();
     final fileName = p.basename(sourcePath);
@@ -195,13 +195,13 @@ class DocumentService {
   ///
   /// Optional [onProgress] callback is called after each file is processed
   /// with (currentIndex, totalCount, currentFileName).
-  Future<DocumentImportBatchResult?> importPdfs({
+  Future<DocumentImportBatchResult?> importDocuments({
     void Function(int current, int total, String fileName)? onProgress,
   }) async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf'],
+        allowedExtensions: DocumentTypes.allExtensions,
         allowMultiple: true,
         withData: kIsWeb, // Load bytes on web
       );
@@ -227,9 +227,9 @@ class DocumentService {
   }
 
   /// Import a single PDF file using file picker (convenience method)
-  @Deprecated('Use importPdfs() instead for multi-file support')
-  Future<String?> importPdf() async {
-    final result = await importPdfs();
+  @Deprecated('Use importDocuments() instead for multi-file support')
+  Future<String?> importDocument() async {
+    final result = await importDocuments();
     if (result == null || result.results.isEmpty) {
       return null;
     }
@@ -244,7 +244,7 @@ class DocumentService {
   ///
   /// Optional [onProgress] callback is called after each file is processed
   /// with (currentIndex, totalCount, currentFileName).
-  Future<DocumentImportBatchResult> importPdfsFromDroppedFiles(
+  Future<DocumentImportBatchResult> importDocumentsFromDroppedFiles(
     List<XFile> files, {
     void Function(int current, int total, String fileName)? onProgress,
   }) async {
@@ -266,11 +266,12 @@ class DocumentService {
   Future<DocumentImportResult> _importDroppedFile(XFile file) async {
     final fileName = file.name;
 
-    if (!fileName.toLowerCase().endsWith('.pdf')) {
+    final ext = fileName.split('.').last.toLowerCase();
+    if (!DocumentTypes.allExtensions.contains(ext)) {
       return DocumentImportResult(
         fileName: fileName,
         success: false,
-        error: 'Not a PDF file',
+        error: 'Unsupported file type. Supported: PDF, JPG, PNG',
       );
     }
 
@@ -283,7 +284,7 @@ class DocumentService {
   /// Import a dropped file using bytes (web platform)
   Future<DocumentImportResult> _importDroppedFileFromBytes(XFile file) async {
     final bytes = await file.readAsBytes();
-    final path = await _addPdfFromBytes(file.name, bytes);
+    final path = await _addDocumentFromBytes(file.name, bytes);
     return DocumentImportResult(
       fileName: file.name,
       success: path != null,
@@ -303,8 +304,8 @@ class DocumentService {
       );
     }
 
-    final destPath = await _copyToPdfDirectory(filePath);
-    final addedPath = await addPdfToLibrary(destPath);
+    final destPath = await _copyToDocumentDirectory(filePath);
+    final addedPath = await addDocumentToLibrary(destPath);
     return DocumentImportResult(
       fileName: file.name,
       success: addedPath != null,
@@ -339,7 +340,7 @@ class DocumentService {
         error: 'No bytes available',
       );
     }
-    final path = await _addPdfFromBytes(file.name, file.bytes!);
+    final path = await _addDocumentFromBytes(file.name, file.bytes!);
     return DocumentImportResult(
       fileName: file.name,
       success: path != null,
@@ -357,8 +358,8 @@ class DocumentService {
         error: 'No file path available',
       );
     }
-    final destPath = await _copyToPdfDirectory(file.path!);
-    final addedPath = await addPdfToLibrary(destPath);
+    final destPath = await _copyToDocumentDirectory(file.path!);
+    final addedPath = await addDocumentToLibrary(destPath);
     return DocumentImportResult(
       fileName: file.name,
       success: addedPath != null,
@@ -368,10 +369,16 @@ class DocumentService {
   }
 
   /// Add a PDF from bytes (web platform)
-  Future<String?> _addPdfFromBytes(String fileName, List<int> bytes) async {
+  Future<String?> _addDocumentFromBytes(
+    String fileName,
+    List<int> bytes,
+  ) async {
     try {
       final nameWithoutExt = p.basenameWithoutExtension(fileName);
-      final pageCount = await _getPdfPageCountFromBytes(bytes);
+      final docType = DocumentTypes.fromPath(fileName);
+      final pageCount = docType == DocumentTypes.pdf
+          ? await _getPdfPageCountFromBytes(bytes)
+          : 1;
 
       // Insert into database with bytes
       final documentId = await _database.insertDocument(
@@ -382,6 +389,7 @@ class DocumentService {
           lastModified: drift.Value(DateTime.now()),
           fileSize: drift.Value(bytes.length),
           pageCount: drift.Value(pageCount),
+          documentType: drift.Value(docType),
         ),
       );
 
@@ -430,13 +438,15 @@ class DocumentService {
       await document.close();
       return pageCount;
     } catch (e) {
-      debugPrint('DocumentService: Could not read PDF page count from bytes: $e');
+      debugPrint(
+        'DocumentService: Could not read PDF page count from bytes: $e',
+      );
       return 0;
     }
   }
 
   /// Add a PDF file to the library database
-  Future<String?> addPdfToLibrary(String filePath) async {
+  Future<String?> addDocumentToLibrary(String filePath) async {
     try {
       final fileAccess = FileAccessService.instance;
       if (!await fileAccess.fileExists(filePath)) {
@@ -448,7 +458,10 @@ class DocumentService {
       final fileName = isSafUri(filePath)
           ? p.basenameWithoutExtension(Uri.parse(filePath).pathSegments.last)
           : p.basenameWithoutExtension(filePath);
-      final pageCount = await _getPdfPageCount(filePath);
+      final docType = DocumentTypes.fromPath(filePath);
+      final pageCount = docType == DocumentTypes.pdf
+          ? await _getPdfPageCount(filePath)
+          : 1;
 
       // Insert into database
       final documentId = await _database.insertDocument(
@@ -458,6 +471,7 @@ class DocumentService {
           lastModified: drift.Value(metadata.lastModified),
           fileSize: drift.Value(metadata.size),
           pageCount: drift.Value(pageCount),
+          documentType: drift.Value(docType),
         ),
       );
 
@@ -514,7 +528,7 @@ class DocumentService {
       // Add new PDFs to database
       for (final file in pdfFiles) {
         if (!dbPaths.contains(file.uri)) {
-          await addPdfToLibrary(file.uri);
+          await addDocumentToLibrary(file.uri);
         }
       }
 
@@ -539,7 +553,7 @@ class DocumentService {
   }
 
   /// Delete a PDF from library and optionally from disk
-  Future<void> deletePdf(int documentId, {bool deleteFile = false}) async {
+  Future<void> deleteDocument(int documentId, {bool deleteFile = false}) async {
     try {
       final doc = await _database.getDocument(documentId);
       if (doc == null) return;
