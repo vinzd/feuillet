@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
+import '../utils/viewer_constants.dart';
 import '../models/database.dart';
 import '../models/view_mode.dart';
 import '../services/annotation_service.dart';
@@ -190,8 +191,8 @@ class PerformanceDocumentViewState extends State<PerformanceDocumentView> {
 
     if (widget.viewMode == PdfViewMode.single) {
       _pageController?.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        duration: ViewerConstants.pageAnimationDuration,
+        curve: ViewerConstants.pageAnimationCurve,
       );
     } else {
       final currentSpread = PageSpreadCalculator.getSpreadForPage(
@@ -217,8 +218,8 @@ class PerformanceDocumentViewState extends State<PerformanceDocumentView> {
 
     if (widget.viewMode == PdfViewMode.single) {
       _pageController?.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        duration: ViewerConstants.pageAnimationDuration,
+        curve: ViewerConstants.pageAnimationCurve,
       );
     } else {
       final currentSpread = PageSpreadCalculator.getSpreadForPage(

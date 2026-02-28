@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/view_mode.dart';
+import '../utils/viewer_constants.dart';
 import 'zoom_slider.dart';
 
 /// Bottom controls for setlist performance mode.
@@ -77,7 +78,7 @@ class PerformanceBottomControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black.withValues(alpha: 0.7),
+      color: ViewerConstants.overlayBackground,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
