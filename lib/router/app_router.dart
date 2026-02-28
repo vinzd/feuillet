@@ -6,7 +6,7 @@ import '../screens/library_screen.dart';
 import '../screens/setlist_detail_screen.dart';
 import '../screens/setlists_screen.dart';
 import '../screens/settings_screen.dart';
-import '../screens/wrappers/pdf_viewer_wrapper.dart';
+import '../screens/wrappers/document_viewer_wrapper.dart';
 import '../screens/wrappers/setlist_performance_wrapper.dart';
 import '../widgets/error_placeholder_screen.dart';
 
@@ -59,7 +59,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.document,
         builder: (context, state) {
           final documentId = int.parse(state.pathParameters['documentId']!);
-          return PdfViewerWrapper(documentId: documentId);
+          return DocumentViewerWrapper(documentId: documentId);
         },
       ),
 

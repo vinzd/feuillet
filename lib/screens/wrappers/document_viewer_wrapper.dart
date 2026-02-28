@@ -5,7 +5,7 @@ import '../../models/database.dart';
 import '../../router/app_router.dart';
 import '../../services/database_service.dart';
 import '../../widgets/error_placeholder_screen.dart';
-import '../pdf_viewer_screen.dart';
+import '../document_viewer_screen.dart';
 
 /// Provider to fetch a document by ID
 final documentByIdProvider = FutureProvider.family<Document?, int>((
@@ -16,18 +16,18 @@ final documentByIdProvider = FutureProvider.family<Document?, int>((
   return db.getDocument(id);
 });
 
-/// Wrapper that loads a document by ID before displaying PdfViewerScreen.
+/// Wrapper that loads a document by ID before displaying DocumentViewerScreen.
 /// Used for URL-based navigation (e.g., /document/42).
-class PdfViewerWrapper extends ConsumerStatefulWidget {
+class DocumentViewerWrapper extends ConsumerStatefulWidget {
   final int documentId;
 
-  const PdfViewerWrapper({super.key, required this.documentId});
+  const DocumentViewerWrapper({super.key, required this.documentId});
 
   @override
-  ConsumerState<PdfViewerWrapper> createState() => _PdfViewerWrapperState();
+  ConsumerState<DocumentViewerWrapper> createState() => _DocumentViewerWrapperState();
 }
 
-class _PdfViewerWrapperState extends ConsumerState<PdfViewerWrapper> {
+class _DocumentViewerWrapperState extends ConsumerState<DocumentViewerWrapper> {
   @override
   void initState() {
     super.initState();
@@ -58,7 +58,7 @@ class _PdfViewerWrapperState extends ConsumerState<PdfViewerWrapper> {
             navigateTo: AppRoutes.library,
           );
         }
-        return PdfViewerScreen(document: document);
+        return DocumentViewerScreen(document: document);
       },
       loading: () => const LoadingScreen(),
       error: (error, stack) => ErrorPlaceholderScreen(

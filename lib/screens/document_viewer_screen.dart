@@ -24,17 +24,17 @@ import '../widgets/floating_annotations_panel.dart';
 import '../widgets/pdf_bottom_controls.dart';
 import '../widgets/two_page_pdf_view.dart';
 
-/// PDF Viewer screen with zoom, pan, and contrast controls
-class PdfViewerScreen extends ConsumerStatefulWidget {
+/// Document Viewer screen with zoom, pan, and contrast controls
+class DocumentViewerScreen extends ConsumerStatefulWidget {
   final Document document;
 
-  const PdfViewerScreen({super.key, required this.document});
+  const DocumentViewerScreen({super.key, required this.document});
 
   @override
-  ConsumerState<PdfViewerScreen> createState() => _PdfViewerScreenState();
+  ConsumerState<DocumentViewerScreen> createState() => _DocumentViewerScreenState();
 }
 
-class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen>
+class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     with ZoomPanGestureMixin {
   CachedPdfController? _pdfController;
   PageController? _singlePageController;
