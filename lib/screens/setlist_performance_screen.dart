@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../utils/viewer_constants.dart';
 import 'package:pdfx/pdfx.dart';
 
 import '../models/database.dart';
@@ -225,8 +226,8 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
   void _goToNextDocument() {
     if (_currentDocIndex < widget.documents.length - 1) {
       _documentPageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        duration: ViewerConstants.pageAnimationDuration,
+        curve: ViewerConstants.pageAnimationCurve,
       );
     }
   }
@@ -234,8 +235,8 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
   void _goToPreviousDocument() {
     if (_currentDocIndex > 0) {
       _documentPageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        duration: ViewerConstants.pageAnimationDuration,
+        curve: ViewerConstants.pageAnimationCurve,
       );
     }
   }
@@ -243,8 +244,8 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
   void _goToDocument(int index) {
     _documentPageController.animateToPage(
       index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+      duration: ViewerConstants.pageAnimationDuration,
+      curve: ViewerConstants.pageAnimationCurve,
     );
   }
 
@@ -353,7 +354,7 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
   void _showDisplaySettings() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.grey[900],
+      backgroundColor: ViewerConstants.modalBackground,
       builder: (context) => DisplaySettingsPanel(
         brightness: zoomPanState.displaySettings.brightness,
         contrast: zoomPanState.displaySettings.contrast,
@@ -420,12 +421,12 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
               ),
 
               AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                top: _autoHideController.isVisible ? 0 : -100,
+                duration: ViewerConstants.overlayAnimationDuration,
+                top: _autoHideController.isVisible ? 0 : ViewerConstants.overlayHideOffsetTop,
                 left: 0,
                 right: 0,
                 child: AppBar(
-                  backgroundColor: Colors.black.withValues(alpha: 0.7),
+                  backgroundColor: ViewerConstants.overlayBackground,
                   title: Text(
                     widget.documents[_currentDocIndex].name,
                     style: const TextStyle(color: Colors.white),
@@ -474,8 +475,8 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
               ),
 
               AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                bottom: _autoHideController.isVisible ? 0 : -200,
+                duration: ViewerConstants.overlayAnimationDuration,
+                bottom: _autoHideController.isVisible ? 0 : ViewerConstants.overlayHideOffsetBottomTall,
                 left: 0,
                 right: 0,
                 child: PerformanceBottomControls(
@@ -513,7 +514,7 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
   void _showDocumentList() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.grey[900],
+      backgroundColor: ViewerConstants.modalBackground,
       builder: (context) => Container(
         padding: const EdgeInsets.all(16),
         child: Column(

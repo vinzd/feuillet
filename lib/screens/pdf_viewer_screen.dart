@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
+import '../utils/viewer_constants.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdfx/pdfx.dart';
@@ -295,8 +296,8 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen>
   void _goToPreviousPage() {
     if (_viewMode == PdfViewMode.single) {
       _singlePageController?.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        duration: ViewerConstants.pageAnimationDuration,
+        curve: ViewerConstants.pageAnimationCurve,
       );
     } else {
       // Two-page mode: navigate by spread
@@ -324,8 +325,8 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen>
   void _goToNextPage() {
     if (_viewMode == PdfViewMode.single) {
       _singlePageController?.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        duration: ViewerConstants.pageAnimationDuration,
+        curve: ViewerConstants.pageAnimationCurve,
       );
     } else {
       // Two-page mode: navigate by spread
@@ -480,13 +481,13 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen>
 
               // Top app bar
               AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                top: _autoHideController.isVisible ? 0 : -100,
+                duration: ViewerConstants.overlayAnimationDuration,
+                top: _autoHideController.isVisible ? 0 : ViewerConstants.overlayHideOffsetTop,
                 left: 0,
                 right: 0,
                 child: AppBar(
                   title: Text(widget.document.name),
-                  backgroundColor: Colors.black.withValues(alpha: 0.7),
+                  backgroundColor: ViewerConstants.overlayBackground,
                   actions: [
                     PopupMenuButton<PdfViewMode>(
                       icon: Icon(_viewMode.icon),
@@ -581,8 +582,8 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen>
 
               // Bottom controls
               AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                bottom: _autoHideController.isVisible ? 0 : -100,
+                duration: ViewerConstants.overlayAnimationDuration,
+                bottom: _autoHideController.isVisible ? 0 : ViewerConstants.overlayHideOffsetBottom,
                 left: 0,
                 right: 0,
                 child: Builder(
@@ -686,7 +687,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen>
   void _showControlsPanel() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.grey[900],
+      backgroundColor: ViewerConstants.modalBackground,
       builder: (context) => DisplaySettingsPanel(
         brightness: zoomPanState.displaySettings.brightness,
         contrast: zoomPanState.displaySettings.contrast,
