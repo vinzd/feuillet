@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/app_settings_service.dart';
 import '../services/file_access_service.dart';
 import '../services/file_watcher_service.dart';
-import '../services/pdf_service.dart';
+import '../services/document_service.dart';
 import '../services/version_service.dart';
 
 /// Settings screen for app configuration
@@ -45,7 +45,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     try {
       await AppSettingsService.instance.setPdfDirectoryPath(result);
       await FileWatcherService.instance.updatePdfDirectoryPath();
-      await PdfService.instance.scanAndSyncLibrary();
+      await DocumentService.instance.scanAndSyncLibrary();
       await _loadCurrentSettings();
 
       if (mounted) {
@@ -92,7 +92,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     try {
       await AppSettingsService.instance.clearPdfDirectoryPath();
       await FileWatcherService.instance.updatePdfDirectoryPath();
-      await PdfService.instance.scanAndSyncLibrary();
+      await DocumentService.instance.scanAndSyncLibrary();
       await _loadCurrentSettings();
 
       if (mounted) {

@@ -24,7 +24,7 @@ class FileWatcherService {
   String? _databasePath;
   Timer? _safPollingTimer;
 
-  /// Callback for SAF polling — set by PdfService to trigger scanAndSyncLibrary
+  /// Callback for SAF polling — set by DocumentService to trigger scanAndSyncLibrary
   Future<void> Function()? onSafPollCallback;
 
   /// Stream of PDF directory changes

@@ -10,7 +10,7 @@ import '../services/annotation_service.dart';
 import '../services/database_service.dart';
 import '../services/file_access_service.dart';
 import '../services/pdf_export_service.dart';
-import '../services/pdf_service.dart';
+import '../services/document_service.dart';
 import '../services/setlist_service.dart';
 import '../services/version_service.dart';
 import '../utils/fuzzy_search.dart';
@@ -66,7 +66,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   Future<void> _syncLibrary() async {
     setState(() => _isLoading = true);
-    await PdfService.instance.scanAndSyncLibrary();
+    await DocumentService.instance.scanAndSyncLibrary();
     setState(() => _isLoading = false);
   }
 
@@ -76,7 +76,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     }
   }
 
-  void _onImportComplete(PdfImportBatchResult? result) {
+  void _onImportComplete(DocumentImportBatchResult? result) {
     if (!mounted) return;
 
     setState(() {
@@ -95,7 +95,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       _importProgress = null;
     });
 
-    final result = await PdfService.instance.importPdfs(
+    final result = await DocumentService.instance.importPdfs(
       onProgress: _onImportProgress,
     );
 
@@ -111,7 +111,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       _isDraggingFiles = false;
     });
 
-    final result = await PdfService.instance.importPdfsFromDroppedFiles(
+    final result = await DocumentService.instance.importPdfsFromDroppedFiles(
       details.files,
       onProgress: _onImportProgress,
     );
@@ -119,7 +119,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     _onImportComplete(result);
   }
 
-  void _showImportResult(PdfImportBatchResult result) {
+  void _showImportResult(DocumentImportBatchResult result) {
     final messenger = ScaffoldMessenger.of(context);
 
     if (result.allSucceeded) {
@@ -176,7 +176,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     return 'Added $addedCount ${_pluralize(addedCount, 'document')} to set list';
   }
 
-  void _showImportFailuresDialog(List<PdfImportResult> failures) {
+  void _showImportFailuresDialog(List<DocumentImportResult> failures) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -502,7 +502,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     if (deleteFiles == null || !mounted) return;
 
     for (final docId in _selectedDocumentIds) {
-      await PdfService.instance.deletePdf(docId, deleteFile: deleteFiles);
+      await DocumentService.instance.deletePdf(docId, deleteFile: deleteFiles);
     }
 
     if (mounted) {
@@ -1232,7 +1232,7 @@ class _PdfListTileState extends State<PdfListTile> {
     setState(() => _isLoading = true);
 
     try {
-      final bytes = await PdfService.instance.generateThumbnail(
+      final bytes = await DocumentService.instance.generateThumbnail(
         widget.document,
       );
       if (mounted) {

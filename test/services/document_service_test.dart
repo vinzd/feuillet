@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:feuillet/services/pdf_service.dart';
+import 'package:feuillet/services/document_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('PdfService', () {
+  group('DocumentService', () {
     test('service type is correct', () {
       // Note: Full instantiation requires database and file system initialization
       // Testing the actual service requires proper setup/mocking
@@ -57,9 +57,9 @@ void main() {
     });
   });
 
-  group('PdfImportResult', () {
+  group('DocumentImportResult', () {
     test('creates success result correctly', () {
-      const result = PdfImportResult(
+      const result = DocumentImportResult(
         fileName: 'test.pdf',
         success: true,
         filePath: '/path/to/test.pdf',
@@ -71,7 +71,7 @@ void main() {
     });
 
     test('creates failure result correctly', () {
-      const result = PdfImportResult(
+      const result = DocumentImportResult(
         fileName: 'test.pdf',
         success: false,
         error: 'File not found',
@@ -83,7 +83,7 @@ void main() {
     });
 
     test('creates non-PDF file error result', () {
-      const result = PdfImportResult(
+      const result = DocumentImportResult(
         fileName: 'document.txt',
         success: false,
         error: 'Not a PDF file',
@@ -94,7 +94,7 @@ void main() {
     });
 
     test('creates empty path error result', () {
-      const result = PdfImportResult(
+      const result = DocumentImportResult(
         fileName: 'test.pdf',
         success: false,
         error: 'No file path available',
@@ -105,12 +105,12 @@ void main() {
     });
   });
 
-  group('PdfImportBatchResult', () {
+  group('DocumentImportBatchResult', () {
     test('calculates counts correctly for all success', () {
-      const results = PdfImportBatchResult([
-        PdfImportResult(fileName: 'a.pdf', success: true, filePath: '/a.pdf'),
-        PdfImportResult(fileName: 'b.pdf', success: true, filePath: '/b.pdf'),
-        PdfImportResult(fileName: 'c.pdf', success: true, filePath: '/c.pdf'),
+      const results = DocumentImportBatchResult([
+        DocumentImportResult(fileName: 'a.pdf', success: true, filePath: '/a.pdf'),
+        DocumentImportResult(fileName: 'b.pdf', success: true, filePath: '/b.pdf'),
+        DocumentImportResult(fileName: 'c.pdf', success: true, filePath: '/c.pdf'),
       ]);
 
       expect(results.totalCount, 3);
@@ -122,10 +122,10 @@ void main() {
     });
 
     test('calculates counts correctly for partial success', () {
-      const results = PdfImportBatchResult([
-        PdfImportResult(fileName: 'a.pdf', success: true, filePath: '/a.pdf'),
-        PdfImportResult(fileName: 'b.pdf', success: false, error: 'Failed'),
-        PdfImportResult(fileName: 'c.pdf', success: true, filePath: '/c.pdf'),
+      const results = DocumentImportBatchResult([
+        DocumentImportResult(fileName: 'a.pdf', success: true, filePath: '/a.pdf'),
+        DocumentImportResult(fileName: 'b.pdf', success: false, error: 'Failed'),
+        DocumentImportResult(fileName: 'c.pdf', success: true, filePath: '/c.pdf'),
       ]);
 
       expect(results.totalCount, 3);
@@ -138,9 +138,9 @@ void main() {
     });
 
     test('calculates counts correctly for all failures', () {
-      const results = PdfImportBatchResult([
-        PdfImportResult(fileName: 'a.pdf', success: false, error: 'Error 1'),
-        PdfImportResult(fileName: 'b.pdf', success: false, error: 'Error 2'),
+      const results = DocumentImportBatchResult([
+        DocumentImportResult(fileName: 'a.pdf', success: false, error: 'Error 1'),
+        DocumentImportResult(fileName: 'b.pdf', success: false, error: 'Error 2'),
       ]);
 
       expect(results.totalCount, 2);
@@ -152,7 +152,7 @@ void main() {
     });
 
     test('handles empty results', () {
-      const results = PdfImportBatchResult([]);
+      const results = DocumentImportBatchResult([]);
 
       expect(results.totalCount, 0);
       expect(results.successCount, 0);
@@ -163,23 +163,23 @@ void main() {
 
     test('handles mixed file types from drag-drop', () {
       // Simulates dropping a mix of PDF and non-PDF files
-      const results = PdfImportBatchResult([
-        PdfImportResult(
+      const results = DocumentImportBatchResult([
+        DocumentImportResult(
           fileName: 'doc1.pdf',
           success: true,
           filePath: '/doc1.pdf',
         ),
-        PdfImportResult(
+        DocumentImportResult(
           fileName: 'image.png',
           success: false,
           error: 'Not a PDF file',
         ),
-        PdfImportResult(
+        DocumentImportResult(
           fileName: 'doc2.pdf',
           success: true,
           filePath: '/doc2.pdf',
         ),
-        PdfImportResult(
+        DocumentImportResult(
           fileName: 'notes.txt',
           success: false,
           error: 'Not a PDF file',
@@ -203,14 +203,14 @@ void main() {
     });
 
     test('filters only failures from results', () {
-      const results = PdfImportBatchResult([
-        PdfImportResult(fileName: 'a.pdf', success: true, filePath: '/a.pdf'),
-        PdfImportResult(
+      const results = DocumentImportBatchResult([
+        DocumentImportResult(fileName: 'a.pdf', success: true, filePath: '/a.pdf'),
+        DocumentImportResult(
           fileName: 'b.txt',
           success: false,
           error: 'Not a PDF file',
         ),
-        PdfImportResult(
+        DocumentImportResult(
           fileName: 'c.pdf',
           success: false,
           error: 'Failed to add PDF',

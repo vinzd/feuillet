@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../models/database.dart';
-import '../services/pdf_service.dart';
+import '../services/document_service.dart';
 
 /// Card widget to display a PDF in the library grid view
 class PdfCard extends StatefulWidget {
@@ -53,7 +53,7 @@ class _PdfCardState extends State<PdfCard> {
     });
 
     try {
-      final bytes = await PdfService.instance.generateThumbnail(
+      final bytes = await DocumentService.instance.generateThumbnail(
         widget.document,
       );
       if (mounted) {
