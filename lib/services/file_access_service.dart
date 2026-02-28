@@ -94,7 +94,7 @@ class FileAccessService {
     if (!await dir.exists()) return [];
 
     final files = <PdfFileInfo>[];
-    await for (final entity in dir.list()) {
+    await for (final entity in dir.list(recursive: true)) {
       if (entity is File && entity.path.toLowerCase().endsWith('.pdf')) {
         final stat = await entity.stat();
         files.add(

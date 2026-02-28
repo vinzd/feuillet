@@ -79,20 +79,29 @@ class SafMethodChannel(private val activity: MainActivity) {
                 return
             }
 
-            val pdfFiles = documentFile.listFiles()
-                .filter { it.isFile && it.name?.lowercase()?.endsWith(".pdf") == true }
-                .map { file ->
+            val pdfFiles = mutableListOf<Map<String, Any>>()
+            collectPdfFiles(documentFile, pdfFiles)
+
+            result.success(pdfFiles)
+        } catch (e: Exception) {
+            result.error("LIST_ERROR", e.message, null)
+        }
+    }
+
+    private fun collectPdfFiles(directory: DocumentFile, result: MutableList<Map<String, Any>>) {
+        for (file in directory.listFiles()) {
+            if (file.isDirectory) {
+                collectPdfFiles(file, result)
+            } else if (file.isFile && file.name?.lowercase()?.endsWith(".pdf") == true) {
+                result.add(
                     mapOf(
                         "uri" to file.uri.toString(),
                         "name" to (file.name ?: ""),
                         "size" to file.length(),
                         "lastModified" to file.lastModified()
                     )
-                }
-
-            result.success(pdfFiles)
-        } catch (e: Exception) {
-            result.error("LIST_ERROR", e.message, null)
+                )
+            }
         }
     }
 
