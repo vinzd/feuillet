@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:feuillet/services/file_access_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +37,34 @@ void main() {
       expect('normal.pdf'.startsWith('.syncthing.'), isFalse);
       expect('normal.pdf'.startsWith('~syncthing~'), isFalse);
       expect('normal.pdf'.endsWith('.tmp'), isFalse);
+    });
+  });
+
+  group('SAF URI detection for file watching', () {
+    test('isSafUri correctly identifies content:// URIs', () {
+      expect(
+        isSafUri('content://com.android.externalstorage.documents/tree/primary%3AMusic'),
+        isTrue,
+      );
+      expect(
+        isSafUri('content://com.android.providers.downloads.documents/tree/downloads'),
+        isTrue,
+      );
+    });
+
+    test('isSafUri returns false for local paths', () {
+      expect(isSafUri('/data/data/com.feuillet.app/files/pdfs'), isFalse);
+      expect(isSafUri('/Users/test/Documents/pdfs'), isFalse);
+    });
+
+    test('SAF directories should use polling instead of DirectoryWatcher', () {
+      // Design verification: SAF URIs cannot be watched with DirectoryWatcher.
+      // FileWatcherService falls back to periodic polling for these.
+      final safPath = 'content://com.android.externalstorage.documents/tree/primary%3ASyncthing';
+      final localPath = '/Users/test/Documents/pdfs';
+
+      expect(isSafUri(safPath), isTrue);
+      expect(isSafUri(localPath), isFalse);
     });
   });
 }

@@ -1,9 +1,8 @@
-import 'dart:io';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/app_settings_service.dart';
+import '../services/file_access_service.dart';
 import '../services/file_watcher_service.dart';
 import '../services/pdf_service.dart';
 import '../services/version_service.dart';
@@ -38,36 +37,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _selectDirectory() async {
-    final result = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: 'Select PDF Directory',
-      lockParentWindow: true,
-    );
-
-    if (result == null) return; // User cancelled
-
-    // Validate the directory exists and is accessible
-    final dir = Directory(result);
-    if (!await dir.exists()) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Selected directory does not exist')),
-        );
-      }
-      return;
-    }
+    final result = await FileAccessService.instance.pickDirectory();
+    if (result == null) return;
 
     setState(() => _isLoading = true);
 
     try {
-      // Save the new path
       await AppSettingsService.instance.setPdfDirectoryPath(result);
-
-      // Restart file watcher with new path
       await FileWatcherService.instance.updatePdfDirectoryPath();
-
-      // Rescan library
       await PdfService.instance.scanAndSyncLibrary();
-
       await _loadCurrentSettings();
 
       if (mounted) {
@@ -76,14 +54,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         );
       }
     } catch (e) {
+      setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error updating directory: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating directory: $e')),
+        );
       }
     }
-
-    setState(() => _isLoading = false);
   }
 
   Future<void> _resetToDefault() async {
@@ -124,14 +101,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         );
       }
     } catch (e) {
+      setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error resetting directory: $e')),
         );
       }
     }
-
-    setState(() => _isLoading = false);
   }
 
   @override

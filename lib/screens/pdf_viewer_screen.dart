@@ -8,6 +8,7 @@ import '../models/database.dart';
 import '../models/view_mode.dart';
 import '../services/annotation_service.dart';
 import '../services/database_service.dart';
+import '../services/file_access_service.dart';
 import '../services/pdf_page_cache_service.dart';
 import '../utils/auto_hide_controller.dart';
 import '../utils/display_settings.dart';
@@ -107,19 +108,14 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen>
 
       // Now load PDF document in background - UI is already visible
       final freshDocument = await db.getDocument(widget.document.id);
+      if (freshDocument == null) throw Exception('Document not found');
 
-      final Future<PdfDocument> pdfDocument;
-      if (freshDocument?.pdfBytes != null) {
-        // Copy bytes to avoid detached ArrayBuffer issue on web
-        final bytesCopy = Uint8List.fromList(freshDocument!.pdfBytes!);
-        pdfDocument = PdfDocument.openData(bytesCopy);
-      } else if (freshDocument != null) {
-        pdfDocument = PdfDocument.openFile(freshDocument.filePath);
-      } else {
-        throw Exception('Document not found');
-      }
-
-      _pdfDocument = await pdfDocument;
+      _pdfDocument = await FileAccessService.instance.openPdfDocument(
+        freshDocument.filePath,
+        pdfBytes: freshDocument.pdfBytes != null
+            ? Uint8List.fromList(freshDocument.pdfBytes!)
+            : null,
+      );
 
       _pdfController = CachedPdfController(
         document: Future.value(_pdfDocument),
