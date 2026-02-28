@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
@@ -14,7 +15,8 @@ import 'annotation_service.dart';
 /// Service for exporting documents with annotations burned in
 class DocumentExportService {
   static DocumentExportService? _instance;
-  static DocumentExportService get instance => _instance ??= DocumentExportService._();
+  static DocumentExportService get instance =>
+      _instance ??= DocumentExportService._();
   DocumentExportService._();
 
   final _annotationService = AnnotationService();
@@ -208,6 +210,98 @@ class DocumentExportService {
     );
   }
 
+  /// Export an image with selected annotation layers burned in as PNG
+  Future<Uint8List> exportImageWithAnnotations({
+    required Document document,
+    required Uint8List imageBytes,
+    required List<int> selectedLayerIds,
+  }) async {
+    // Decode the original image
+    final codec = await ui.instantiateImageCodec(imageBytes);
+    final frame = await codec.getNextFrame();
+    final originalImage = frame.image;
+
+    // Get annotations for page 0 (images always use page 0)
+    final annotations = await _getPageAnnotations(
+      document.id,
+      0,
+      selectedLayerIds,
+    );
+
+    if (annotations.isEmpty) {
+      // No annotations, return original bytes
+      originalImage.dispose();
+      return imageBytes;
+    }
+
+    // Create a canvas and draw image + annotations
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+
+    // Draw the original image
+    canvas.drawImage(originalImage, ui.Offset.zero, ui.Paint());
+
+    // Draw annotations on top
+    for (final stroke in annotations) {
+      _drawStrokeToCanvas(canvas, stroke);
+    }
+
+    // Encode as PNG
+    final picture = recorder.endRecording();
+    final img = await picture.toImage(
+      originalImage.width,
+      originalImage.height,
+    );
+    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+
+    originalImage.dispose();
+    img.dispose();
+
+    return byteData!.buffer.asUint8List();
+  }
+
+  /// Draw a stroke onto a Flutter Canvas (for image export)
+  void _drawStrokeToCanvas(ui.Canvas canvas, DrawingStroke stroke) {
+    if (stroke.points.isEmpty) return;
+    if (stroke.type == AnnotationType.eraser ||
+        stroke.type == AnnotationType.text) {
+      return;
+    }
+
+    final paint = ui.Paint()
+      ..strokeCap = ui.StrokeCap.round
+      ..strokeJoin = ui.StrokeJoin.round
+      ..style = ui.PaintingStyle.stroke;
+
+    switch (stroke.type) {
+      case AnnotationType.pen:
+        paint.color = stroke.color;
+        paint.strokeWidth = stroke.thickness;
+      case AnnotationType.highlighter:
+        paint.color = stroke.color.withAlpha((0.4 * 255).toInt());
+        paint.strokeWidth = stroke.thickness * 2;
+      case AnnotationType.eraser:
+      case AnnotationType.text:
+        return;
+    }
+
+    if (stroke.points.length == 1) {
+      // Single point - draw a filled circle
+      final fillPaint = ui.Paint()
+        ..color = paint.color
+        ..style = ui.PaintingStyle.fill;
+      canvas.drawCircle(stroke.points.first, paint.strokeWidth / 2, fillPaint);
+    } else {
+      // Multiple points - draw path
+      final path = ui.Path();
+      path.moveTo(stroke.points.first.dx, stroke.points.first.dy);
+      for (int i = 1; i < stroke.points.length; i++) {
+        path.lineTo(stroke.points[i].dx, stroke.points[i].dy);
+      }
+      canvas.drawPath(path, paint);
+    }
+  }
+
   /// Share the exported PDF using platform share sheet.
   /// Note: On web, use the platform-specific downloadPdf function instead.
   Future<void> sharePdf(Uint8List pdfBytes, String fileName) async {
@@ -225,6 +319,31 @@ class DocumentExportService {
     await SharePlus.instance.share(
       ShareParams(
         files: [XFile(filePath, mimeType: 'application/pdf')],
+        subject: fileName,
+      ),
+    );
+  }
+
+  /// Share an exported image using platform share sheet
+  Future<void> shareImage(Uint8List imageBytes, String fileName) async {
+    if (kIsWeb) {
+      throw UnsupportedError(
+        'shareImage is not supported on web. Use platform download instead.',
+      );
+    }
+
+    final tempDir = await getTemporaryDirectory();
+    final filePath = path.join(tempDir.path, fileName);
+    final file = File(filePath);
+    await file.writeAsBytes(imageBytes);
+
+    final mimeType = fileName.toLowerCase().endsWith('.png')
+        ? 'image/png'
+        : 'image/jpeg';
+
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(filePath, mimeType: mimeType)],
         subject: fileName,
       ),
     );

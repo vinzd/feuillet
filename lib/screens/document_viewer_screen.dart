@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart' as drift;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../utils/viewer_constants.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +10,7 @@ import '../models/database.dart';
 import '../models/view_mode.dart';
 import '../services/annotation_service.dart';
 import '../services/database_service.dart';
+import '../services/document_export_service.dart';
 import '../services/file_access_service.dart';
 import '../services/pdf_page_cache_service.dart';
 import '../utils/auto_hide_controller.dart';
@@ -559,12 +561,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                         icon: const Icon(Icons.ios_share),
                         onPressed: () {
                           if (widget.document.isImage) {
-                            // TODO: Image export will be handled in Task 12
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Image export coming soon'),
-                              ),
-                            );
+                            _exportImage();
                           } else {
                             ExportPdfDialog.show(
                               context: context,
@@ -793,5 +790,144 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
         (currentPos.dy + delta.dy).clamp(0, size.height - 100),
       );
     });
+  }
+
+  Future<void> _exportImage() async {
+    if (_imageBytes == null) return;
+
+    // Get layers for selection
+    final layers = await _annotationService.getLayers(widget.document.id);
+
+    if (!mounted) return;
+
+    // Show layer selection dialog
+    final selectedLayerIds = await showDialog<List<int>>(
+      context: context,
+      builder: (context) => _ImageExportLayerDialog(layers: layers),
+    );
+
+    if (selectedLayerIds == null || !mounted) return;
+
+    // Show progress
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Exporting image...')));
+
+    try {
+      final exportBytes = await DocumentExportService.instance
+          .exportImageWithAnnotations(
+            document: widget.document,
+            imageBytes: _imageBytes!,
+            selectedLayerIds: selectedLayerIds,
+          );
+
+      if (!mounted) return;
+
+      final baseName = widget.document.name;
+      final fileName = '${baseName}_annotated.png';
+
+      if (kIsWeb) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Web export not yet supported for images'),
+          ),
+        );
+      } else {
+        await DocumentExportService.instance.shareImage(exportBytes, fileName);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+      }
+    }
+  }
+}
+
+class _ImageExportLayerDialog extends StatefulWidget {
+  final List<AnnotationLayer> layers;
+
+  const _ImageExportLayerDialog({required this.layers});
+
+  @override
+  State<_ImageExportLayerDialog> createState() =>
+      _ImageExportLayerDialogState();
+}
+
+class _ImageExportLayerDialogState extends State<_ImageExportLayerDialog> {
+  late Set<int> _selectedLayerIds;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedLayerIds = widget.layers
+        .where((l) => l.isVisible)
+        .map((l) => l.id)
+        .toSet();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Export Image'),
+      content: SizedBox(
+        width: 300,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Select annotation layers to include:',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            if (widget.layers.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text('No annotation layers found.'),
+              )
+            else
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 250),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: widget.layers.length,
+                  itemBuilder: (context, index) {
+                    final layer = widget.layers[index];
+                    return CheckboxListTile(
+                      title: Text(layer.name),
+                      value: _selectedLayerIds.contains(layer.id),
+                      onChanged: (value) {
+                        setState(() {
+                          if (value == true) {
+                            _selectedLayerIds.add(layer.id);
+                          } else {
+                            _selectedLayerIds.remove(layer.id);
+                          }
+                        });
+                      },
+                      controlAffinity: ListTileControlAffinity.leading,
+                      dense: true,
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _selectedLayerIds.isEmpty
+              ? null
+              : () => Navigator.of(context).pop(_selectedLayerIds.toList()),
+          child: const Text('Export'),
+        ),
+      ],
+    );
   }
 }
