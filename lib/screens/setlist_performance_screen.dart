@@ -422,7 +422,9 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
 
               AnimatedPositioned(
                 duration: ViewerConstants.overlayAnimationDuration,
-                top: _autoHideController.isVisible ? 0 : ViewerConstants.overlayHideOffsetTop,
+                top: _autoHideController.isVisible
+                    ? 0
+                    : ViewerConstants.overlayHideOffsetTop,
                 left: 0,
                 right: 0,
                 child: AppBar(
@@ -476,7 +478,9 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
 
               AnimatedPositioned(
                 duration: ViewerConstants.overlayAnimationDuration,
-                bottom: _autoHideController.isVisible ? 0 : ViewerConstants.overlayHideOffsetBottomTall,
+                bottom: _autoHideController.isVisible
+                    ? 0
+                    : ViewerConstants.overlayHideOffsetBottomTall,
                 left: 0,
                 right: 0,
                 child: PerformanceBottomControls(

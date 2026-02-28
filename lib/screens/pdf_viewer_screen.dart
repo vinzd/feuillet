@@ -482,7 +482,9 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen>
               // Top app bar
               AnimatedPositioned(
                 duration: ViewerConstants.overlayAnimationDuration,
-                top: _autoHideController.isVisible ? 0 : ViewerConstants.overlayHideOffsetTop,
+                top: _autoHideController.isVisible
+                    ? 0
+                    : ViewerConstants.overlayHideOffsetTop,
                 left: 0,
                 right: 0,
                 child: AppBar(
@@ -583,7 +585,9 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen>
               // Bottom controls
               AnimatedPositioned(
                 duration: ViewerConstants.overlayAnimationDuration,
-                bottom: _autoHideController.isVisible ? 0 : ViewerConstants.overlayHideOffsetBottom,
+                bottom: _autoHideController.isVisible
+                    ? 0
+                    : ViewerConstants.overlayHideOffsetBottom,
                 left: 0,
                 right: 0,
                 child: Builder(
