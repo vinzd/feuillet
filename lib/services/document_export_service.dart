@@ -11,11 +11,11 @@ import 'package:share_plus/share_plus.dart';
 import '../models/database.dart';
 import 'annotation_service.dart';
 
-/// Service for exporting PDFs with annotations burned in
-class PdfExportService {
-  static PdfExportService? _instance;
-  static PdfExportService get instance => _instance ??= PdfExportService._();
-  PdfExportService._();
+/// Service for exporting documents with annotations burned in
+class DocumentExportService {
+  static DocumentExportService? _instance;
+  static DocumentExportService get instance => _instance ??= DocumentExportService._();
+  DocumentExportService._();
 
   final _annotationService = AnnotationService();
 

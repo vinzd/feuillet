@@ -9,7 +9,7 @@ import '../router/app_router.dart';
 import '../services/annotation_service.dart';
 import '../services/database_service.dart';
 import '../services/file_access_service.dart';
-import '../services/pdf_export_service.dart';
+import '../services/document_export_service.dart';
 import '../services/document_service.dart';
 import '../services/setlist_service.dart';
 import '../services/version_service.dart';
@@ -1027,7 +1027,7 @@ class _BulkExportDialog extends StatefulWidget {
 }
 
 class _BulkExportDialogState extends State<_BulkExportDialog> {
-  final _exportService = PdfExportService.instance;
+  final _exportService = DocumentExportService.instance;
   final _annotationService = AnnotationService();
 
   bool _isExporting = false;
