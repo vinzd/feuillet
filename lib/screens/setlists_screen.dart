@@ -80,7 +80,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
       );
 
       if (mounted) {
-        context.go(AppRoutes.setlistDetailPath(id));
+        context.push(AppRoutes.setlistDetailPath(id));
       }
     }
   }
@@ -134,7 +134,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
     }
 
     if (mounted) {
-      context.go(AppRoutes.setlistPerformancePath(setList.id));
+      context.push(AppRoutes.setlistPerformancePath(setList.id));
     }
   }
 
@@ -238,7 +238,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
                     ],
                   ),
                   onTap: () {
-                    context.go(AppRoutes.setlistDetailPath(setList.id));
+                    context.push(AppRoutes.setlistDetailPath(setList.id));
                   },
                 ),
               );

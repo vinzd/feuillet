@@ -113,7 +113,7 @@ run-macos:
 
 run-android:
 	@echo "🤖 Running on Android..."
-	flutter run -d android --dart-define=GIT_HASH=$(GIT_HASH)
+	flutter run -d $(shell flutter devices | grep android | head -1 | awk -F ' • ' '{print $$2}' | xargs) --dart-define=GIT_HASH=$(GIT_HASH)
 
 # Serve web build locally
 serve-web: build-web

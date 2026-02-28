@@ -207,7 +207,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     await ref.read(databaseProvider).updateDocument(updatedDoc);
 
     if (mounted) {
-      context.go(AppRoutes.documentPath(document.id));
+      context.push(AppRoutes.documentPath(document.id));
     }
   }
 
