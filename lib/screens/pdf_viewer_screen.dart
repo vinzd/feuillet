@@ -84,6 +84,22 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen>
   @override
   void onZoomChanged() => _saveSettings();
 
+  @override
+  void onSwipeLeft() {
+    if (_annotationMode) return;
+    if (_canGoToNext()) {
+      _goToNextPage();
+    }
+  }
+
+  @override
+  void onSwipeRight() {
+    if (_annotationMode) return;
+    if (_canGoToPrevious()) {
+      _goToPreviousPage();
+    }
+  }
+
   Future<void> _initializePdf() async {
     try {
       final db = ref.read(databaseProvider);
@@ -612,6 +628,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen>
       controller: _singlePageController,
       scrollDirection: Axis.horizontal,
       pageSnapping: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: _pdfDocument!.pagesCount,
       onPageChanged: (index) => _onPageChanged(index + 1),
       itemBuilder: (context, index) {

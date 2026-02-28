@@ -17,6 +17,15 @@ class ZoomPanState {
 
   /// Baseline pan offset at gesture start (null when not in gesture).
   Offset? basePanOffset;
+
+  /// Focal point at gesture start (for swipe detection).
+  Offset? startFocalPoint;
+
+  /// Last focal point during gesture (for swipe detection).
+  Offset? lastFocalPoint;
+
+  /// Accumulated horizontal overscroll beyond content bounds.
+  double horizontalOverscroll = 0.0;
 }
 
 /// Mixin for handling pinch-to-zoom and pan gestures.
@@ -62,6 +71,18 @@ mixin ZoomPanGestureMixin<T extends StatefulWidget> on State<T> {
   /// Called when zoom changes are complete and should be persisted.
   void onZoomChanged() {}
 
+  /// Minimum horizontal displacement (in pixels) to trigger a swipe.
+  static const double _swipeThreshold = 50.0;
+
+  /// Minimum overscroll past content boundary (in pixels) to trigger a swipe when zoomed.
+  static const double _overscrollThreshold = 80.0;
+
+  /// Called when a left swipe is detected (navigate forward).
+  void onSwipeLeft() {}
+
+  /// Called when a right swipe is detected (navigate backward).
+  void onSwipeRight() {}
+
   /// Sensitivity multiplier for trackpad pinch gestures.
   static const double _trackpadZoomSensitivity = 3.0;
 
@@ -69,6 +90,8 @@ mixin ZoomPanGestureMixin<T extends StatefulWidget> on State<T> {
   void handleScaleStart(ScaleStartDetails details) {
     zoomPanState.baseZoom = zoomPanState.displaySettings.zoomLevel;
     zoomPanState.basePanOffset = zoomPanState.panOffset;
+    zoomPanState.startFocalPoint = details.focalPoint;
+    zoomPanState.lastFocalPoint = details.focalPoint;
   }
 
   /// Handle scale gesture update.
@@ -91,9 +114,29 @@ mixin ZoomPanGestureMixin<T extends StatefulWidget> on State<T> {
 
       // Handle pan (drag) - only when zoomed in
       if (state.displaySettings.zoomLevel > 1.0) {
-        state.panOffset = state.basePanOffset! + details.focalPointDelta;
+        final rawOffset = state.basePanOffset! + details.focalPointDelta;
+
+        // Clamp pan to content bounds
+        final viewportSize = context.size;
+        if (viewportSize != null) {
+          final maxPanX =
+              (state.displaySettings.zoomLevel - 1.0) * viewportSize.width / 2;
+          final maxPanY =
+              (state.displaySettings.zoomLevel - 1.0) * viewportSize.height / 2;
+          final clampedX = rawOffset.dx.clamp(-maxPanX, maxPanX);
+          final clampedY = rawOffset.dy.clamp(-maxPanY, maxPanY);
+          state.panOffset = Offset(clampedX, clampedY);
+
+          // Track horizontal overscroll for swipe detection
+          state.horizontalOverscroll = rawOffset.dx - clampedX;
+        } else {
+          state.panOffset = rawOffset;
+        }
       }
     });
+
+    // Track focal point for swipe detection
+    zoomPanState.lastFocalPoint = details.focalPoint;
   }
 
   /// Handle scale gesture end.
@@ -101,6 +144,49 @@ mixin ZoomPanGestureMixin<T extends StatefulWidget> on State<T> {
     final state = zoomPanState;
     final didZoom = state.baseZoom != state.displaySettings.zoomLevel;
     final didPan = state.basePanOffset != state.panOffset;
+
+    // Detect swipe at 1x zoom: horizontal displacement exceeds threshold, no pinch zoom
+    if (!isZoomPanDisabled &&
+        !didZoom &&
+        state.displaySettings.zoomLevel <= 1.0) {
+      final startFocal = state.startFocalPoint;
+      final lastFocal = state.lastFocalPoint;
+      if (startFocal != null && lastFocal != null) {
+        final dx = lastFocal.dx - startFocal.dx;
+        if (dx.abs() >= _swipeThreshold) {
+          if (dx < 0) {
+            onSwipeLeft();
+          } else {
+            onSwipeRight();
+          }
+          // Clean up and return — don't trigger tap
+          state.baseZoom = null;
+          state.basePanOffset = null;
+          state.startFocalPoint = null;
+          state.lastFocalPoint = null;
+          return;
+        }
+      }
+    }
+
+    // Detect swipe when zoomed: overscroll past content boundary
+    if (!isZoomPanDisabled &&
+        !didZoom &&
+        state.displaySettings.zoomLevel > 1.0) {
+      if (state.horizontalOverscroll.abs() >= _overscrollThreshold) {
+        if (state.horizontalOverscroll < 0) {
+          onSwipeLeft();
+        } else {
+          onSwipeRight();
+        }
+        state.horizontalOverscroll = 0.0;
+        state.baseZoom = null;
+        state.basePanOffset = null;
+        state.startFocalPoint = null;
+        state.lastFocalPoint = null;
+        return;
+      }
+    }
 
     // Detect tap: gesture ended without zoom or pan
     if (!didZoom && !didPan) {
@@ -116,6 +202,9 @@ mixin ZoomPanGestureMixin<T extends StatefulWidget> on State<T> {
 
     state.baseZoom = null;
     state.basePanOffset = null;
+    state.startFocalPoint = null;
+    state.lastFocalPoint = null;
+    state.horizontalOverscroll = 0.0;
   }
 
   /// Handle trackpad pinch-to-zoom via PointerScaleEvent.

@@ -71,6 +71,12 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
   @override
   void onZoomPanTap() => _autoHideController.toggle();
 
+  @override
+  void onSwipeLeft() => _goToNextPage();
+
+  @override
+  void onSwipeRight() => _goToPreviousPage();
+
   Future<void> _initializeDocuments() async {
     // Load the first document immediately
     await _ensureDocumentLoaded(0);
