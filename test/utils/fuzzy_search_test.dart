@@ -12,6 +12,7 @@ Document _makeDoc(int id, String name, {DateTime? lastOpened}) {
     lastModified: DateTime(2024, 1, 1),
     fileSize: 1000,
     pageCount: 10,
+    documentType: 'pdf',
   );
 }
 
