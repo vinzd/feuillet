@@ -57,17 +57,17 @@ void main() {
       final matches = callPattern.allMatches(pdfViewerSource);
 
       // Should be called:
-      // 1. After initial PDF load in _initializePdf
-      // 2. In _goToPreviousPage
-      // 3. In _goToNextPage
-      // 4. In _onPageChanged
-      // 5. In _onViewModeChanged
+      // 1. In _goToPreviousPage
+      // 2. In _goToNextPage
+      // 3. In _onPageChanged
+      // 4. In _onViewModeChanged
+      // (NOT in _initializePdf — CachedPdfView handles initial pre-rendering)
       expect(
         matches.length,
         greaterThanOrEqualTo(4),
         reason:
             '_preRenderPages() should be called in at least 4 places: '
-            'after init, on previous page, on next page, and on page changed.',
+            'on previous page, on next page, on page changed, and on view mode changed.',
       );
     });
 
@@ -159,8 +159,12 @@ void main() {
       );
     });
 
-    test('_preRenderPages is called after initial PDF load', () {
-      // Find the _initializePdf method
+    test('_preRenderPages is NOT called in _initializePdf to avoid race', () {
+      // Pre-rendering on initial load is handled by CachedPdfView's
+      // onPageRendered callback after the first page renders successfully.
+      // Calling it directly in _initializePdf causes a race condition where
+      // adjacent pages start rendering before the first page, which can cause
+      // the first page render to fail on some devices.
       final methodStartIndex = sourceLines.indexWhere(
         (line) => line.contains('Future<void> _initializePdf()'),
       );
@@ -170,15 +174,14 @@ void main() {
         reason: '_initializePdf must exist',
       );
 
-      // Look for _preRenderPages() call within the method body (it's a longer method)
       final methodBody = sourceLines.skip(methodStartIndex).take(70).join('\n');
 
       expect(
         methodBody.contains('_preRenderPages()'),
-        isTrue,
+        isFalse,
         reason:
-            '_initializePdf must call _preRenderPages() after PDF is loaded '
-            'to pre-cache adjacent pages.',
+            '_initializePdf must NOT call _preRenderPages() directly — '
+            'CachedPdfView handles initial pre-rendering via onPageRendered.',
       );
     });
   });

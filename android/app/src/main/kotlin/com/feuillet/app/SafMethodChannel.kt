@@ -23,6 +23,7 @@ class SafMethodChannel(private val activity: MainActivity) {
                     "pickDirectory" -> pickDirectory(result)
                     "listPdfFiles" -> listPdfFiles(call, result)
                     "readFileBytes" -> readFileBytes(call, result)
+                    "copyToLocal" -> copyToLocal(call, result)
                     "writeFile" -> writeFile(call, result)
                     "getFileMetadata" -> getFileMetadata(call, result)
                     "deleteFile" -> deleteFile(call, result)
@@ -117,6 +118,34 @@ class SafMethodChannel(private val activity: MainActivity) {
             result.success(bytes)
         } catch (e: Exception) {
             result.error("READ_ERROR", e.message, null)
+        }
+    }
+
+    private fun copyToLocal(call: MethodCall, result: MethodChannel.Result) {
+        val documentUriStr = call.argument<String>("documentUri")
+        val destPath = call.argument<String>("destPath")
+        if (documentUriStr == null || destPath == null) {
+            result.error("INVALID_ARGUMENT", "documentUri and destPath are required", null)
+            return
+        }
+
+        try {
+            val documentUri = Uri.parse(documentUriStr)
+            val destFile = java.io.File(destPath)
+            destFile.parentFile?.mkdirs()
+
+            activity.contentResolver.openInputStream(documentUri)?.use { input ->
+                destFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            } ?: run {
+                result.error("COPY_ERROR", "Could not open input stream", null)
+                return
+            }
+
+            result.success(destPath)
+        } catch (e: Exception) {
+            result.error("COPY_ERROR", e.message, null)
         }
     }
 
