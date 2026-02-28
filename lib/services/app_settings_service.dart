@@ -1,8 +1,8 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'database_service.dart';
+import 'file_access_service.dart';
 
 /// Keys for app settings stored in database
 class AppSettingKeys {
@@ -37,9 +37,8 @@ class AppSettingsService {
     );
 
     if (customPath != null && customPath.isNotEmpty) {
-      // Verify the directory still exists
-      final dir = Directory(customPath);
-      if (await dir.exists()) {
+      // Verify the directory still exists/is accessible
+      if (await FileAccessService.instance.directoryExists(customPath)) {
         _cachedPdfPath = customPath;
         return customPath;
       } else {
