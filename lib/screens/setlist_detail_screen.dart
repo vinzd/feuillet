@@ -4,6 +4,7 @@ import '../models/database.dart';
 import '../router/app_router.dart';
 import '../services/database_service.dart';
 import '../services/setlist_service.dart';
+import '../utils/fuzzy_search.dart';
 
 /// Screen for viewing and editing a set list
 class SetListDetailScreen extends StatefulWidget {
@@ -236,6 +237,7 @@ class _DocumentPickerDialog extends StatefulWidget {
 
 class _DocumentPickerDialogState extends State<_DocumentPickerDialog> {
   final Set<int> _selectedIds = {};
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
@@ -243,28 +245,58 @@ class _DocumentPickerDialogState extends State<_DocumentPickerDialog> {
       title: const Text('Add Documents'),
       content: SizedBox(
         width: double.maxFinite,
-        child: ListView.builder(
-          shrinkWrap: true,
-          itemCount: widget.documents.length,
-          itemBuilder: (context, index) {
-            final doc = widget.documents[index];
-            final isSelected = _selectedIds.contains(doc.id);
-
-            return CheckboxListTile(
-              title: Text(doc.name),
-              subtitle: Text('${doc.pageCount} pages'),
-              value: isSelected,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'Search documents...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                isDense: true,
+              ),
               onChanged: (value) {
-                setState(() {
-                  if (value == true) {
-                    _selectedIds.add(doc.id);
-                  } else {
-                    _selectedIds.remove(doc.id);
-                  }
-                });
+                setState(() => _searchQuery = value);
               },
-            );
-          },
+            ),
+            const SizedBox(height: 8),
+            Flexible(
+              child: Builder(
+                builder: (context) {
+                  final filteredDocs = fuzzySearchDocuments(
+                    widget.documents,
+                    _searchQuery,
+                  );
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: filteredDocs.length,
+                    itemBuilder: (context, index) {
+                      final doc = filteredDocs[index];
+                      final isSelected = _selectedIds.contains(doc.id);
+
+                      return CheckboxListTile(
+                        title: Text(doc.name),
+                        subtitle: Text('${doc.pageCount} pages'),
+                        value: isSelected,
+                        onChanged: (value) {
+                          setState(() {
+                            if (value == true) {
+                              _selectedIds.add(doc.id);
+                            } else {
+                              _selectedIds.remove(doc.id);
+                            }
+                          });
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
       actions: [
