@@ -126,13 +126,12 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen>
 
       await _loadPageAnnotations();
 
-      // Trigger rebuild now that PDF is ready
+      // Trigger rebuild now that PDF is ready.
+      // Pre-rendering of adjacent pages is handled by CachedPdfView's
+      // onPageRendered callback after the first page renders successfully.
       if (mounted) {
         setState(() {});
       }
-
-      // Trigger pre-rendering of adjacent pages after initial load
-      _preRenderPages();
     } catch (e) {
       debugPrint('Error initializing PDF: $e');
       setState(() => _isLoading = false);

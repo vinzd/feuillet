@@ -290,11 +290,18 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> setAppSetting(String key, String value) async {
-    await into(appSettings).insertOnConflictUpdate(
+    await into(appSettings).insert(
       AppSettingsCompanion(
         key: Value(key),
         value: Value(value),
         updatedAt: Value(DateTime.now()),
+      ),
+      onConflict: DoUpdate(
+        (old) => AppSettingsCompanion(
+          value: Value(value),
+          updatedAt: Value(DateTime.now()),
+        ),
+        target: [appSettings.key],
       ),
     );
   }
