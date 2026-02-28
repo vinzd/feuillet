@@ -295,6 +295,7 @@ class PerformanceDocumentViewState extends State<PerformanceDocumentView> {
       controller: _pageController,
       scrollDirection: Axis.horizontal,
       pageSnapping: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: widget.document.pageCount,
       onPageChanged: _onSinglePageChanged,
       itemBuilder: (context, index) {

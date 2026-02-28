@@ -557,6 +557,257 @@ void main() {
         expect(testState.isZoomPanDisabled, isTrue);
       });
     });
+
+    group('swipe detection when zoomed in', () {
+      // Default test viewport is 800x600.
+      // At zoom 2x: maxPanX = (2.0 - 1.0) * 800 / 2 = 400
+      // Overscroll threshold is 80px.
+
+      testWidgets('detects left swipe when panning past right boundary', (
+        tester,
+      ) async {
+        await tester.pumpWidget(MaterialApp(home: testWidget));
+        testState = tester.state(find.byType(_TestWidget));
+
+        // Zoom to 2x — maxPanX = 400
+        testState.zoomPanState.displaySettings = testState
+            .zoomPanState
+            .displaySettings
+            .copyWith(zoomLevel: 2.0);
+        // Start at the right boundary
+        testState.zoomPanState.panOffset = const Offset(-400, 0);
+
+        testState.handleScaleStart(
+          ScaleStartDetails(focalPoint: const Offset(300, 200)),
+        );
+        // Drag left by 500px — 100 of that is overscroll past boundary (>= 80 threshold)
+        testState.handleScaleUpdate(
+          ScaleUpdateDetails(
+            scale: 1.0,
+            focalPoint: const Offset(-200, 200),
+            localFocalPoint: const Offset(-200, 200),
+            focalPointDelta: const Offset(-500, 0),
+          ),
+        );
+        testState.handleScaleEnd(ScaleEndDetails());
+
+        expect(testState.swipeLeftCalled, isTrue);
+      });
+
+      testWidgets('detects right swipe when panning past left boundary', (
+        tester,
+      ) async {
+        await tester.pumpWidget(MaterialApp(home: testWidget));
+        testState = tester.state(find.byType(_TestWidget));
+
+        // Zoom to 2x — maxPanX = 400
+        testState.zoomPanState.displaySettings = testState
+            .zoomPanState
+            .displaySettings
+            .copyWith(zoomLevel: 2.0);
+        // Start at the left boundary
+        testState.zoomPanState.panOffset = const Offset(400, 0);
+
+        testState.handleScaleStart(
+          ScaleStartDetails(focalPoint: const Offset(100, 200)),
+        );
+        // Drag right by 500px — 100 of that is overscroll (>= 80 threshold)
+        testState.handleScaleUpdate(
+          ScaleUpdateDetails(
+            scale: 1.0,
+            focalPoint: const Offset(600, 200),
+            localFocalPoint: const Offset(600, 200),
+            focalPointDelta: const Offset(500, 0),
+          ),
+        );
+        testState.handleScaleEnd(ScaleEndDetails());
+
+        expect(testState.swipeRightCalled, isTrue);
+      });
+
+      testWidgets('does not swipe when overscroll is below threshold', (
+        tester,
+      ) async {
+        await tester.pumpWidget(MaterialApp(home: testWidget));
+        testState = tester.state(find.byType(_TestWidget));
+
+        // Zoom to 2x — maxPanX = 400
+        testState.zoomPanState.displaySettings = testState
+            .zoomPanState
+            .displaySettings
+            .copyWith(zoomLevel: 2.0);
+        testState.zoomPanState.panOffset = const Offset(-400, 0);
+
+        testState.handleScaleStart(
+          ScaleStartDetails(focalPoint: const Offset(300, 200)),
+        );
+        // Drag left by 30px — 30px overscroll, below 80px threshold
+        testState.handleScaleUpdate(
+          ScaleUpdateDetails(
+            scale: 1.0,
+            focalPoint: const Offset(270, 200),
+            localFocalPoint: const Offset(270, 200),
+            focalPointDelta: const Offset(-30, 0),
+          ),
+        );
+        testState.handleScaleEnd(ScaleEndDetails());
+
+        expect(testState.swipeLeftCalled, isFalse);
+        expect(testState.swipeRightCalled, isFalse);
+      });
+
+      testWidgets('clamps pan offset to content bounds', (tester) async {
+        await tester.pumpWidget(MaterialApp(home: testWidget));
+        testState = tester.state(find.byType(_TestWidget));
+
+        // Zoom to 2x — maxPanX = 400
+        testState.zoomPanState.displaySettings = testState
+            .zoomPanState
+            .displaySettings
+            .copyWith(zoomLevel: 2.0);
+        testState.zoomPanState.panOffset = const Offset(0, 0);
+
+        testState.handleScaleStart(
+          ScaleStartDetails(focalPoint: const Offset(200, 200)),
+        );
+        // Drag right by 600px — should be clamped to maxPan = 400
+        testState.handleScaleUpdate(
+          ScaleUpdateDetails(
+            scale: 1.0,
+            focalPoint: const Offset(800, 200),
+            localFocalPoint: const Offset(800, 200),
+            focalPointDelta: const Offset(600, 0),
+          ),
+        );
+
+        // Pan should be clamped to maxPan
+        expect(testState.zoomPanState.panOffset.dx, 400.0);
+      });
+    });
+
+    group('swipe detection at 1x zoom', () {
+      testWidgets(
+        'detects left swipe (next page) from negative horizontal displacement',
+        (tester) async {
+          await tester.pumpWidget(MaterialApp(home: testWidget));
+          testState = tester.state(find.byType(_TestWidget));
+
+          // Simulate a left swipe: start at right, end at left
+          testState.handleScaleStart(
+            ScaleStartDetails(focalPoint: const Offset(300, 200)),
+          );
+          testState.handleScaleUpdate(
+            ScaleUpdateDetails(
+              scale: 1.0,
+              focalPoint: const Offset(200, 200),
+              localFocalPoint: const Offset(200, 200),
+              focalPointDelta: const Offset(-100, 0),
+            ),
+          );
+          testState.handleScaleEnd(ScaleEndDetails());
+
+          expect(testState.swipeLeftCalled, isTrue);
+          expect(testState.swipeRightCalled, isFalse);
+          expect(testState.tapCalled, isFalse);
+        },
+      );
+
+      testWidgets(
+        'detects right swipe (previous page) from positive horizontal displacement',
+        (tester) async {
+          await tester.pumpWidget(MaterialApp(home: testWidget));
+          testState = tester.state(find.byType(_TestWidget));
+
+          testState.handleScaleStart(
+            ScaleStartDetails(focalPoint: const Offset(100, 200)),
+          );
+          testState.handleScaleUpdate(
+            ScaleUpdateDetails(
+              scale: 1.0,
+              focalPoint: const Offset(200, 200),
+              localFocalPoint: const Offset(200, 200),
+              focalPointDelta: const Offset(100, 0),
+            ),
+          );
+          testState.handleScaleEnd(ScaleEndDetails());
+
+          expect(testState.swipeRightCalled, isTrue);
+          expect(testState.swipeLeftCalled, isFalse);
+          expect(testState.tapCalled, isFalse);
+        },
+      );
+
+      testWidgets(
+        'does not detect swipe when displacement is below threshold',
+        (tester) async {
+          await tester.pumpWidget(MaterialApp(home: testWidget));
+          testState = tester.state(find.byType(_TestWidget));
+
+          testState.handleScaleStart(
+            ScaleStartDetails(focalPoint: const Offset(200, 200)),
+          );
+          testState.handleScaleUpdate(
+            ScaleUpdateDetails(
+              scale: 1.0,
+              focalPoint: const Offset(220, 200),
+              localFocalPoint: const Offset(220, 200),
+              focalPointDelta: const Offset(20, 0),
+            ),
+          );
+          testState.handleScaleEnd(ScaleEndDetails());
+
+          expect(testState.swipeLeftCalled, isFalse);
+          expect(testState.swipeRightCalled, isFalse);
+          expect(testState.tapCalled, isTrue); // Small movement = tap
+        },
+      );
+
+      testWidgets('does not detect swipe during pinch zoom', (tester) async {
+        await tester.pumpWidget(MaterialApp(home: testWidget));
+        testState = tester.state(find.byType(_TestWidget));
+
+        testState.handleScaleStart(
+          ScaleStartDetails(focalPoint: const Offset(300, 200)),
+        );
+        testState.handleScaleUpdate(
+          ScaleUpdateDetails(
+            scale: 1.5, // Pinch zoom happening
+            focalPoint: const Offset(200, 200),
+            localFocalPoint: const Offset(200, 200),
+            focalPointDelta: const Offset(-100, 0),
+          ),
+        );
+        testState.handleScaleEnd(ScaleEndDetails());
+
+        expect(testState.swipeLeftCalled, isFalse);
+        expect(testState.swipeRightCalled, isFalse);
+      });
+
+      testWidgets('does not detect swipe when isZoomPanDisabled', (
+        tester,
+      ) async {
+        await tester.pumpWidget(MaterialApp(home: testWidget));
+        testState = tester.state(find.byType(_TestWidget));
+
+        testState.setZoomPanDisabled(true);
+
+        testState.handleScaleStart(
+          ScaleStartDetails(focalPoint: const Offset(300, 200)),
+        );
+        testState.handleScaleUpdate(
+          ScaleUpdateDetails(
+            scale: 1.0,
+            focalPoint: const Offset(200, 200),
+            localFocalPoint: const Offset(200, 200),
+            focalPointDelta: const Offset(-100, 0),
+          ),
+        );
+        testState.handleScaleEnd(ScaleEndDetails());
+
+        expect(testState.swipeLeftCalled, isFalse);
+        expect(testState.swipeRightCalled, isFalse);
+      });
+    });
   });
 }
 
@@ -575,6 +826,8 @@ class _TestWidgetState extends State<_TestWidget> with ZoomPanGestureMixin {
   bool _isZoomPanDisabled = false;
   bool tapCalled = false;
   bool zoomChangedCalled = false;
+  bool swipeLeftCalled = false;
+  bool swipeRightCalled = false;
 
   @override
   void initState() {
@@ -599,6 +852,16 @@ class _TestWidgetState extends State<_TestWidget> with ZoomPanGestureMixin {
   @override
   void onZoomChanged() {
     zoomChangedCalled = true;
+  }
+
+  @override
+  void onSwipeLeft() {
+    swipeLeftCalled = true;
+  }
+
+  @override
+  void onSwipeRight() {
+    swipeRightCalled = true;
   }
 
   @override
