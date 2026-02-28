@@ -225,13 +225,17 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     result = List.of(result);
     switch (_sortField) {
       case LibrarySortField.name:
-        result.sort((a, b) => _sortAscending
-            ? a.name.toLowerCase().compareTo(b.name.toLowerCase())
-            : b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+        result.sort(
+          (a, b) => _sortAscending
+              ? a.name.toLowerCase().compareTo(b.name.toLowerCase())
+              : b.name.toLowerCase().compareTo(a.name.toLowerCase()),
+        );
       case LibrarySortField.dateAdded:
-        result.sort((a, b) => _sortAscending
-            ? a.dateAdded.compareTo(b.dateAdded)
-            : b.dateAdded.compareTo(a.dateAdded));
+        result.sort(
+          (a, b) => _sortAscending
+              ? a.dateAdded.compareTo(b.dateAdded)
+              : b.dateAdded.compareTo(a.dateAdded),
+        );
     }
     return result;
   }

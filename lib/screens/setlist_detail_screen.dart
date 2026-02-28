@@ -43,10 +43,10 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
   Future<void> _addDocuments() async {
     final allDocuments = await _database.getAllDocuments();
     final currentDocIds = _documents.map((d) => d.id).toSet();
-    final availableDocs = allDocuments
-        .where((d) => !currentDocIds.contains(d.id))
-        .toList()
-      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    final availableDocs =
+        allDocuments.where((d) => !currentDocIds.contains(d.id)).toList()..sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
 
     if (availableDocs.isEmpty) {
       if (mounted) {
