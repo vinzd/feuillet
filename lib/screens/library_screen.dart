@@ -13,6 +13,7 @@ import '../services/pdf_export_service.dart';
 import '../services/pdf_service.dart';
 import '../services/setlist_service.dart';
 import '../services/version_service.dart';
+import '../utils/fuzzy_search.dart';
 import '../widgets/pdf_card.dart';
 import '../widgets/setlist_picker_dialog.dart';
 import '../widgets/export_pdf_dialog_web.dart'
@@ -216,38 +217,37 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   }
 
   List<Document> _filterDocuments(List<Document> documents) {
-    var result = documents;
-    if (_searchQuery.isNotEmpty) {
-      result = result.where((doc) {
-        return doc.name.toLowerCase().contains(_searchQuery.toLowerCase());
-      }).toList();
-    }
-    result = List.of(result);
-    switch (_sortField) {
-      case LibrarySortField.name:
-        result.sort(
-          (a, b) => _sortAscending
-              ? a.name.toLowerCase().compareTo(b.name.toLowerCase())
-              : b.name.toLowerCase().compareTo(a.name.toLowerCase()),
-        );
-      case LibrarySortField.dateAdded:
-        result.sort(
-          (a, b) => _sortAscending
-              ? a.dateAdded.compareTo(b.dateAdded)
-              : b.dateAdded.compareTo(a.dateAdded),
-        );
-      case LibrarySortField.fileSize:
-        result.sort(
-          (a, b) => _sortAscending
-              ? a.fileSize.compareTo(b.fileSize)
-              : b.fileSize.compareTo(a.fileSize),
-        );
-      case LibrarySortField.pageCount:
-        result.sort(
-          (a, b) => _sortAscending
-              ? a.pageCount.compareTo(b.pageCount)
-              : b.pageCount.compareTo(a.pageCount),
-        );
+    var result = fuzzySearchDocuments(documents, _searchQuery);
+    // When searching, preserve fuzzy relevance ordering;
+    // when not searching, apply user-selected sort.
+    if (_searchQuery.isEmpty) {
+      result = List.of(result);
+      switch (_sortField) {
+        case LibrarySortField.name:
+          result.sort(
+            (a, b) => _sortAscending
+                ? a.name.toLowerCase().compareTo(b.name.toLowerCase())
+                : b.name.toLowerCase().compareTo(a.name.toLowerCase()),
+          );
+        case LibrarySortField.dateAdded:
+          result.sort(
+            (a, b) => _sortAscending
+                ? a.dateAdded.compareTo(b.dateAdded)
+                : b.dateAdded.compareTo(a.dateAdded),
+          );
+        case LibrarySortField.fileSize:
+          result.sort(
+            (a, b) => _sortAscending
+                ? a.fileSize.compareTo(b.fileSize)
+                : b.fileSize.compareTo(a.fileSize),
+          );
+        case LibrarySortField.pageCount:
+          result.sort(
+            (a, b) => _sortAscending
+                ? a.pageCount.compareTo(b.pageCount)
+                : b.pageCount.compareTo(a.pageCount),
+          );
+      }
     }
     return result;
   }
