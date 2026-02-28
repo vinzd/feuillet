@@ -21,7 +21,7 @@ class SafMethodChannel(private val activity: MainActivity) {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "pickDirectory" -> pickDirectory(result)
-                    "listPdfFiles" -> listPdfFiles(call, result)
+                    "listDocumentFiles" -> listDocumentFiles(call, result)
                     "readFileBytes" -> readFileBytes(call, result)
                     "copyToLocal" -> copyToLocal(call, result)
                     "writeFile" -> writeFile(call, result)
@@ -65,7 +65,7 @@ class SafMethodChannel(private val activity: MainActivity) {
         return true
     }
 
-    private fun listPdfFiles(call: MethodCall, result: MethodChannel.Result) {
+    private fun listDocumentFiles(call: MethodCall, result: MethodChannel.Result) {
         val treeUriStr = call.argument<String>("treeUri")
         if (treeUriStr == null) {
             result.error("INVALID_ARGUMENT", "treeUri is required", null)
@@ -81,7 +81,7 @@ class SafMethodChannel(private val activity: MainActivity) {
             }
 
             val pdfFiles = mutableListOf<Map<String, Any>>()
-            collectPdfFiles(documentFile, pdfFiles)
+            collectDocumentFiles(documentFile, pdfFiles)
 
             result.success(pdfFiles)
         } catch (e: Exception) {
@@ -89,10 +89,10 @@ class SafMethodChannel(private val activity: MainActivity) {
         }
     }
 
-    private fun collectPdfFiles(directory: DocumentFile, result: MutableList<Map<String, Any>>) {
+    private fun collectDocumentFiles(directory: DocumentFile, result: MutableList<Map<String, Any>>) {
         for (file in directory.listFiles()) {
             if (file.isDirectory) {
-                collectPdfFiles(file, result)
+                collectDocumentFiles(file, result)
             } else if (file.isFile && file.name?.lowercase()?.endsWith(".pdf") == true) {
                 result.add(
                     mapOf(

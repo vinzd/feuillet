@@ -38,10 +38,10 @@ void main() {
     });
   });
 
-  group('PdfFileInfo', () {
+  group('DocumentFileInfo', () {
     test('creates instance with all fields', () {
       final now = DateTime.now();
-      final info = PdfFileInfo(
+      final info = DocumentFileInfo(
         uri: '/path/to/file.pdf',
         name: 'file.pdf',
         size: 1024,
@@ -55,7 +55,7 @@ void main() {
     });
 
     test('works with SAF URIs', () {
-      final info = PdfFileInfo(
+      final info = DocumentFileInfo(
         uri:
             'content://com.android.externalstorage.documents/document/primary%3Afile.pdf',
         name: 'file.pdf',
@@ -91,14 +91,14 @@ void main() {
       }
     });
 
-    test('listPdfFiles returns PDF files in directory', () async {
+    test('listDocumentFiles returns PDF files in directory', () async {
       // Create test files
       await File('${tempDir.path}/doc1.pdf').writeAsBytes([1, 2, 3]);
       await File('${tempDir.path}/doc2.pdf').writeAsBytes([4, 5, 6]);
       await File('${tempDir.path}/notes.txt').writeAsString('hello');
       await File('${tempDir.path}/image.png').writeAsBytes([7, 8, 9]);
 
-      final files = await FileAccessService.instance.listPdfFiles(tempDir.path);
+      final files = await FileAccessService.instance.listDocumentFiles(tempDir.path);
 
       expect(files.length, 2);
       expect(files.map((f) => f.name).toSet(), {'doc1.pdf', 'doc2.pdf'});
@@ -108,22 +108,22 @@ void main() {
       }
     });
 
-    test('listPdfFiles returns empty list for nonexistent directory', () async {
-      final files = await FileAccessService.instance.listPdfFiles(
+    test('listDocumentFiles returns empty list for nonexistent directory', () async {
+      final files = await FileAccessService.instance.listDocumentFiles(
         '${tempDir.path}/nonexistent',
       );
       expect(files, isEmpty);
     });
 
-    test('listPdfFiles returns empty list for empty directory', () async {
-      final files = await FileAccessService.instance.listPdfFiles(tempDir.path);
+    test('listDocumentFiles returns empty list for empty directory', () async {
+      final files = await FileAccessService.instance.listDocumentFiles(tempDir.path);
       expect(files, isEmpty);
     });
 
-    test('listPdfFiles handles uppercase PDF extension', () async {
+    test('listDocumentFiles handles uppercase PDF extension', () async {
       await File('${tempDir.path}/doc.PDF').writeAsBytes([1, 2, 3]);
 
-      final files = await FileAccessService.instance.listPdfFiles(tempDir.path);
+      final files = await FileAccessService.instance.listDocumentFiles(tempDir.path);
       expect(files.length, 1);
       expect(files.first.name, 'doc.PDF');
     });
@@ -225,7 +225,7 @@ void main() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (call) async {
             switch (call.method) {
-              case 'listPdfFiles':
+              case 'listDocumentFiles':
                 // Return an empty list as if the directory was empty
                 return <Map>[];
               case 'fileExists':
@@ -246,8 +246,8 @@ void main() {
           .setMockMethodCallHandler(channel, null);
     });
 
-    test('listPdfFiles routes SAF URIs to SAF channel', () async {
-      final files = await FileAccessService.instance.listPdfFiles(
+    test('listDocumentFiles routes SAF URIs to SAF channel', () async {
+      final files = await FileAccessService.instance.listDocumentFiles(
         'content://com.android.externalstorage.documents/tree/primary%3AMusic',
       );
       expect(files, isEmpty);

@@ -5,14 +5,14 @@ import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart';
 
-/// Metadata for a PDF file (works for both SAF URIs and local paths).
-class PdfFileInfo {
+/// Metadata for a document file (works for both SAF URIs and local paths).
+class DocumentFileInfo {
   final String uri; // file path or content:// URI
   final String name;
   final int size;
   final DateTime lastModified;
 
-  const PdfFileInfo({
+  const DocumentFileInfo({
     required this.uri,
     required this.name,
     required this.size,
@@ -58,24 +58,24 @@ class FileAccessService {
     );
   }
 
-  /// List PDF files in a directory.
-  Future<List<PdfFileInfo>> listPdfFiles(String directoryPath) async {
+  /// List document files in a directory.
+  Future<List<DocumentFileInfo>> listDocumentFiles(String directoryPath) async {
     if (isSafUri(directoryPath)) {
-      return _listPdfFilesSaf(directoryPath);
+      return _listDocumentFilesSaf(directoryPath);
     }
-    return _listPdfFilesLocal(directoryPath);
+    return _listDocumentFilesLocal(directoryPath);
   }
 
-  Future<List<PdfFileInfo>> _listPdfFilesSaf(String treeUri) async {
+  Future<List<DocumentFileInfo>> _listDocumentFilesSaf(String treeUri) async {
     try {
-      final result = await _channel.invokeListMethod<Map>('listPdfFiles', {
+      final result = await _channel.invokeListMethod<Map>('listDocumentFiles', {
         'treeUri': treeUri,
       });
       if (result == null) return [];
 
       return result.map((item) {
         final map = Map<String, dynamic>.from(item);
-        return PdfFileInfo(
+        return DocumentFileInfo(
           uri: map['uri'] as String,
           name: map['name'] as String,
           size: (map['size'] as num).toInt(),
@@ -85,21 +85,21 @@ class FileAccessService {
         );
       }).toList();
     } on PlatformException catch (e) {
-      debugPrint('FileAccessService: SAF listPdfFiles failed: $e');
+      debugPrint('FileAccessService: SAF listDocumentFiles failed: $e');
       return [];
     }
   }
 
-  Future<List<PdfFileInfo>> _listPdfFilesLocal(String directoryPath) async {
+  Future<List<DocumentFileInfo>> _listDocumentFilesLocal(String directoryPath) async {
     final dir = Directory(directoryPath);
     if (!await dir.exists()) return [];
 
-    final files = <PdfFileInfo>[];
+    final files = <DocumentFileInfo>[];
     await for (final entity in dir.list(recursive: true)) {
       if (entity is File && entity.path.toLowerCase().endsWith('.pdf')) {
         final stat = await entity.stat();
         files.add(
-          PdfFileInfo(
+          DocumentFileInfo(
             uri: entity.path,
             name: entity.uri.pathSegments.last,
             size: stat.size,
@@ -218,7 +218,7 @@ class FileAccessService {
     if (isSafUri(path)) {
       // For SAF URIs, try listing files — if it works, the directory is accessible
       try {
-        await _channel.invokeListMethod<Map>('listPdfFiles', {'treeUri': path});
+        await _channel.invokeListMethod<Map>('listDocumentFiles', {'treeUri': path});
         return true;
       } on PlatformException {
         return false;
