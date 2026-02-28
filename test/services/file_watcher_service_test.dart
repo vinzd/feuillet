@@ -43,11 +43,15 @@ void main() {
   group('SAF URI detection for file watching', () {
     test('isSafUri correctly identifies content:// URIs', () {
       expect(
-        isSafUri('content://com.android.externalstorage.documents/tree/primary%3AMusic'),
+        isSafUri(
+          'content://com.android.externalstorage.documents/tree/primary%3AMusic',
+        ),
         isTrue,
       );
       expect(
-        isSafUri('content://com.android.providers.downloads.documents/tree/downloads'),
+        isSafUri(
+          'content://com.android.providers.downloads.documents/tree/downloads',
+        ),
         isTrue,
       );
     });
@@ -60,7 +64,8 @@ void main() {
     test('SAF directories should use polling instead of DirectoryWatcher', () {
       // Design verification: SAF URIs cannot be watched with DirectoryWatcher.
       // FileWatcherService falls back to periodic polling for these.
-      final safPath = 'content://com.android.externalstorage.documents/tree/primary%3ASyncthing';
+      final safPath =
+          'content://com.android.externalstorage.documents/tree/primary%3ASyncthing';
       final localPath = '/Users/test/Documents/pdfs';
 
       expect(isSafUri(safPath), isTrue);

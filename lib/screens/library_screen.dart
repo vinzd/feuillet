@@ -971,9 +971,7 @@ class _BulkExportDialogState extends State<_BulkExportDialog> {
     // Load the PDF document
     final pdfDoc = await FileAccessService.instance.openPdfDocument(
       doc.filePath,
-      pdfBytes: doc.pdfBytes != null
-          ? Uint8List.fromList(doc.pdfBytes!)
-          : null,
+      pdfBytes: doc.pdfBytes != null ? Uint8List.fromList(doc.pdfBytes!) : null,
     );
 
     try {
