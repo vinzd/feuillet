@@ -45,7 +45,8 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
     final currentDocIds = _documents.map((d) => d.id).toSet();
     final availableDocs = allDocuments
         .where((d) => !currentDocIds.contains(d.id))
-        .toList();
+        .toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
     if (availableDocs.isEmpty) {
       if (mounted) {

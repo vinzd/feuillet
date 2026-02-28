@@ -33,11 +33,15 @@ class LibraryScreen extends ConsumerStatefulWidget {
   ConsumerState<LibraryScreen> createState() => _LibraryScreenState();
 }
 
+enum LibrarySortField { dateAdded, name }
+
 class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   bool _isGridView = true;
   String _searchQuery = '';
   bool _isLoading = false;
   String? _importProgress;
+  LibrarySortField _sortField = LibrarySortField.dateAdded;
+  bool _sortAscending = false; // false = newest first for date, Z-A for name
 
   // Selection mode state
   bool _isSelectionMode = false;
@@ -212,12 +216,24 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   }
 
   List<Document> _filterDocuments(List<Document> documents) {
-    if (_searchQuery.isEmpty) {
-      return documents;
+    var result = documents;
+    if (_searchQuery.isNotEmpty) {
+      result = result.where((doc) {
+        return doc.name.toLowerCase().contains(_searchQuery.toLowerCase());
+      }).toList();
     }
-    return documents.where((doc) {
-      return doc.name.toLowerCase().contains(_searchQuery.toLowerCase());
-    }).toList();
+    result = List.of(result);
+    switch (_sortField) {
+      case LibrarySortField.name:
+        result.sort((a, b) => _sortAscending
+            ? a.name.toLowerCase().compareTo(b.name.toLowerCase())
+            : b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+      case LibrarySortField.dateAdded:
+        result.sort((a, b) => _sortAscending
+            ? a.dateAdded.compareTo(b.dateAdded)
+            : b.dateAdded.compareTo(a.dateAdded));
+    }
+    return result;
   }
 
   // Selection mode methods
@@ -813,6 +829,53 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             setState(() => _isGridView = !_isGridView);
           },
           tooltip: _isGridView ? 'List view' : 'Grid view',
+        ),
+        PopupMenuButton<LibrarySortField>(
+          icon: const Icon(Icons.sort),
+          tooltip: 'Sort order',
+          onSelected: (field) {
+            setState(() {
+              if (_sortField == field) {
+                _sortAscending = !_sortAscending;
+              } else {
+                _sortField = field;
+                // Default: A-Z for name, newest first for date
+                _sortAscending = field == LibrarySortField.name;
+              }
+            });
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: LibrarySortField.name,
+              child: Row(
+                children: [
+                  const Expanded(child: Text('Name')),
+                  if (_sortField == LibrarySortField.name)
+                    Icon(
+                      _sortAscending
+                          ? Icons.arrow_upward
+                          : Icons.arrow_downward,
+                      size: 18,
+                    ),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: LibrarySortField.dateAdded,
+              child: Row(
+                children: [
+                  const Expanded(child: Text('Date added')),
+                  if (_sortField == LibrarySortField.dateAdded)
+                    Icon(
+                      _sortAscending
+                          ? Icons.arrow_upward
+                          : Icons.arrow_downward,
+                      size: 18,
+                    ),
+                ],
+              ),
+            ),
+          ],
         ),
         IconButton(
           icon: const Icon(Icons.refresh),
