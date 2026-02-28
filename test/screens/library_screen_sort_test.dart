@@ -18,13 +18,17 @@ List<Document> sortDocuments(
   result = List.of(result);
   switch (sortField) {
     case LibrarySortField.name:
-      result.sort((a, b) => sortAscending
-          ? a.name.toLowerCase().compareTo(b.name.toLowerCase())
-          : b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+      result.sort(
+        (a, b) => sortAscending
+            ? a.name.toLowerCase().compareTo(b.name.toLowerCase())
+            : b.name.toLowerCase().compareTo(a.name.toLowerCase()),
+      );
     case LibrarySortField.dateAdded:
-      result.sort((a, b) => sortAscending
-          ? a.dateAdded.compareTo(b.dateAdded)
-          : b.dateAdded.compareTo(a.dateAdded));
+      result.sort(
+        (a, b) => sortAscending
+            ? a.dateAdded.compareTo(b.dateAdded)
+            : b.dateAdded.compareTo(a.dateAdded),
+      );
   }
   return result;
 }
@@ -291,11 +295,11 @@ void main() {
       final currentDocIds = <int>{}; // No docs in set list yet
 
       // Replicate the logic from setlist_detail_screen.dart _addDocuments
-      final availableDocs = allDocuments
-          .where((d) => !currentDocIds.contains(d.id))
-          .toList()
-        ..sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      final availableDocs =
+          allDocuments.where((d) => !currentDocIds.contains(d.id)).toList()
+            ..sort(
+              (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+            );
 
       expect(availableDocs.map((d) => d.name).toList(), [
         'Aria in G',
@@ -340,11 +344,11 @@ void main() {
 
       final currentDocIds = {2}; // Etude already in set list
 
-      final availableDocs = allDocuments
-          .where((d) => !currentDocIds.contains(d.id))
-          .toList()
-        ..sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+      final availableDocs =
+          allDocuments.where((d) => !currentDocIds.contains(d.id)).toList()
+            ..sort(
+              (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+            );
 
       expect(availableDocs.map((d) => d.name).toList(), [
         'Aria in G',
