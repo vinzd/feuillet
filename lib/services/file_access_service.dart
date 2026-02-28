@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart';
 
 /// Metadata for a PDF file (works for both SAF URIs and local paths).
@@ -226,6 +227,23 @@ class FileAccessService {
     return Directory(path).exists();
   }
 
+  /// Copy a SAF document to a local temporary file.
+  /// Returns the local file path.
+  Future<String> copyToLocal(String documentUri) async {
+    final hash = documentUri.hashCode.toRadixString(16);
+    final cacheDir = await getTemporaryDirectory();
+    final destPath = '${cacheDir.path}/saf_cache/$hash.pdf';
+
+    final result = await _channel.invokeMethod<String>('copyToLocal', {
+      'documentUri': documentUri,
+      'destPath': destPath,
+    });
+    if (result == null) {
+      throw Exception('Failed to copy SAF file to local: $documentUri');
+    }
+    return result;
+  }
+
   /// Open a PdfDocument from a path or bytes.
   Future<PdfDocument> openPdfDocument(
     String filePath, {
@@ -235,8 +253,8 @@ class FileAccessService {
       return PdfDocument.openData(pdfBytes);
     }
     if (isSafUri(filePath)) {
-      final bytes = await readFileBytes(filePath);
-      return PdfDocument.openData(bytes);
+      final localPath = await copyToLocal(filePath);
+      return PdfDocument.openFile(localPath);
     }
     return PdfDocument.openFile(filePath);
   }
