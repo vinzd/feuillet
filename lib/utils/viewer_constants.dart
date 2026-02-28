@@ -6,12 +6,12 @@ class ViewerConstants {
 
   // Overlay background
   static const double overlayOpacity = 0.85;
-  static final Color overlayBackground =
-      Colors.black.withValues(alpha: overlayOpacity);
+  static final Color overlayBackground = Colors.black.withValues(
+    alpha: overlayOpacity,
+  );
 
   // Animation durations
-  static const Duration overlayAnimationDuration =
-      Duration(milliseconds: 300);
+  static const Duration overlayAnimationDuration = Duration(milliseconds: 300);
   static const Duration pageAnimationDuration = Duration(milliseconds: 300);
   static const Curve pageAnimationCurve = Curves.easeInOut;
 
