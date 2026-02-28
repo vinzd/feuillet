@@ -97,7 +97,7 @@ jobs:
         run: flutter pub get
 
       - name: Download generated code
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: generated-code
           path: lib/models
