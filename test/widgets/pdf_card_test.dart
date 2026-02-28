@@ -17,6 +17,7 @@ void main() {
         lastModified: DateTime(2024, 1, 1),
         fileSize: 1024000, // 1MB
         pageCount: 5,
+        documentType: 'pdf',
       );
     });
 
