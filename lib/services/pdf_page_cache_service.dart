@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:pdfx/pdfx.dart';
 
@@ -48,6 +49,13 @@ class PdfPageCacheService {
 
   /// Set of pages currently being rendered
   final Set<PageCacheKey> _rendering = {};
+
+  /// Queue of render requests processed sequentially.
+  /// Priority (on-demand) requests are added to the front.
+  final ListQueue<_RenderRequest> _renderQueue = ListQueue();
+
+  /// Whether the render queue is currently being processed
+  bool _isProcessingQueue = false;
 
   /// Maximum number of pages to keep in cache per document
   static const int maxPagesPerDocument = 25;
@@ -99,7 +107,12 @@ class PdfPageCacheService {
       }
     }
 
-    // Pre-render each page in background
+    // Clear any stale queued non-priority requests for this document
+    _renderQueue.removeWhere(
+      (r) => r.documentId == documentId && r.completer == null,
+    );
+
+    // Enqueue pages for sequential rendering (at the back)
     for (final pageNumber in pagesToRender) {
       final key = PageCacheKey(documentId, pageNumber);
 
@@ -108,21 +121,97 @@ class PdfPageCacheService {
         continue;
       }
 
-      // Mark as rendering
-      _rendering.add(key);
-
-      // Render in background
-      unawaited(
-        _renderPage(document: document, pageNumber: pageNumber, scale: scale)
-            .then((_) {
-              _rendering.remove(key);
-            })
-            .catchError((error) {
-              _rendering.remove(key);
-              debugPrint('Error pre-rendering page $pageNumber: $error');
-            }),
+      _renderQueue.addLast(
+        _RenderRequest(
+          document: document,
+          pageNumber: pageNumber,
+          scale: scale,
+        ),
       );
     }
+
+    // Start processing the queue if not already running
+    _startProcessing();
+  }
+
+  /// Render a page on-demand with priority and return it (also caches it)
+  Future<CachedPageImage?> renderAndCachePage({
+    required PdfDocument document,
+    required int pageNumber,
+    double scale = 2.0,
+  }) async {
+    final key = PageCacheKey(document.id, pageNumber);
+
+    // Return cached version if available
+    if (_cache.containsKey(key)) {
+      return _cache[key];
+    }
+
+    // Check if this page is already queued with a completer (another caller waiting)
+    for (final req in _renderQueue) {
+      if (req.documentId == document.id &&
+          req.pageNumber == pageNumber &&
+          req.completer != null) {
+        return req.completer!.future;
+      }
+    }
+
+    // Create a priority request with a completer so we can return the result
+    final completer = Completer<CachedPageImage?>();
+    final request = _RenderRequest(
+      document: document,
+      pageNumber: pageNumber,
+      scale: scale,
+      completer: completer,
+    );
+
+    // Insert at front of queue for priority processing
+    _renderQueue.addFirst(request);
+
+    // Start processing if not already running
+    _startProcessing();
+
+    return completer.future;
+  }
+
+  void _startProcessing() {
+    if (_isProcessingQueue || _renderQueue.isEmpty) return;
+    _isProcessingQueue = true;
+    unawaited(_processQueue());
+  }
+
+  Future<void> _processQueue() async {
+    while (_renderQueue.isNotEmpty) {
+      final request = _renderQueue.removeFirst();
+      final key = PageCacheKey(request.documentId, request.pageNumber);
+
+      // Skip if already cached while waiting in queue
+      if (_cache.containsKey(key)) {
+        request.completer?.complete(_cache[key]);
+        continue;
+      }
+
+      // Skip non-priority requests if already being rendered elsewhere
+      if (_rendering.contains(key) && request.completer == null) {
+        continue;
+      }
+
+      _rendering.add(key);
+      try {
+        final result = await _renderPage(
+          document: request.document,
+          pageNumber: request.pageNumber,
+          scale: request.scale,
+        );
+        request.completer?.complete(result);
+      } catch (error) {
+        debugPrint('Error rendering page ${request.pageNumber}: $error');
+        request.completer?.complete(null);
+      } finally {
+        _rendering.remove(key);
+      }
+    }
+    _isProcessingQueue = false;
   }
 
   /// Render a single page and cache it
@@ -131,75 +220,32 @@ class PdfPageCacheService {
     required int pageNumber,
     required double scale,
   }) async {
-    final documentId = document.id;
-    final key = PageCacheKey(documentId, pageNumber);
-
-    // Check if already cached (might have been cached while waiting)
-    if (_cache.containsKey(key)) {
-      return _cache[key];
-    }
+    final page = await document.getPage(pageNumber);
 
     try {
-      // Get the page
-      final page = await document.getPage(pageNumber);
-
-      try {
-        // Render the page
-        final image = await page.render(
-          width: page.width * scale,
-          height: page.height * scale,
-          format: PdfPageImageFormat.jpeg,
-          backgroundColor: '#ffffff',
-          quality: 85,
-        );
-
-        if (image != null) {
-          final cachedImage = CachedPageImage(
-            bytes: image.bytes,
-            width: image.width ?? (page.width * scale).round(),
-            height: image.height ?? (page.height * scale).round(),
-          );
-
-          _cache[key] = cachedImage;
-          _evictOldPages(documentId);
-
-          return cachedImage;
-        }
-      } finally {
-        await page.close();
-      }
-    } catch (e) {
-      debugPrint('Error rendering page $pageNumber: $e');
-    }
-
-    return null;
-  }
-
-  /// Render a page and return it (also caches it)
-  Future<CachedPageImage?> renderAndCachePage({
-    required PdfDocument document,
-    required int pageNumber,
-    double scale = 2.0,
-  }) async {
-    final documentId = document.id;
-    final key = PageCacheKey(documentId, pageNumber);
-
-    // Return cached version if available
-    if (_cache.containsKey(key)) {
-      return _cache[key];
-    }
-
-    // Mark as rendering
-    _rendering.add(key);
-
-    try {
-      return await _renderPage(
-        document: document,
-        pageNumber: pageNumber,
-        scale: scale,
+      final image = await page.render(
+        width: page.width * scale,
+        height: page.height * scale,
+        format: PdfPageImageFormat.jpeg,
+        backgroundColor: '#ffffff',
+        quality: 85,
       );
+
+      if (image == null) return null;
+
+      final cachedImage = CachedPageImage(
+        bytes: image.bytes,
+        width: image.width ?? (page.width * scale).round(),
+        height: image.height ?? (page.height * scale).round(),
+      );
+
+      final key = PageCacheKey(document.id, pageNumber);
+      _cache[key] = cachedImage;
+      _evictOldPages(document.id);
+
+      return cachedImage;
     } finally {
-      _rendering.remove(key);
+      await page.close();
     }
   }
 
@@ -234,5 +280,26 @@ class PdfPageCacheService {
   void clearAll() {
     _cache.clear();
     _rendering.clear();
+    _renderQueue.clear();
   }
+}
+
+/// A queued render request
+class _RenderRequest {
+  final PdfDocument document;
+  final int pageNumber;
+  final double scale;
+
+  /// If non-null, this is an on-demand (priority) request and the completer
+  /// will be completed with the result.
+  final Completer<CachedPageImage?>? completer;
+
+  _RenderRequest({
+    required this.document,
+    required this.pageNumber,
+    required this.scale,
+    this.completer,
+  });
+
+  String get documentId => document.id;
 }

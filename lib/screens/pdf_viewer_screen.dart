@@ -126,11 +126,10 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen>
 
       await _loadPageAnnotations();
 
-      // Trigger rebuild now that PDF is ready.
-      // Pre-rendering of adjacent pages is handled by CachedPdfView's
-      // onPageRendered callback after the first page renders successfully.
       if (mounted) {
         setState(() {});
+        // Safe to pre-render here: on-demand renders have priority in the queue.
+        _preRenderPages();
       }
     } catch (e) {
       debugPrint('Error initializing PDF: $e');
@@ -181,12 +180,12 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen>
 
   /// Pre-render pages around the current page for faster navigation
   void _preRenderPages() {
-    if (_pdfDocument == null) return;
+    final pdfDocument = _pdfDocument;
+    if (pdfDocument == null) return;
 
     final spread = _getCurrentSpread();
-    // Use leftPage as the basis for pre-rendering
     PdfPageCacheService.instance.preRenderPages(
-      document: _pdfDocument!,
+      document: pdfDocument,
       currentPage: spread.leftPage,
       totalPages: widget.document.pageCount,
     );
