@@ -585,7 +585,7 @@ class DocumentService {
     return p.join(cachePath, 'thumb_$documentId.png');
   }
 
-  /// Generate a thumbnail for a PDF document
+  /// Generate a thumbnail for a document (PDF or image)
   /// Returns the thumbnail as bytes, or null if generation fails
   Future<Uint8List?> generateThumbnail(Document document) async {
     try {
@@ -599,45 +599,62 @@ class DocumentService {
         }
       }
 
-      // Open the PDF
-      final pdfDoc = await FileAccessService.instance.openPdfDocument(
-        document.filePath,
-        pdfBytes: document.pdfBytes != null
-            ? Uint8List.fromList(document.pdfBytes!)
-            : null,
-      );
+      Uint8List? thumbnailBytes;
 
-      // Get the first page
-      final page = await pdfDoc.getPage(1);
-
-      // Render the page at a reasonable thumbnail size
-      const double thumbnailWidth = 300;
-      final scale = thumbnailWidth / page.width;
-      final pageImage = await page.render(
-        width: thumbnailWidth,
-        height: page.height * scale,
-        format: PdfPageImageFormat.png,
-        backgroundColor: '#FFFFFF',
-      );
-
-      await page.close();
-      await pdfDoc.close();
-
-      if (pageImage == null) {
-        debugPrint('DocumentService: Failed to render page for thumbnail');
-        return null;
+      if (document.isImage) {
+        thumbnailBytes = await _generateImageThumbnail(document);
+      } else {
+        thumbnailBytes = await _generatePdfThumbnail(document);
       }
 
-      // Cache the thumbnail on native platforms
-      if (!kIsWeb && thumbFile != null) {
-        await thumbFile.writeAsBytes(pageImage.bytes);
+      // Cache on native platforms
+      if (!kIsWeb && thumbFile != null && thumbnailBytes != null) {
+        await thumbFile.writeAsBytes(thumbnailBytes);
       }
 
-      return pageImage.bytes;
+      return thumbnailBytes;
     } catch (e) {
       debugPrint('DocumentService: Error generating thumbnail: $e');
       return null;
     }
+  }
+
+  /// Generate thumbnail for an image document
+  Future<Uint8List?> _generateImageThumbnail(Document document) async {
+    if (document.pdfBytes != null) {
+      return Uint8List.fromList(document.pdfBytes!);
+    }
+    return await FileAccessService.instance.readFileBytes(document.filePath);
+  }
+
+  /// Generate thumbnail for a PDF document
+  Future<Uint8List?> _generatePdfThumbnail(Document document) async {
+    final pdfDoc = await FileAccessService.instance.openPdfDocument(
+      document.filePath,
+      pdfBytes: document.pdfBytes != null
+          ? Uint8List.fromList(document.pdfBytes!)
+          : null,
+    );
+
+    final page = await pdfDoc.getPage(1);
+    const double thumbnailWidth = 300;
+    final scale = thumbnailWidth / page.width;
+    final pageImage = await page.render(
+      width: thumbnailWidth,
+      height: page.height * scale,
+      format: PdfPageImageFormat.png,
+      backgroundColor: '#FFFFFF',
+    );
+
+    await page.close();
+    await pdfDoc.close();
+
+    if (pageImage == null) {
+      debugPrint('DocumentService: Failed to render page for thumbnail');
+      return null;
+    }
+
+    return pageImage.bytes;
   }
 
   /// Get a cached thumbnail if available, otherwise return null
