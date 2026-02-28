@@ -123,6 +123,8 @@ The database uses **WAL mode** (Write-Ahead Logging) for Syncthing compatibility
 await customStatement('PRAGMA journal_mode=WAL;');
 ```
 
+**Schema version: 4**
+
 **Tables:**
 - `Documents` - PDF metadata with file paths, timestamps, page counts
 - `DocumentSettings` - Per-document viewing preferences (zoom, brightness, contrast, current page)
@@ -130,6 +132,7 @@ await customStatement('PRAGMA journal_mode=WAL;');
 - `Annotations` - Drawing data stored as JSON (points, color, thickness) per page
 - `SetLists` - Collections for performances
 - `SetListItems` - Documents in set lists with ordering and notes
+- `AppSettings` - Key-value store for app-wide configuration (e.g., custom PDF directory path). Use `getAppSetting`/`setAppSetting`/`deleteAppSetting` from `AppDatabase` rather than `SharedPreferences`
 
 **Key Relationships:**
 - One document → many annotation layers → many annotations
@@ -150,10 +153,13 @@ class ServiceName {
 ```
 
 **Services:**
-- `PdfService` - PDF import (file picker + drag-and-drop), library scanning, file management
+- `PdfService` - PDF import (file picker + drag-and-drop), library scanning, file management. All file I/O goes through `FileAccessService`
 - `AnnotationService` - Drawing stroke CRUD, JSON serialization
 - `SetListService` - Set list CRUD, document ordering
-- `FileWatcherService` - Monitors PDF directory and database for Syncthing changes
+- `FileWatcherService` - Monitors PDF directory and database for Syncthing changes; uses 30-second polling for Android SAF directories
+- `FileAccessService` - Cross-platform file I/O abstraction (local paths + Android SAF `content://` URIs). All code that reads/writes PDF files must go through this service
+- `PdfPageCacheService` - Pre-renders PDF pages to JPEG and caches in memory. Uses a priority queue: `renderAndCachePage()` for immediate needs, `preRenderPages()` for background warming. Do not render pages directly via `pdfx` outside this service
+- `AppSettingsService` - Persists app-wide key-value settings (e.g., custom PDF directory) via the `AppSettings` database table
 
 ### State Management
 
@@ -190,23 +196,31 @@ Both methods use `PdfService` which handles:
 - Adding entries to the database with metadata
 - Validation (rejects non-PDF files with error feedback)
 - Progress callbacks for batch imports
+- **Recursive scanning** of subdirectories within the PDF directory
 
 The drag-and-drop feature uses the `desktop_drop` package with `DropTarget` widget wrapping the library screen body.
 
 ### PDF Viewing Pipeline
 
 1. `LibraryScreen` displays grid/list of PDFs via `PdfCard` widgets
-2. Tapping opens `PdfViewerScreen` with `pdfx` controller
-3. Settings are loaded from `DocumentSettings` table
+2. Tapping opens `PdfViewerScreen` which uses a **two-stage async init**: settings/layers load first (UI shown with spinner), then the PDF document opens in the background
+3. PDF is opened through `FileAccessService.instance.openPdfDocument()` (handles local paths, SAF URIs, and web bytes)
 4. Annotations are loaded per page from `Annotations` table
 5. `DrawingCanvas` overlays on PDF for annotation mode
-6. Settings and annotations persist on page change/app close
+6. After each page change, `PdfPageCacheService.preRenderPages()` warms ±10 pages in background
+7. Settings and annotations persist on page change/app close
+
+**Page navigation:** The viewer uses `PageView.builder` with `NeverScrollableScrollPhysics` in single-page mode. All gestures (pinch-zoom, pan, swipe) are owned by `ZoomPanGestureMixin`. Override `onSwipeLeft()`/`onSwipeRight()` for page navigation. Swipes are suppressed when `isZoomPanDisabled` returns true (e.g., annotation mode). Two swipe thresholds: 50px displacement at 1x zoom, 80px overscroll when zoomed in.
 
 ### File Watching & Syncthing Integration
 
-`FileWatcherService` monitors two directories:
-- PDF directory (`pdfs/`)
+`FileWatcherService` monitors:
+- PDF directory (user-configurable, stored in `AppSettings` table)
 - Database file (`feuillet_db.sqlite` + WAL files)
+
+**PDF directory is now configurable:** The path is managed by `AppSettingsService` and can be changed in settings. After changing the directory, call `FileWatcherService.instance.updatePdfDirectoryPath()` to restart the watcher on the new path.
+
+**SAF directories:** On Android, the PDF directory can be a `content://` SAF URI. These cannot be watched with `DirectoryWatcher`, so a **30-second polling timer** is used instead. The polling callback is registered by `PdfService` during initialization.
 
 **Filters Syncthing temporary files:**
 - `.syncthing.*`
@@ -217,6 +231,17 @@ The drag-and-drop feature uses the `desktop_drop` package with `DropTarget` widg
 When changes detected:
 - PDF changes trigger library rescan via `PdfService.scanAndSyncLibrary()`
 - Database changes handled via WAL mode (no explicit reload needed)
+
+### Android SAF Integration
+
+The app supports Android's Storage Access Framework for selecting custom PDF directories:
+
+- **Method channel:** `com.feuillet.app/saf` — Kotlin implementation in `android/app/src/main/kotlin/com/feuillet/app/SafMethodChannel.kt`
+- **URI permissions:** `pickDirectory` takes persistable URI permissions so the selected directory survives app restarts
+- **File access:** All file I/O goes through `FileAccessService.instance`. Use `isSafUri(path)` (exported from `file_access_service.dart`) to check if a path is a SAF URI
+- **Local caching:** `FileAccessService.copyToLocal()` copies SAF documents to `getTemporaryDirectory()/saf_cache/` for libraries that require a real file path (e.g., `pdfx`)
+- **Recursive scanning:** `listPdfFiles` recursively lists all `.pdf` files in both local directories and SAF tree URIs
+- **Supported operations:** `pickDirectory`, `listPdfFiles`, `readFileBytes`, `copyToLocal`, `writeFile`, `getFileMetadata`, `deleteFile`, `fileExists`
 
 ## Critical Implementation Details
 
@@ -296,13 +321,15 @@ Annotations are **JSON-serialized** in the database. To add new annotation types
 ## Data Storage Locations
 
 - **macOS**: `~/Library/Application Support/com.feuillet.app/feuillet/`
-- **Android**: `/data/data/com.feuillet.feuillet/app_flutter/feuillet/`
+- **Android**: `/data/data/com.feuillet.feuillet/app_flutter/feuillet/` (default), or a user-selected SAF directory
 - **iOS**: App Documents directory
 
-Structure:
+The PDF directory is **user-configurable** (stored in `AppSettings` table via `AppSettingKeys.pdfDirectoryPath`). On Android, this can be a `content://` SAF URI.
+
+Default structure:
 ```
 feuillet/
-├── pdfs/                    # PDF files
+├── pdfs/                    # PDF files (or user-configured directory)
 ├── feuillet_db.sqlite     # Main database
 ├── feuillet_db.sqlite-wal # WAL file
 └── feuillet_db.sqlite-shm # Shared memory file
