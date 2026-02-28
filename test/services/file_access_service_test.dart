@@ -8,8 +8,18 @@ void main() {
 
   group('isSafUri', () {
     test('returns true for content:// URIs', () {
-      expect(isSafUri('content://com.android.externalstorage.documents/tree/primary%3AMusic'), isTrue);
-      expect(isSafUri('content://com.android.providers.downloads.documents/document/123'), isTrue);
+      expect(
+        isSafUri(
+          'content://com.android.externalstorage.documents/tree/primary%3AMusic',
+        ),
+        isTrue,
+      );
+      expect(
+        isSafUri(
+          'content://com.android.providers.downloads.documents/document/123',
+        ),
+        isTrue,
+      );
     });
 
     test('returns false for regular file paths', () {
@@ -46,7 +56,8 @@ void main() {
 
     test('works with SAF URIs', () {
       final info = PdfFileInfo(
-        uri: 'content://com.android.externalstorage.documents/document/primary%3Afile.pdf',
+        uri:
+            'content://com.android.externalstorage.documents/document/primary%3Afile.pdf',
         name: 'file.pdf',
         size: 2048,
         lastModified: DateTime(2024, 1, 15),
@@ -213,21 +224,21 @@ void main() {
     setUp(() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (call) async {
-        switch (call.method) {
-          case 'listPdfFiles':
-            // Return an empty list as if the directory was empty
-            return <Map>[];
-          case 'fileExists':
-            // Simulate file not found
-            return false;
-          case 'readFileBytes':
-            return Uint8List.fromList([1, 2, 3]);
-          case 'getFileMetadata':
-            return {'size': 1024, 'lastModified': 1700000000000};
-          default:
-            return null;
-        }
-      });
+            switch (call.method) {
+              case 'listPdfFiles':
+                // Return an empty list as if the directory was empty
+                return <Map>[];
+              case 'fileExists':
+                // Simulate file not found
+                return false;
+              case 'readFileBytes':
+                return Uint8List.fromList([1, 2, 3]);
+              case 'getFileMetadata':
+                return {'size': 1024, 'lastModified': 1700000000000};
+              default:
+                return null;
+            }
+          });
     });
 
     tearDown(() {

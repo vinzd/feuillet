@@ -112,9 +112,7 @@ class FileWatcherService {
 
     // SAF URIs can't be watched with DirectoryWatcher — use periodic polling
     if (isSafUri(_pdfDirectoryPath!)) {
-      debugPrint(
-        'FileWatcherService: Using polling for SAF directory',
-      );
+      debugPrint('FileWatcherService: Using polling for SAF directory');
       _safPollingTimer = Timer.periodic(
         const Duration(seconds: 30),
         (_) => _pollSafDirectory(),
