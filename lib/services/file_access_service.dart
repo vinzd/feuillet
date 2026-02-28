@@ -97,12 +97,14 @@ class FileAccessService {
     await for (final entity in dir.list()) {
       if (entity is File && entity.path.toLowerCase().endsWith('.pdf')) {
         final stat = await entity.stat();
-        files.add(PdfFileInfo(
-          uri: entity.path,
-          name: entity.uri.pathSegments.last,
-          size: stat.size,
-          lastModified: stat.modified,
-        ));
+        files.add(
+          PdfFileInfo(
+            uri: entity.path,
+            name: entity.uri.pathSegments.last,
+            size: stat.size,
+            lastModified: stat.modified,
+          ),
+        );
       }
     }
     return files;
@@ -215,9 +217,7 @@ class FileAccessService {
     if (isSafUri(path)) {
       // For SAF URIs, try listing files — if it works, the directory is accessible
       try {
-        await _channel.invokeListMethod<Map>('listPdfFiles', {
-          'treeUri': path,
-        });
+        await _channel.invokeListMethod<Map>('listPdfFiles', {'treeUri': path});
         return true;
       } on PlatformException {
         return false;
