@@ -114,7 +114,7 @@ mixin ZoomPanGestureMixin<T extends StatefulWidget> on State<T> {
 
       // Handle pan (drag) - only when zoomed in
       if (state.displaySettings.zoomLevel > 1.0) {
-        final rawOffset = state.basePanOffset! + details.focalPointDelta;
+        final rawOffset = state.panOffset + details.focalPointDelta;
 
         // Clamp pan to content bounds
         final viewportSize = context.size;
@@ -127,8 +127,8 @@ mixin ZoomPanGestureMixin<T extends StatefulWidget> on State<T> {
           final clampedY = rawOffset.dy.clamp(-maxPanY, maxPanY);
           state.panOffset = Offset(clampedX, clampedY);
 
-          // Track horizontal overscroll for swipe detection
-          state.horizontalOverscroll = rawOffset.dx - clampedX;
+          // Accumulate horizontal overscroll for swipe detection
+          state.horizontalOverscroll += rawOffset.dx - clampedX;
         } else {
           state.panOffset = rawOffset;
         }

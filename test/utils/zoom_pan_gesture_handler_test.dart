@@ -656,6 +656,110 @@ void main() {
         expect(testState.swipeRightCalled, isFalse);
       });
 
+      testWidgets('accumulates pan across multiple update events', (
+        tester,
+      ) async {
+        await tester.pumpWidget(MaterialApp(home: testWidget));
+        testState = tester.state(find.byType(_TestWidget));
+
+        // Zoom to 2x so pan is allowed — maxPanX = 400, maxPanY = 300
+        testState.zoomPanState.displaySettings = testState
+            .zoomPanState
+            .displaySettings
+            .copyWith(zoomLevel: 2.0);
+
+        testState.handleScaleStart(
+          ScaleStartDetails(focalPoint: const Offset(200, 200)),
+        );
+
+        // Simulate multiple small drag events (like real touch input)
+        for (var i = 0; i < 10; i++) {
+          testState.handleScaleUpdate(
+            ScaleUpdateDetails(
+              scale: 1.0,
+              focalPoint: Offset(200.0 + (i + 1) * 10, 200),
+              localFocalPoint: Offset(200.0 + (i + 1) * 10, 200),
+              focalPointDelta: const Offset(10, 0),
+            ),
+          );
+        }
+
+        // 10 updates * 10px each = 100px total pan
+        expect(testState.zoomPanState.panOffset.dx, 100.0);
+      });
+
+      testWidgets(
+        'triggers left swipe from accumulated overscroll across multiple events',
+        (tester) async {
+          await tester.pumpWidget(MaterialApp(home: testWidget));
+          testState = tester.state(find.byType(_TestWidget));
+
+          // Zoom to 2x — maxPanX = 400
+          testState.zoomPanState.displaySettings = testState
+              .zoomPanState
+              .displaySettings
+              .copyWith(zoomLevel: 2.0);
+          // Start at the right boundary
+          testState.zoomPanState.panOffset = const Offset(-400, 0);
+
+          testState.handleScaleStart(
+            ScaleStartDetails(focalPoint: const Offset(300, 200)),
+          );
+
+          // Simulate 20 small drag events past boundary (5px each = 100px total overscroll)
+          for (var i = 0; i < 20; i++) {
+            testState.handleScaleUpdate(
+              ScaleUpdateDetails(
+                scale: 1.0,
+                focalPoint: Offset(300.0 - (i + 1) * 5, 200),
+                localFocalPoint: Offset(300.0 - (i + 1) * 5, 200),
+                focalPointDelta: const Offset(-5, 0),
+              ),
+            );
+          }
+          testState.handleScaleEnd(ScaleEndDetails());
+
+          // 20 * 5px = 100px accumulated overscroll, exceeds 80px threshold
+          expect(testState.swipeLeftCalled, isTrue);
+        },
+      );
+
+      testWidgets(
+        'triggers right swipe from accumulated overscroll across multiple events',
+        (tester) async {
+          await tester.pumpWidget(MaterialApp(home: testWidget));
+          testState = tester.state(find.byType(_TestWidget));
+
+          // Zoom to 2x — maxPanX = 400
+          testState.zoomPanState.displaySettings = testState
+              .zoomPanState
+              .displaySettings
+              .copyWith(zoomLevel: 2.0);
+          // Start at the left boundary
+          testState.zoomPanState.panOffset = const Offset(400, 0);
+
+          testState.handleScaleStart(
+            ScaleStartDetails(focalPoint: const Offset(100, 200)),
+          );
+
+          // Simulate 20 small drag events past boundary (5px each = 100px total overscroll)
+          for (var i = 0; i < 20; i++) {
+            testState.handleScaleUpdate(
+              ScaleUpdateDetails(
+                scale: 1.0,
+                focalPoint: Offset(100.0 + (i + 1) * 5, 200),
+                localFocalPoint: Offset(100.0 + (i + 1) * 5, 200),
+                focalPointDelta: const Offset(5, 0),
+              ),
+            );
+          }
+          testState.handleScaleEnd(ScaleEndDetails());
+
+          // 20 * 5px = 100px accumulated overscroll, exceeds 80px threshold
+          expect(testState.swipeRightCalled, isTrue);
+        },
+      );
+
       testWidgets('clamps pan offset to content bounds', (tester) async {
         await tester.pumpWidget(MaterialApp(home: testWidget));
         testState = tester.state(find.byType(_TestWidget));
