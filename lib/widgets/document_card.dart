@@ -1,10 +1,10 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../models/database.dart';
-import '../services/pdf_service.dart';
+import '../services/document_service.dart';
 
-/// Card widget to display a PDF in the library grid view
-class PdfCard extends StatefulWidget {
+/// Card widget to display a document in the library grid view
+class DocumentCard extends StatefulWidget {
   final Document document;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
@@ -12,7 +12,7 @@ class PdfCard extends StatefulWidget {
   final bool isSelectionMode;
   final bool isSelected;
 
-  const PdfCard({
+  const DocumentCard({
     super.key,
     required this.document,
     required this.onTap,
@@ -23,10 +23,10 @@ class PdfCard extends StatefulWidget {
   });
 
   @override
-  State<PdfCard> createState() => _PdfCardState();
+  State<DocumentCard> createState() => _DocumentCardState();
 }
 
-class _PdfCardState extends State<PdfCard> {
+class _DocumentCardState extends State<DocumentCard> {
   Uint8List? _thumbnailBytes;
   bool _isLoading = true;
   bool _hasFailed = false;
@@ -39,7 +39,7 @@ class _PdfCardState extends State<PdfCard> {
   }
 
   @override
-  void didUpdateWidget(PdfCard oldWidget) {
+  void didUpdateWidget(DocumentCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.document.id != widget.document.id) {
       _loadThumbnail();
@@ -53,7 +53,7 @@ class _PdfCardState extends State<PdfCard> {
     });
 
     try {
-      final bytes = await PdfService.instance.generateThumbnail(
+      final bytes = await DocumentService.instance.generateThumbnail(
         widget.document,
       );
       if (mounted) {
@@ -90,7 +90,10 @@ class _PdfCardState extends State<PdfCard> {
     if (_hasFailed || _thumbnailBytes == null) {
       return Container(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        child: const Icon(Icons.picture_as_pdf, size: 64),
+        child: Icon(
+          widget.document.isImage ? Icons.image : Icons.picture_as_pdf,
+          size: 64,
+        ),
       );
     }
 
@@ -100,7 +103,10 @@ class _PdfCardState extends State<PdfCard> {
       errorBuilder: (context, error, stackTrace) {
         return Container(
           color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          child: const Icon(Icons.picture_as_pdf, size: 64),
+          child: Icon(
+            widget.document.isImage ? Icons.image : Icons.picture_as_pdf,
+            size: 64,
+          ),
         );
       },
     );
@@ -154,7 +160,9 @@ class _PdfCardState extends State<PdfCard> {
           ),
           const SizedBox(height: 4),
           Text(
-            '${widget.document.pageCount} pages',
+            widget.document.isImage
+                ? 'Image'
+                : '${widget.document.pageCount} pages',
             style: textTheme.bodySmall?.copyWith(
               color: textTheme.bodySmall?.color?.withValues(alpha: 0.6),
             ),

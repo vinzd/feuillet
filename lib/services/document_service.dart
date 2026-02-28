@@ -15,14 +15,14 @@ import 'database_service.dart';
 import 'file_access_service.dart';
 import 'file_watcher_service.dart';
 
-/// Result of importing a single PDF file
-class PdfImportResult {
+/// Result of importing a single document file
+class DocumentImportResult {
   final String fileName;
   final bool success;
   final String? error;
   final String? filePath;
 
-  const PdfImportResult({
+  const DocumentImportResult({
     required this.fileName,
     required this.success,
     this.error,
@@ -30,28 +30,28 @@ class PdfImportResult {
   });
 }
 
-/// Result of a batch PDF import operation
-class PdfImportBatchResult {
-  final List<PdfImportResult> results;
+/// Result of a batch document import operation
+class DocumentImportBatchResult {
+  final List<DocumentImportResult> results;
 
-  const PdfImportBatchResult(this.results);
+  const DocumentImportBatchResult(this.results);
 
   int get successCount => results.where((r) => r.success).length;
   int get failureCount => results.where((r) => !r.success).length;
   int get totalCount => results.length;
   bool get hasFailures => failureCount > 0;
   bool get allSucceeded => failureCount == 0;
-  List<PdfImportResult> get failures =>
+  List<DocumentImportResult> get failures =>
       results.where((r) => !r.success).toList();
 }
 
 /// Service to manage PDF files and library operations
-class PdfService {
-  PdfService._() {
+class DocumentService {
+  DocumentService._() {
     _initialize();
   }
 
-  static final PdfService instance = PdfService._();
+  static final DocumentService instance = DocumentService._();
 
   StreamSubscription? _pdfChangesSubscription;
   final _database = DatabaseService.instance.database;
@@ -60,7 +60,7 @@ class PdfService {
   void _initialize() {
     // Skip file watching on web (for development iteration only)
     if (kIsWeb) {
-      debugPrint('PdfService: Skipping file watcher on web platform');
+      debugPrint('DocumentService: Skipping file watcher on web platform');
       return;
     }
 
@@ -71,7 +71,7 @@ class PdfService {
     _pdfChangesSubscription = FileWatcherService.instance.pdfChanges.listen(
       _handlePdfDirectoryChange,
       onError: (error) {
-        debugPrint('PdfService: Error in PDF watcher: $error');
+        debugPrint('DocumentService: Error in PDF watcher: $error');
       },
     );
   }
@@ -79,7 +79,7 @@ class PdfService {
   /// Handle PDF directory changes detected by file watcher
   Future<void> _handlePdfDirectoryChange(WatchEvent event) async {
     debugPrint(
-      'PdfService: PDF directory changed: ${event.type} - ${event.path}',
+      'DocumentService: PDF directory changed: ${event.type} - ${event.path}',
     );
 
     switch (event.type) {
@@ -103,15 +103,15 @@ class PdfService {
       final alreadyExists = existingDocs.any((doc) => doc.filePath == filePath);
 
       if (alreadyExists) {
-        debugPrint('PdfService: PDF already in database: $filePath');
+        debugPrint('DocumentService: PDF already in database: $filePath');
         return;
       }
 
       // Add to database
-      await addPdfToLibrary(filePath);
-      debugPrint('PdfService: Added new PDF from Syncthing: $filePath');
+      await addDocumentToLibrary(filePath);
+      debugPrint('DocumentService: Added new PDF from Syncthing: $filePath');
     } catch (e) {
-      debugPrint('PdfService: Error handling new PDF: $e');
+      debugPrint('DocumentService: Error handling new PDF: $e');
     }
   }
 
@@ -130,10 +130,10 @@ class PdfService {
       final doc = await _findDocumentByPath(filePath);
       if (doc != null) {
         await _database.deleteDocument(doc.id);
-        debugPrint('PdfService: Removed PDF from database: $filePath');
+        debugPrint('DocumentService: Removed PDF from database: $filePath');
       }
     } catch (e) {
-      debugPrint('PdfService: Error handling removed PDF: $e');
+      debugPrint('DocumentService: Error handling removed PDF: $e');
     }
   }
 
@@ -152,15 +152,15 @@ class PdfService {
             fileSize: metadata.size,
           ),
         );
-        debugPrint('PdfService: Updated PDF metadata: $filePath');
+        debugPrint('DocumentService: Updated PDF metadata: $filePath');
       }
     } catch (e) {
-      debugPrint('PdfService: Error handling modified PDF: $e');
+      debugPrint('DocumentService: Error handling modified PDF: $e');
     }
   }
 
   /// Copy a file to the PDF directory with a unique name if needed
-  Future<String> _copyToPdfDirectory(String sourcePath) async {
+  Future<String> _copyToDocumentDirectory(String sourcePath) async {
     final fileAccess = FileAccessService.instance;
     final pdfDir = await FileWatcherService.instance.getPdfDirectoryPath();
     final fileName = p.basename(sourcePath);
@@ -190,18 +190,18 @@ class PdfService {
 
   /// Import one or more PDF files using file picker
   ///
-  /// Returns a [PdfImportBatchResult] with results for each file,
+  /// Returns a [DocumentImportBatchResult] with results for each file,
   /// or null if the user cancelled the file picker.
   ///
   /// Optional [onProgress] callback is called after each file is processed
   /// with (currentIndex, totalCount, currentFileName).
-  Future<PdfImportBatchResult?> importPdfs({
+  Future<DocumentImportBatchResult?> importDocuments({
     void Function(int current, int total, String fileName)? onProgress,
   }) async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf'],
+        allowedExtensions: DocumentTypes.allExtensions,
         allowMultiple: true,
         withData: kIsWeb, // Load bytes on web
       );
@@ -210,7 +210,7 @@ class PdfService {
         return null;
       }
 
-      final results = <PdfImportResult>[];
+      final results = <DocumentImportResult>[];
       final total = result.files.length;
 
       for (var i = 0; i < result.files.length; i++) {
@@ -219,17 +219,17 @@ class PdfService {
         results.add(await _importSingleFile(file));
       }
 
-      return PdfImportBatchResult(results);
+      return DocumentImportBatchResult(results);
     } catch (e) {
-      debugPrint('PdfService: Error opening file picker: $e');
+      debugPrint('DocumentService: Error opening file picker: $e');
       return null;
     }
   }
 
   /// Import a single PDF file using file picker (convenience method)
-  @Deprecated('Use importPdfs() instead for multi-file support')
-  Future<String?> importPdf() async {
-    final result = await importPdfs();
+  @Deprecated('Use importDocuments() instead for multi-file support')
+  Future<String?> importDocument() async {
+    final result = await importDocuments();
     if (result == null || result.results.isEmpty) {
       return null;
     }
@@ -240,15 +240,15 @@ class PdfService {
   /// Import PDFs from dropped files (desktop_drop integration)
   ///
   /// For native platforms, uses file paths. For web, uses file bytes.
-  /// Returns a [PdfImportBatchResult] with results for each file.
+  /// Returns a [DocumentImportBatchResult] with results for each file.
   ///
   /// Optional [onProgress] callback is called after each file is processed
   /// with (currentIndex, totalCount, currentFileName).
-  Future<PdfImportBatchResult> importPdfsFromDroppedFiles(
+  Future<DocumentImportBatchResult> importDocumentsFromDroppedFiles(
     List<XFile> files, {
     void Function(int current, int total, String fileName)? onProgress,
   }) async {
-    final results = <PdfImportResult>[];
+    final results = <DocumentImportResult>[];
     final total = files.length;
 
     for (var i = 0; i < files.length; i++) {
@@ -259,18 +259,19 @@ class PdfService {
       results.add(await _importDroppedFile(file));
     }
 
-    return PdfImportBatchResult(results);
+    return DocumentImportBatchResult(results);
   }
 
   /// Import a single dropped file
-  Future<PdfImportResult> _importDroppedFile(XFile file) async {
+  Future<DocumentImportResult> _importDroppedFile(XFile file) async {
     final fileName = file.name;
 
-    if (!fileName.toLowerCase().endsWith('.pdf')) {
-      return PdfImportResult(
+    final ext = fileName.split('.').last.toLowerCase();
+    if (!DocumentTypes.allExtensions.contains(ext)) {
+      return DocumentImportResult(
         fileName: fileName,
         success: false,
-        error: 'Not a PDF file',
+        error: 'Unsupported file type. Supported: PDF, JPG, PNG',
       );
     }
 
@@ -281,10 +282,10 @@ class PdfService {
   }
 
   /// Import a dropped file using bytes (web platform)
-  Future<PdfImportResult> _importDroppedFileFromBytes(XFile file) async {
+  Future<DocumentImportResult> _importDroppedFileFromBytes(XFile file) async {
     final bytes = await file.readAsBytes();
-    final path = await _addPdfFromBytes(file.name, bytes);
-    return PdfImportResult(
+    final path = await _addDocumentFromBytes(file.name, bytes);
+    return DocumentImportResult(
       fileName: file.name,
       success: path != null,
       filePath: path,
@@ -293,19 +294,19 @@ class PdfService {
   }
 
   /// Import a dropped file using file path (native platforms)
-  Future<PdfImportResult> _importDroppedFileFromPath(XFile file) async {
+  Future<DocumentImportResult> _importDroppedFileFromPath(XFile file) async {
     final filePath = file.path;
     if (filePath.isEmpty) {
-      return PdfImportResult(
+      return DocumentImportResult(
         fileName: file.name,
         success: false,
         error: 'No file path available',
       );
     }
 
-    final destPath = await _copyToPdfDirectory(filePath);
-    final addedPath = await addPdfToLibrary(destPath);
-    return PdfImportResult(
+    final destPath = await _copyToDocumentDirectory(filePath);
+    final addedPath = await addDocumentToLibrary(destPath);
+    return DocumentImportResult(
       fileName: file.name,
       success: addedPath != null,
       filePath: addedPath,
@@ -314,15 +315,15 @@ class PdfService {
   }
 
   /// Import a single file from the file picker result
-  Future<PdfImportResult> _importSingleFile(PlatformFile file) async {
+  Future<DocumentImportResult> _importSingleFile(PlatformFile file) async {
     try {
       if (kIsWeb) {
         return await _importFileFromBytes(file);
       }
       return await _importFileFromPath(file);
     } catch (e) {
-      debugPrint('PdfService: Error importing ${file.name}: $e');
-      return PdfImportResult(
+      debugPrint('DocumentService: Error importing ${file.name}: $e');
+      return DocumentImportResult(
         fileName: file.name,
         success: false,
         error: e.toString(),
@@ -331,16 +332,16 @@ class PdfService {
   }
 
   /// Import a file using bytes (web platform)
-  Future<PdfImportResult> _importFileFromBytes(PlatformFile file) async {
+  Future<DocumentImportResult> _importFileFromBytes(PlatformFile file) async {
     if (file.bytes == null) {
-      return PdfImportResult(
+      return DocumentImportResult(
         fileName: file.name,
         success: false,
         error: 'No bytes available',
       );
     }
-    final path = await _addPdfFromBytes(file.name, file.bytes!);
-    return PdfImportResult(
+    final path = await _addDocumentFromBytes(file.name, file.bytes!);
+    return DocumentImportResult(
       fileName: file.name,
       success: path != null,
       filePath: path,
@@ -349,17 +350,17 @@ class PdfService {
   }
 
   /// Import a file using file path (native platforms)
-  Future<PdfImportResult> _importFileFromPath(PlatformFile file) async {
+  Future<DocumentImportResult> _importFileFromPath(PlatformFile file) async {
     if (file.path == null) {
-      return PdfImportResult(
+      return DocumentImportResult(
         fileName: file.name,
         success: false,
         error: 'No file path available',
       );
     }
-    final destPath = await _copyToPdfDirectory(file.path!);
-    final addedPath = await addPdfToLibrary(destPath);
-    return PdfImportResult(
+    final destPath = await _copyToDocumentDirectory(file.path!);
+    final addedPath = await addDocumentToLibrary(destPath);
+    return DocumentImportResult(
       fileName: file.name,
       success: addedPath != null,
       filePath: addedPath,
@@ -368,10 +369,16 @@ class PdfService {
   }
 
   /// Add a PDF from bytes (web platform)
-  Future<String?> _addPdfFromBytes(String fileName, List<int> bytes) async {
+  Future<String?> _addDocumentFromBytes(
+    String fileName,
+    List<int> bytes,
+  ) async {
     try {
       final nameWithoutExt = p.basenameWithoutExtension(fileName);
-      final pageCount = await _getPdfPageCountFromBytes(bytes);
+      final docType = DocumentTypes.fromPath(fileName);
+      final pageCount = docType == DocumentTypes.pdf
+          ? await _getPdfPageCountFromBytes(bytes)
+          : 1;
 
       // Insert into database with bytes
       final documentId = await _database.insertDocument(
@@ -382,6 +389,7 @@ class PdfService {
           lastModified: drift.Value(DateTime.now()),
           fileSize: drift.Value(bytes.length),
           pageCount: drift.Value(pageCount),
+          documentType: drift.Value(docType),
         ),
       );
 
@@ -397,11 +405,11 @@ class PdfService {
       );
 
       debugPrint(
-        'PdfService: Added PDF from bytes: $nameWithoutExt (ID: $documentId)',
+        'DocumentService: Added PDF from bytes: $nameWithoutExt (ID: $documentId)',
       );
       return 'web://$fileName';
     } catch (e, stackTrace) {
-      debugPrint('PdfService: Error adding PDF from bytes: $e');
+      debugPrint('DocumentService: Error adding PDF from bytes: $e');
       debugPrint(stackTrace.toString());
       return null;
     }
@@ -417,7 +425,7 @@ class PdfService {
       await document.close();
       return pageCount;
     } catch (e) {
-      debugPrint('PdfService: Could not read PDF page count: $e');
+      debugPrint('DocumentService: Could not read PDF page count: $e');
       return 0;
     }
   }
@@ -430,17 +438,19 @@ class PdfService {
       await document.close();
       return pageCount;
     } catch (e) {
-      debugPrint('PdfService: Could not read PDF page count from bytes: $e');
+      debugPrint(
+        'DocumentService: Could not read PDF page count from bytes: $e',
+      );
       return 0;
     }
   }
 
   /// Add a PDF file to the library database
-  Future<String?> addPdfToLibrary(String filePath) async {
+  Future<String?> addDocumentToLibrary(String filePath) async {
     try {
       final fileAccess = FileAccessService.instance;
       if (!await fileAccess.fileExists(filePath)) {
-        debugPrint('PdfService: File does not exist: $filePath');
+        debugPrint('DocumentService: File does not exist: $filePath');
         return null;
       }
 
@@ -448,7 +458,10 @@ class PdfService {
       final fileName = isSafUri(filePath)
           ? p.basenameWithoutExtension(Uri.parse(filePath).pathSegments.last)
           : p.basenameWithoutExtension(filePath);
-      final pageCount = await _getPdfPageCount(filePath);
+      final docType = DocumentTypes.fromPath(filePath);
+      final pageCount = docType == DocumentTypes.pdf
+          ? await _getPdfPageCount(filePath)
+          : 1;
 
       // Insert into database
       final documentId = await _database.insertDocument(
@@ -458,6 +471,7 @@ class PdfService {
           lastModified: drift.Value(metadata.lastModified),
           fileSize: drift.Value(metadata.size),
           pageCount: drift.Value(pageCount),
+          documentType: drift.Value(docType),
         ),
       );
 
@@ -473,11 +487,11 @@ class PdfService {
       );
 
       debugPrint(
-        'PdfService: Added PDF to library: $fileName (ID: $documentId)',
+        'DocumentService: Added PDF to library: $fileName (ID: $documentId)',
       );
       return filePath;
     } catch (e, stackTrace) {
-      debugPrint('PdfService: Error adding PDF to library: $e');
+      debugPrint('DocumentService: Error adding PDF to library: $e');
       debugPrint(stackTrace.toString());
       return null;
     }
@@ -488,24 +502,24 @@ class PdfService {
   Future<void> scanAndSyncLibrary() async {
     // Skip on web (for development iteration only)
     if (kIsWeb) {
-      debugPrint('PdfService: Skipping library scan on web platform');
+      debugPrint('DocumentService: Skipping library scan on web platform');
       return;
     }
 
     try {
-      debugPrint('PdfService: Scanning PDF directory...');
+      debugPrint('DocumentService: Scanning PDF directory...');
 
       final fileAccess = FileAccessService.instance;
       final pdfDirPath = await FileWatcherService.instance
           .getPdfDirectoryPath();
 
       if (!await fileAccess.directoryExists(pdfDirPath)) {
-        debugPrint('PdfService: PDF directory does not exist');
+        debugPrint('DocumentService: PDF directory does not exist');
         return;
       }
 
       // Get all PDF files in directory (works for both SAF and local)
-      final pdfFiles = await fileAccess.listPdfFiles(pdfDirPath);
+      final pdfFiles = await fileAccess.listDocumentFiles(pdfDirPath);
 
       // Get all documents in database
       final dbDocuments = await _database.getAllDocuments();
@@ -514,7 +528,7 @@ class PdfService {
       // Add new PDFs to database
       for (final file in pdfFiles) {
         if (!dbPaths.contains(file.uri)) {
-          await addPdfToLibrary(file.uri);
+          await addDocumentToLibrary(file.uri);
         }
       }
 
@@ -526,20 +540,20 @@ class PdfService {
         if (!filePaths.contains(doc.filePath)) {
           await _database.deleteDocument(doc.id);
           debugPrint(
-            'PdfService: Removed missing PDF from database: ${doc.name}',
+            'DocumentService: Removed missing PDF from database: ${doc.name}',
           );
         }
       }
 
-      debugPrint('PdfService: Library sync complete');
+      debugPrint('DocumentService: Library sync complete');
     } catch (e, stackTrace) {
-      debugPrint('PdfService: Error scanning library: $e');
+      debugPrint('DocumentService: Error scanning library: $e');
       debugPrint(stackTrace.toString());
     }
   }
 
   /// Delete a PDF from library and optionally from disk
-  Future<void> deletePdf(int documentId, {bool deleteFile = false}) async {
+  Future<void> deleteDocument(int documentId, {bool deleteFile = false}) async {
     try {
       final doc = await _database.getDocument(documentId);
       if (doc == null) return;
@@ -549,9 +563,9 @@ class PdfService {
       }
 
       await _database.deleteDocument(documentId);
-      debugPrint('PdfService: Deleted PDF: ${doc.name}');
+      debugPrint('DocumentService: Deleted PDF: ${doc.name}');
     } catch (e) {
-      debugPrint('PdfService: Error deleting PDF: $e');
+      debugPrint('DocumentService: Error deleting PDF: $e');
     }
   }
 
@@ -571,7 +585,7 @@ class PdfService {
     return p.join(cachePath, 'thumb_$documentId.png');
   }
 
-  /// Generate a thumbnail for a PDF document
+  /// Generate a thumbnail for a document (PDF or image)
   /// Returns the thumbnail as bytes, or null if generation fails
   Future<Uint8List?> generateThumbnail(Document document) async {
     try {
@@ -585,45 +599,62 @@ class PdfService {
         }
       }
 
-      // Open the PDF
-      final pdfDoc = await FileAccessService.instance.openPdfDocument(
-        document.filePath,
-        pdfBytes: document.pdfBytes != null
-            ? Uint8List.fromList(document.pdfBytes!)
-            : null,
-      );
+      Uint8List? thumbnailBytes;
 
-      // Get the first page
-      final page = await pdfDoc.getPage(1);
-
-      // Render the page at a reasonable thumbnail size
-      const double thumbnailWidth = 300;
-      final scale = thumbnailWidth / page.width;
-      final pageImage = await page.render(
-        width: thumbnailWidth,
-        height: page.height * scale,
-        format: PdfPageImageFormat.png,
-        backgroundColor: '#FFFFFF',
-      );
-
-      await page.close();
-      await pdfDoc.close();
-
-      if (pageImage == null) {
-        debugPrint('PdfService: Failed to render page for thumbnail');
-        return null;
+      if (document.isImage) {
+        thumbnailBytes = await _generateImageThumbnail(document);
+      } else {
+        thumbnailBytes = await _generatePdfThumbnail(document);
       }
 
-      // Cache the thumbnail on native platforms
-      if (!kIsWeb && thumbFile != null) {
-        await thumbFile.writeAsBytes(pageImage.bytes);
+      // Cache on native platforms
+      if (!kIsWeb && thumbFile != null && thumbnailBytes != null) {
+        await thumbFile.writeAsBytes(thumbnailBytes);
       }
 
-      return pageImage.bytes;
+      return thumbnailBytes;
     } catch (e) {
-      debugPrint('PdfService: Error generating thumbnail: $e');
+      debugPrint('DocumentService: Error generating thumbnail: $e');
       return null;
     }
+  }
+
+  /// Generate thumbnail for an image document
+  Future<Uint8List?> _generateImageThumbnail(Document document) async {
+    if (document.pdfBytes != null) {
+      return Uint8List.fromList(document.pdfBytes!);
+    }
+    return await FileAccessService.instance.readFileBytes(document.filePath);
+  }
+
+  /// Generate thumbnail for a PDF document
+  Future<Uint8List?> _generatePdfThumbnail(Document document) async {
+    final pdfDoc = await FileAccessService.instance.openPdfDocument(
+      document.filePath,
+      pdfBytes: document.pdfBytes != null
+          ? Uint8List.fromList(document.pdfBytes!)
+          : null,
+    );
+
+    final page = await pdfDoc.getPage(1);
+    const double thumbnailWidth = 300;
+    final scale = thumbnailWidth / page.width;
+    final pageImage = await page.render(
+      width: thumbnailWidth,
+      height: page.height * scale,
+      format: PdfPageImageFormat.png,
+      backgroundColor: '#FFFFFF',
+    );
+
+    await page.close();
+    await pdfDoc.close();
+
+    if (pageImage == null) {
+      debugPrint('DocumentService: Failed to render page for thumbnail');
+      return null;
+    }
+
+    return pageImage.bytes;
   }
 
   /// Get a cached thumbnail if available, otherwise return null
@@ -637,7 +668,7 @@ class PdfService {
         return await thumbFile.readAsBytes();
       }
     } catch (e) {
-      debugPrint('PdfService: Error reading cached thumbnail: $e');
+      debugPrint('DocumentService: Error reading cached thumbnail: $e');
     }
     return null;
   }
@@ -653,7 +684,7 @@ class PdfService {
         await thumbFile.delete();
       }
     } catch (e) {
-      debugPrint('PdfService: Error deleting cached thumbnail: $e');
+      debugPrint('DocumentService: Error deleting cached thumbnail: $e');
     }
   }
 
