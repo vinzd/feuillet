@@ -24,7 +24,8 @@ class DocumentViewerWrapper extends ConsumerStatefulWidget {
   const DocumentViewerWrapper({super.key, required this.documentId});
 
   @override
-  ConsumerState<DocumentViewerWrapper> createState() => _DocumentViewerWrapperState();
+  ConsumerState<DocumentViewerWrapper> createState() =>
+      _DocumentViewerWrapperState();
 }
 
 class _DocumentViewerWrapperState extends ConsumerState<DocumentViewerWrapper> {

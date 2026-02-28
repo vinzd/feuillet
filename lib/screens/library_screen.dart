@@ -1283,9 +1283,9 @@ class _DocumentListTileState extends State<DocumentListTile> {
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
           return Icon(
-        widget.document.isImage ? Icons.image : Icons.picture_as_pdf,
-        size: 40,
-      );
+            widget.document.isImage ? Icons.image : Icons.picture_as_pdf,
+            size: 40,
+          );
         },
       ),
     );

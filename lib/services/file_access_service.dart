@@ -91,7 +91,9 @@ class FileAccessService {
     }
   }
 
-  Future<List<DocumentFileInfo>> _listDocumentFilesLocal(String directoryPath) async {
+  Future<List<DocumentFileInfo>> _listDocumentFilesLocal(
+    String directoryPath,
+  ) async {
     final dir = Directory(directoryPath);
     if (!await dir.exists()) return [];
 
@@ -220,7 +222,9 @@ class FileAccessService {
     if (isSafUri(path)) {
       // For SAF URIs, try listing files — if it works, the directory is accessible
       try {
-        await _channel.invokeListMethod<Map>('listDocumentFiles', {'treeUri': path});
+        await _channel.invokeListMethod<Map>('listDocumentFiles', {
+          'treeUri': path,
+        });
         return true;
       } on PlatformException {
         return false;

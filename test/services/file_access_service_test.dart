@@ -97,7 +97,9 @@ void main() {
       await File('${tempDir.path}/doc2.pdf').writeAsBytes([4, 5, 6]);
       await File('${tempDir.path}/notes.txt').writeAsString('hello');
 
-      final files = await FileAccessService.instance.listDocumentFiles(tempDir.path);
+      final files = await FileAccessService.instance.listDocumentFiles(
+        tempDir.path,
+      );
 
       expect(files.length, 2);
       expect(files.map((f) => f.name).toSet(), {'doc1.pdf', 'doc2.pdf'});
@@ -116,35 +118,46 @@ void main() {
       await File('${tempDir.path}/notes.txt').writeAsString('hello');
       await File('${tempDir.path}/data.csv').writeAsString('a,b,c');
 
-      final files = await FileAccessService.instance.listDocumentFiles(tempDir.path);
+      final files = await FileAccessService.instance.listDocumentFiles(
+        tempDir.path,
+      );
 
       expect(files.length, 4);
-      expect(
-        files.map((f) => f.name).toSet(),
-        {'score.pdf', 'photo.jpg', 'scan.jpeg', 'diagram.png'},
-      );
+      expect(files.map((f) => f.name).toSet(), {
+        'score.pdf',
+        'photo.jpg',
+        'scan.jpeg',
+        'diagram.png',
+      });
       for (final file in files) {
         expect(file.size, greaterThan(0));
         expect(file.uri, startsWith(tempDir.path));
       }
     });
 
-    test('listDocumentFiles returns empty list for nonexistent directory', () async {
-      final files = await FileAccessService.instance.listDocumentFiles(
-        '${tempDir.path}/nonexistent',
-      );
-      expect(files, isEmpty);
-    });
+    test(
+      'listDocumentFiles returns empty list for nonexistent directory',
+      () async {
+        final files = await FileAccessService.instance.listDocumentFiles(
+          '${tempDir.path}/nonexistent',
+        );
+        expect(files, isEmpty);
+      },
+    );
 
     test('listDocumentFiles returns empty list for empty directory', () async {
-      final files = await FileAccessService.instance.listDocumentFiles(tempDir.path);
+      final files = await FileAccessService.instance.listDocumentFiles(
+        tempDir.path,
+      );
       expect(files, isEmpty);
     });
 
     test('listDocumentFiles handles uppercase PDF extension', () async {
       await File('${tempDir.path}/doc.PDF').writeAsBytes([1, 2, 3]);
 
-      final files = await FileAccessService.instance.listDocumentFiles(tempDir.path);
+      final files = await FileAccessService.instance.listDocumentFiles(
+        tempDir.path,
+      );
       expect(files.length, 1);
       expect(files.first.name, 'doc.PDF');
     });
