@@ -63,12 +63,13 @@ class _CachedPdfViewState extends State<CachedPdfView> {
   }
 
   void _preRenderPages(int currentPage) {
-    if (_document == null) return;
+    final document = _document;
+    if (document == null) return;
 
     _cacheService.preRenderPages(
-      document: _document!,
+      document: document,
       currentPage: currentPage,
-      totalPages: _document!.pagesCount,
+      totalPages: document.pagesCount,
     );
   }
 
@@ -110,7 +111,7 @@ class _CachedPdfViewState extends State<CachedPdfView> {
     }
 
     return PageView.builder(
-      controller: widget.controller._pageController,
+      controller: widget.controller._pageController!,
       scrollDirection: widget.scrollDirection,
       pageSnapping: widget.pageSnapping,
       physics: widget.physics,
@@ -241,7 +242,7 @@ class _CachedPdfPageState extends State<_CachedPdfPage> {
       decoration: widget.backgroundDecoration,
       child: PhotoView(
         imageProvider: MemoryImage(_pageImage!.bytes),
-        minScale: PhotoViewComputedScale.contained * 1.0,
+        minScale: PhotoViewComputedScale.contained,
         maxScale: PhotoViewComputedScale.contained * 3.0,
         initialScale: PhotoViewComputedScale.contained,
         backgroundDecoration:
@@ -268,7 +269,7 @@ class CachedPdfController {
   final double viewportFraction;
 
   PdfDocument? _document;
-  late PageController _pageController;
+  PageController? _pageController;
   final ValueNotifier<int> _pageListenable = ValueNotifier(1);
 
   /// Current page number (1-indexed)
@@ -289,13 +290,11 @@ class CachedPdfController {
     _pageListenable.value = initialPage;
   }
 
-  void _detach() {
-    // No-op for now, but kept for symmetry with attach
-  }
+  void _detach() {}
 
   /// Jump to a specific page (1-indexed)
   void jumpToPage(int page) {
-    _pageController.jumpToPage(page - 1);
+    _pageController?.jumpToPage(page - 1);
   }
 
   /// Animate to a specific page (1-indexed)
@@ -304,7 +303,8 @@ class CachedPdfController {
     required Duration duration,
     required Curve curve,
   }) {
-    return _pageController.animateToPage(
+    if (_pageController == null) return Future.value();
+    return _pageController!.animateToPage(
       page - 1,
       duration: duration,
       curve: curve,
@@ -313,8 +313,9 @@ class CachedPdfController {
 
   /// Navigate to next page
   Future<void> nextPage({required Duration duration, required Curve curve}) {
-    final currentPage = _pageController.page?.round() ?? 0;
-    return _pageController.animateToPage(
+    if (_pageController == null) return Future.value();
+    final currentPage = _pageController!.page?.round() ?? 0;
+    return _pageController!.animateToPage(
       currentPage + 1,
       duration: duration,
       curve: curve,
@@ -326,8 +327,9 @@ class CachedPdfController {
     required Duration duration,
     required Curve curve,
   }) {
-    final currentPage = _pageController.page?.round() ?? 0;
-    return _pageController.animateToPage(
+    if (_pageController == null) return Future.value();
+    final currentPage = _pageController!.page?.round() ?? 0;
+    return _pageController!.animateToPage(
       currentPage - 1,
       duration: duration,
       curve: curve,
@@ -336,7 +338,7 @@ class CachedPdfController {
 
   /// Dispose the controller
   void dispose() {
-    _pageController.dispose();
+    _pageController?.dispose();
     _pageListenable.dispose();
 
     // Clear cache for this document

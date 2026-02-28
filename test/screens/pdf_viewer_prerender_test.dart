@@ -159,31 +159,37 @@ void main() {
       );
     });
 
-    test('_preRenderPages is NOT called in _initializePdf to avoid race', () {
-      // Pre-rendering on initial load is handled by CachedPdfView's
-      // onPageRendered callback after the first page renders successfully.
-      // Calling it directly in _initializePdf causes a race condition where
-      // adjacent pages start rendering before the first page, which can cause
-      // the first page render to fail on some devices.
-      final methodStartIndex = sourceLines.indexWhere(
-        (line) => line.contains('Future<void> _initializePdf()'),
-      );
-      expect(
-        methodStartIndex,
-        greaterThan(0),
-        reason: '_initializePdf must exist',
-      );
+    test(
+      '_preRenderPages is called in _initializePdf for initial pre-rendering',
+      () {
+        // Pre-rendering on initial load is handled by CachedPdfView's
+        // onPageRendered callback after the first page renders successfully.
+        // Pre-rendering is now safe to call in _initializePdf because
+        // renderAndCachePage (on-demand) has priority over pre-rendering
+        // in the serialized render queue.
+        final methodStartIndex = sourceLines.indexWhere(
+          (line) => line.contains('Future<void> _initializePdf()'),
+        );
+        expect(
+          methodStartIndex,
+          greaterThan(0),
+          reason: '_initializePdf must exist',
+        );
 
-      final methodBody = sourceLines.skip(methodStartIndex).take(70).join('\n');
+        final methodBody = sourceLines
+            .skip(methodStartIndex)
+            .take(70)
+            .join('\n');
 
-      expect(
-        methodBody.contains('_preRenderPages()'),
-        isFalse,
-        reason:
-            '_initializePdf must NOT call _preRenderPages() directly — '
-            'CachedPdfView handles initial pre-rendering via onPageRendered.',
-      );
-    });
+        expect(
+          methodBody.contains('_preRenderPages()'),
+          isTrue,
+          reason:
+              '_initializePdf should call _preRenderPages() to start '
+              'pre-rendering adjacent pages after the initial page loads.',
+        );
+      },
+    );
   });
 
   group('Pre-rendering method implementation', () {
@@ -195,8 +201,12 @@ void main() {
     });
 
     test('_preRenderPages checks for null _pdfDocument', () {
+      // The null guard may use either a direct check or a local variable pattern
+      final hasNullGuard =
+          pdfViewerSource.contains('if (_pdfDocument == null) return') ||
+          pdfViewerSource.contains('if (pdfDocument == null) return');
       expect(
-        pdfViewerSource.contains('if (_pdfDocument == null) return'),
+        hasNullGuard,
         isTrue,
         reason:
             '_preRenderPages must guard against null _pdfDocument to prevent errors.',
