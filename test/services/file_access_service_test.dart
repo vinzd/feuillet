@@ -96,12 +96,33 @@ void main() {
       await File('${tempDir.path}/doc1.pdf').writeAsBytes([1, 2, 3]);
       await File('${tempDir.path}/doc2.pdf').writeAsBytes([4, 5, 6]);
       await File('${tempDir.path}/notes.txt').writeAsString('hello');
-      await File('${tempDir.path}/image.png').writeAsBytes([7, 8, 9]);
 
       final files = await FileAccessService.instance.listDocumentFiles(tempDir.path);
 
       expect(files.length, 2);
       expect(files.map((f) => f.name).toSet(), {'doc1.pdf', 'doc2.pdf'});
+      for (final file in files) {
+        expect(file.size, greaterThan(0));
+        expect(file.uri, startsWith(tempDir.path));
+      }
+    });
+
+    test('listDocumentFiles includes image files alongside PDFs', () async {
+      // Create test files of various types
+      await File('${tempDir.path}/score.pdf').writeAsBytes([1, 2, 3]);
+      await File('${tempDir.path}/photo.jpg').writeAsBytes([4, 5, 6]);
+      await File('${tempDir.path}/scan.jpeg').writeAsBytes([7, 8, 9]);
+      await File('${tempDir.path}/diagram.png').writeAsBytes([10, 11, 12]);
+      await File('${tempDir.path}/notes.txt').writeAsString('hello');
+      await File('${tempDir.path}/data.csv').writeAsString('a,b,c');
+
+      final files = await FileAccessService.instance.listDocumentFiles(tempDir.path);
+
+      expect(files.length, 4);
+      expect(
+        files.map((f) => f.name).toSet(),
+        {'score.pdf', 'photo.jpg', 'scan.jpeg', 'diagram.png'},
+      );
       for (final file in files) {
         expect(file.size, greaterThan(0));
         expect(file.uri, startsWith(tempDir.path));

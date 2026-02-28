@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart';
+import '../models/database.dart';
 
 /// Metadata for a document file (works for both SAF URIs and local paths).
 class DocumentFileInfo {
@@ -96,7 +97,8 @@ class FileAccessService {
 
     final files = <DocumentFileInfo>[];
     await for (final entity in dir.list(recursive: true)) {
-      if (entity is File && entity.path.toLowerCase().endsWith('.pdf')) {
+      final ext = entity.path.split('.').last.toLowerCase();
+      if (entity is File && DocumentTypes.allExtensions.contains(ext)) {
         final stat = await entity.stat();
         files.add(
           DocumentFileInfo(

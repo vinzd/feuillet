@@ -93,7 +93,7 @@ class SafMethodChannel(private val activity: MainActivity) {
         for (file in directory.listFiles()) {
             if (file.isDirectory) {
                 collectDocumentFiles(file, result)
-            } else if (file.isFile && file.name?.lowercase()?.endsWith(".pdf") == true) {
+            } else if (file.isFile && isDocumentFile(file.name)) {
                 result.add(
                     mapOf(
                         "uri" to file.uri.toString(),
@@ -104,6 +104,12 @@ class SafMethodChannel(private val activity: MainActivity) {
                 )
             }
         }
+    }
+
+    private fun isDocumentFile(name: String?): Boolean {
+        val lower = name?.lowercase() ?: return false
+        return lower.endsWith(".pdf") || lower.endsWith(".jpg") ||
+               lower.endsWith(".jpeg") || lower.endsWith(".png")
     }
 
     private fun readFileBytes(call: MethodCall, result: MethodChannel.Result) {
@@ -176,7 +182,12 @@ class SafMethodChannel(private val activity: MainActivity) {
                 return
             }
 
-            val newFile = parentDoc.createFile("application/pdf", fileName)
+            val mimeType = when {
+                fileName.lowercase().endsWith(".jpg") || fileName.lowercase().endsWith(".jpeg") -> "image/jpeg"
+                fileName.lowercase().endsWith(".png") -> "image/png"
+                else -> "application/pdf"
+            }
+            val newFile = parentDoc.createFile(mimeType, fileName)
             if (newFile == null) {
                 result.error("WRITE_ERROR", "Could not create file", null)
                 return
