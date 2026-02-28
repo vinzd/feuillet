@@ -107,7 +107,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
       return;
     }
 
-    context.go(AppRoutes.setlistPerformancePath(widget.setListId));
+    context.push(AppRoutes.setlistPerformancePath(widget.setListId));
   }
 
   @override
@@ -193,7 +193,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
                               IconButton(
                                 icon: const Icon(Icons.visibility),
                                 onPressed: () {
-                                  context.go(AppRoutes.documentPath(doc.id));
+                                  context.push(AppRoutes.documentPath(doc.id));
                                 },
                                 tooltip: 'View',
                               ),
