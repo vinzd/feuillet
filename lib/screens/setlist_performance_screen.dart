@@ -4,6 +4,7 @@ import 'package:pdfx/pdfx.dart';
 
 import '../models/database.dart';
 import '../models/view_mode.dart';
+import '../services/file_access_service.dart';
 import '../services/pdf_page_cache_service.dart';
 import '../utils/auto_hide_controller.dart';
 import '../utils/display_settings.dart';
@@ -100,15 +101,12 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
 
     try {
       final doc = widget.documents[index];
-      final PdfDocument pdfDocument;
-
-      if (doc.pdfBytes != null) {
-        // Copy bytes to avoid detached ArrayBuffer issue on web
-        final bytesCopy = Uint8List.fromList(doc.pdfBytes!);
-        pdfDocument = await PdfDocument.openData(bytesCopy);
-      } else {
-        pdfDocument = await PdfDocument.openFile(doc.filePath);
-      }
+      final pdfDocument = await FileAccessService.instance.openPdfDocument(
+        doc.filePath,
+        pdfBytes: doc.pdfBytes != null
+            ? Uint8List.fromList(doc.pdfBytes!)
+            : null,
+      );
 
       _pdfDocuments[index] = pdfDocument;
 

@@ -4,11 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:pdfx/pdfx.dart';
 import '../models/database.dart';
 import '../router/app_router.dart';
 import '../services/annotation_service.dart';
 import '../services/database_service.dart';
+import '../services/file_access_service.dart';
 import '../services/pdf_export_service.dart';
 import '../services/pdf_service.dart';
 import '../services/setlist_service.dart';
@@ -969,13 +969,12 @@ class _BulkExportDialogState extends State<_BulkExportDialog> {
 
   Future<void> _exportDocument(Document doc) async {
     // Load the PDF document
-    PdfDocument pdfDoc;
-    if (kIsWeb && doc.pdfBytes != null) {
-      final bytesCopy = Uint8List.fromList(doc.pdfBytes!);
-      pdfDoc = await PdfDocument.openData(bytesCopy);
-    } else {
-      pdfDoc = await PdfDocument.openFile(doc.filePath);
-    }
+    final pdfDoc = await FileAccessService.instance.openPdfDocument(
+      doc.filePath,
+      pdfBytes: doc.pdfBytes != null
+          ? Uint8List.fromList(doc.pdfBytes!)
+          : null,
+    );
 
     try {
       // Get visible layers for this document

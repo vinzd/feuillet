@@ -12,6 +12,7 @@ import 'package:watcher/watcher.dart';
 import 'package:cross_file/cross_file.dart' show XFile;
 import '../models/database.dart';
 import 'database_service.dart';
+import 'file_access_service.dart';
 import 'file_watcher_service.dart';
 
 /// Result of importing a single PDF file
@@ -62,6 +63,9 @@ class PdfService {
       debugPrint('PdfService: Skipping file watcher on web platform');
       return;
     }
+
+    // Register SAF polling callback for Android SAF directories
+    FileWatcherService.instance.onSafPollCallback = () => scanAndSyncLibrary();
 
     // Listen to PDF directory changes from Syncthing
     _pdfChangesSubscription = FileWatcherService.instance.pdfChanges.listen(
@@ -114,10 +118,10 @@ class PdfService {
   /// Find a document by file path
   Future<Document?> _findDocumentByPath(String filePath) async {
     final docs = await _database.getAllDocuments();
-    return docs.cast<Document?>().firstWhere(
-      (d) => d?.filePath == filePath,
-      orElse: () => null,
-    );
+    for (final doc in docs) {
+      if (doc.filePath == filePath) return doc;
+    }
+    return null;
   }
 
   /// Handle a PDF file removed by Syncthing
@@ -138,11 +142,15 @@ class PdfService {
     try {
       final doc = await _findDocumentByPath(filePath);
       if (doc != null) {
-        final file = File(filePath);
-        final stat = await file.stat();
+        final metadata = await FileAccessService.instance.getFileMetadata(
+          filePath,
+        );
 
         await _database.updateDocument(
-          doc.copyWith(lastModified: stat.modified, fileSize: stat.size),
+          doc.copyWith(
+            lastModified: metadata.lastModified,
+            fileSize: metadata.size,
+          ),
         );
         debugPrint('PdfService: Updated PDF metadata: $filePath');
       }
@@ -153,14 +161,20 @@ class PdfService {
 
   /// Copy a file to the PDF directory with a unique name if needed
   Future<String> _copyToPdfDirectory(String sourcePath) async {
+    final fileAccess = FileAccessService.instance;
     final pdfDir = await FileWatcherService.instance.getPdfDirectoryPath();
     final fileName = p.basename(sourcePath);
+
+    if (isSafUri(pdfDir)) {
+      // SAF directory: read source bytes and write to SAF
+      final bytes = await File(sourcePath).readAsBytes();
+      return fileAccess.writeFileToDirectory(pdfDir, fileName, bytes);
+    }
+
     final destPath = p.join(pdfDir, fileName);
 
-    // Check if file already exists
-    final destFile = File(destPath);
-    if (await destFile.exists()) {
-      // Generate unique name with timestamp
+    // Generate unique name if file already exists
+    if (await fileAccess.fileExists(destPath)) {
       final nameWithoutExt = p.basenameWithoutExtension(fileName);
       final ext = p.extension(fileName);
       final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -168,10 +182,10 @@ class PdfService {
       final uniquePath = p.join(pdfDir, uniqueName);
       await File(sourcePath).copy(uniquePath);
       return uniquePath;
-    } else {
-      await File(sourcePath).copy(destPath);
-      return destPath;
     }
+
+    await File(sourcePath).copy(destPath);
+    return destPath;
   }
 
   /// Import one or more PDF files using file picker
@@ -396,7 +410,9 @@ class PdfService {
   /// Get the page count of a PDF file
   Future<int> _getPdfPageCount(String filePath) async {
     try {
-      final document = await PdfDocument.openFile(filePath);
+      final document = await FileAccessService.instance.openPdfDocument(
+        filePath,
+      );
       final pageCount = document.pagesCount;
       await document.close();
       return pageCount;
@@ -422,14 +438,16 @@ class PdfService {
   /// Add a PDF file to the library database
   Future<String?> addPdfToLibrary(String filePath) async {
     try {
-      final file = File(filePath);
-      if (!await file.exists()) {
+      final fileAccess = FileAccessService.instance;
+      if (!await fileAccess.fileExists(filePath)) {
         debugPrint('PdfService: File does not exist: $filePath');
         return null;
       }
 
-      final stat = await file.stat();
-      final fileName = p.basenameWithoutExtension(filePath);
+      final metadata = await fileAccess.getFileMetadata(filePath);
+      final fileName = isSafUri(filePath)
+          ? p.basenameWithoutExtension(Uri.parse(filePath).pathSegments.last)
+          : p.basenameWithoutExtension(filePath);
       final pageCount = await _getPdfPageCount(filePath);
 
       // Insert into database
@@ -437,8 +455,8 @@ class PdfService {
         DocumentsCompanion(
           name: drift.Value(fileName),
           filePath: drift.Value(filePath),
-          lastModified: drift.Value(stat.modified),
-          fileSize: drift.Value(stat.size),
+          lastModified: drift.Value(metadata.lastModified),
+          fileSize: drift.Value(metadata.size),
           pageCount: drift.Value(pageCount),
         ),
       );
@@ -477,25 +495,17 @@ class PdfService {
     try {
       debugPrint('PdfService: Scanning PDF directory...');
 
+      final fileAccess = FileAccessService.instance;
       final pdfDirPath = await FileWatcherService.instance
           .getPdfDirectoryPath();
-      final pdfDir = Directory(pdfDirPath);
 
-      if (!await pdfDir.exists()) {
+      if (!await fileAccess.directoryExists(pdfDirPath)) {
         debugPrint('PdfService: PDF directory does not exist');
         return;
       }
 
-      // Get all PDF files in directory
-      final pdfFiles = await pdfDir
-          .list()
-          .where(
-            (entity) =>
-                entity is File &&
-                p.extension(entity.path).toLowerCase() == '.pdf',
-          )
-          .cast<File>()
-          .toList();
+      // Get all PDF files in directory (works for both SAF and local)
+      final pdfFiles = await fileAccess.listPdfFiles(pdfDirPath);
 
       // Get all documents in database
       final dbDocuments = await _database.getAllDocuments();
@@ -503,14 +513,16 @@ class PdfService {
 
       // Add new PDFs to database
       for (final file in pdfFiles) {
-        if (!dbPaths.contains(file.path)) {
-          await addPdfToLibrary(file.path);
+        if (!dbPaths.contains(file.uri)) {
+          await addPdfToLibrary(file.uri);
         }
       }
 
       // Remove deleted PDFs from database
-      final filePaths = pdfFiles.map((f) => f.path).toSet();
+      final filePaths = pdfFiles.map((f) => f.uri).toSet();
       for (final doc in dbDocuments) {
+        // Skip web-stored PDFs (they don't have files on disk)
+        if (doc.filePath.startsWith('web://')) continue;
         if (!filePaths.contains(doc.filePath)) {
           await _database.deleteDocument(doc.id);
           debugPrint(
@@ -533,10 +545,7 @@ class PdfService {
       if (doc == null) return;
 
       if (deleteFile) {
-        final file = File(doc.filePath);
-        if (await file.exists()) {
-          await file.delete();
-        }
+        await FileAccessService.instance.deleteFile(doc.filePath);
       }
 
       await _database.deleteDocument(documentId);
@@ -577,19 +586,12 @@ class PdfService {
       }
 
       // Open the PDF
-      final PdfDocument pdfDoc;
-      if (document.pdfBytes != null) {
-        pdfDoc = await PdfDocument.openData(
-          Uint8List.fromList(document.pdfBytes!),
-        );
-      } else {
-        final file = File(document.filePath);
-        if (!await file.exists()) {
-          debugPrint('PdfService: PDF file not found: ${document.filePath}');
-          return null;
-        }
-        pdfDoc = await PdfDocument.openFile(document.filePath);
-      }
+      final pdfDoc = await FileAccessService.instance.openPdfDocument(
+        document.filePath,
+        pdfBytes: document.pdfBytes != null
+            ? Uint8List.fromList(document.pdfBytes!)
+            : null,
+      );
 
       // Get the first page
       final page = await pdfDoc.getPage(1);
