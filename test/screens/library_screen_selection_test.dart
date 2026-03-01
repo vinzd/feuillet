@@ -19,6 +19,7 @@ void main() {
           lastModified: DateTime(2024, 1, 1),
           fileSize: 1024000,
           pageCount: 5,
+          documentType: 'pdf',
         ),
         Document(
           id: 2,
@@ -29,6 +30,7 @@ void main() {
           lastModified: DateTime(2024, 1, 2),
           fileSize: 2048000,
           pageCount: 10,
+          documentType: 'pdf',
         ),
         Document(
           id: 3,
@@ -39,6 +41,7 @@ void main() {
           lastModified: DateTime(2024, 1, 3),
           fileSize: 3072000,
           pageCount: 15,
+          documentType: 'pdf',
         ),
       ];
       selectedIds = {};
@@ -315,6 +318,7 @@ void main() {
           lastModified: DateTime.now(),
           fileSize: 1000,
           pageCount: 1,
+          documentType: 'pdf',
         ),
         Document(
           id: 2,
@@ -325,6 +329,7 @@ void main() {
           lastModified: DateTime.now(),
           fileSize: 1000,
           pageCount: 1,
+          documentType: 'pdf',
         ),
       ];
       final selectedIds = {1, 2};
@@ -346,6 +351,7 @@ void main() {
           lastModified: DateTime.now(),
           fileSize: 1000,
           pageCount: 1,
+          documentType: 'pdf',
         ),
         Document(
           id: 2,
@@ -356,6 +362,7 @@ void main() {
           lastModified: DateTime.now(),
           fileSize: 1000,
           pageCount: 1,
+          documentType: 'pdf',
         ),
       ];
       final selectedIds = {1};
@@ -387,6 +394,7 @@ void main() {
           lastModified: DateTime.now(),
           fileSize: 1000,
           pageCount: 1,
+          documentType: 'pdf',
         ),
         Document(
           id: 2,
@@ -397,6 +405,7 @@ void main() {
           lastModified: DateTime.now(),
           fileSize: 1000,
           pageCount: 1,
+          documentType: 'pdf',
         ),
       ];
       final selectedIds = {1}; // Only one selected
@@ -429,6 +438,7 @@ void main() {
           lastModified: DateTime.now(),
           fileSize: 1000,
           pageCount: 1,
+          documentType: 'pdf',
         ),
         Document(
           id: 2,
@@ -439,6 +449,7 @@ void main() {
           lastModified: DateTime.now(),
           fileSize: 1000,
           pageCount: 1,
+          documentType: 'pdf',
         ),
       ];
       final selectedIds = {1, 2};

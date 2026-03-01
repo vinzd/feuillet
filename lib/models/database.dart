@@ -4,6 +4,39 @@ import 'package:drift_flutter/drift_flutter.dart';
 // ignore_for_file: unused_element
 part 'database.g.dart';
 
+/// Document types supported by the app
+class DocumentTypes {
+  static const String pdf = 'pdf';
+  static const String image = 'image';
+
+  /// Supported file extensions by type
+  static const List<String> pdfExtensions = ['pdf'];
+  static const List<String> imageExtensions = ['jpg', 'jpeg', 'png'];
+  static const List<String> allExtensions = [
+    ...pdfExtensions,
+    ...imageExtensions,
+  ];
+
+  /// Determine document type from file extension
+  static String fromExtension(String ext) {
+    final lower = ext.toLowerCase().replaceAll('.', '');
+    if (imageExtensions.contains(lower)) return image;
+    return pdf;
+  }
+
+  /// Determine document type from file path
+  static String fromPath(String filePath) {
+    final ext = filePath.split('.').last;
+    return fromExtension(ext);
+  }
+}
+
+/// Extension on Document for type checking
+extension DocumentTypeHelpers on Document {
+  bool get isPdf => documentType == DocumentTypes.pdf;
+  bool get isImage => documentType == DocumentTypes.image;
+}
+
 // Documents table - stores PDF metadata
 class Documents extends Table {
   IntColumn get id => integer().autoIncrement()();
@@ -16,6 +49,8 @@ class Documents extends Table {
   DateTimeColumn get lastModified => dateTime()();
   IntColumn get fileSize => integer()();
   IntColumn get pageCount => integer().withDefault(const Constant(0))();
+  TextColumn get documentType =>
+      text().withDefault(const Constant('pdf'))(); // 'pdf' or 'image'
 }
 
 // Document settings - stores per-document viewing preferences
@@ -107,7 +142,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration {
@@ -127,6 +162,10 @@ class AppDatabase extends _$AppDatabase {
         if (from < 4) {
           // Add app settings table for configurable PDF directory
           await m.createTable(appSettings);
+        }
+        if (from < 5) {
+          // Add documentType column for image support
+          await m.addColumn(documents, documents.documentType);
         }
       },
       beforeOpen: (details) async {

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'router/app_router.dart';
 import 'services/database_service.dart';
 import 'services/file_watcher_service.dart';
-import 'services/pdf_service.dart';
+import 'services/document_service.dart';
 import 'web_url_strategy.dart';
 
 void main() async {
@@ -19,7 +19,7 @@ void main() async {
     await FileWatcherService.instance.startWatching();
 
     // Initialize PDF service
-    PdfService.instance;
+    DocumentService.instance;
   }
 
   runApp(const ProviderScope(child: FeuilletApp()));
@@ -89,7 +89,7 @@ class _AppLifecycleManagerState extends State<AppLifecycleManager>
         // Restart file watching when app comes to foreground
         FileWatcherService.instance.startWatching();
         // Rescan library for changes made while app was in background
-        PdfService.instance.scanAndSyncLibrary();
+        DocumentService.instance.scanAndSyncLibrary();
         break;
       case AppLifecycleState.paused:
         // Stop file watching when app goes to background
@@ -98,7 +98,7 @@ class _AppLifecycleManagerState extends State<AppLifecycleManager>
       case AppLifecycleState.detached:
         // App is closing - clean up all resources
         FileWatcherService.instance.dispose();
-        PdfService.instance.dispose();
+        DocumentService.instance.dispose();
         DatabaseService.instance.dispose();
         break;
       case AppLifecycleState.hidden:

@@ -114,6 +114,18 @@ class $DocumentsTable extends Documents
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _documentTypeMeta = const VerificationMeta(
+    'documentType',
+  );
+  @override
+  late final GeneratedColumn<String> documentType = GeneratedColumn<String>(
+    'document_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pdf'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -125,6 +137,7 @@ class $DocumentsTable extends Documents
     lastModified,
     fileSize,
     pageCount,
+    documentType,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -200,6 +213,15 @@ class $DocumentsTable extends Documents
         pageCount.isAcceptableOrUnknown(data['page_count']!, _pageCountMeta),
       );
     }
+    if (data.containsKey('document_type')) {
+      context.handle(
+        _documentTypeMeta,
+        documentType.isAcceptableOrUnknown(
+          data['document_type']!,
+          _documentTypeMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -245,6 +267,10 @@ class $DocumentsTable extends Documents
         DriftSqlType.int,
         data['${effectivePrefix}page_count'],
       )!,
+      documentType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_type'],
+      )!,
     );
   }
 
@@ -264,6 +290,7 @@ class Document extends DataClass implements Insertable<Document> {
   final DateTime lastModified;
   final int fileSize;
   final int pageCount;
+  final String documentType;
   const Document({
     required this.id,
     required this.name,
@@ -274,6 +301,7 @@ class Document extends DataClass implements Insertable<Document> {
     required this.lastModified,
     required this.fileSize,
     required this.pageCount,
+    required this.documentType,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -291,6 +319,7 @@ class Document extends DataClass implements Insertable<Document> {
     map['last_modified'] = Variable<DateTime>(lastModified);
     map['file_size'] = Variable<int>(fileSize);
     map['page_count'] = Variable<int>(pageCount);
+    map['document_type'] = Variable<String>(documentType);
     return map;
   }
 
@@ -309,6 +338,7 @@ class Document extends DataClass implements Insertable<Document> {
       lastModified: Value(lastModified),
       fileSize: Value(fileSize),
       pageCount: Value(pageCount),
+      documentType: Value(documentType),
     );
   }
 
@@ -327,6 +357,7 @@ class Document extends DataClass implements Insertable<Document> {
       lastModified: serializer.fromJson<DateTime>(json['lastModified']),
       fileSize: serializer.fromJson<int>(json['fileSize']),
       pageCount: serializer.fromJson<int>(json['pageCount']),
+      documentType: serializer.fromJson<String>(json['documentType']),
     );
   }
   @override
@@ -342,6 +373,7 @@ class Document extends DataClass implements Insertable<Document> {
       'lastModified': serializer.toJson<DateTime>(lastModified),
       'fileSize': serializer.toJson<int>(fileSize),
       'pageCount': serializer.toJson<int>(pageCount),
+      'documentType': serializer.toJson<String>(documentType),
     };
   }
 
@@ -355,6 +387,7 @@ class Document extends DataClass implements Insertable<Document> {
     DateTime? lastModified,
     int? fileSize,
     int? pageCount,
+    String? documentType,
   }) => Document(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -365,6 +398,7 @@ class Document extends DataClass implements Insertable<Document> {
     lastModified: lastModified ?? this.lastModified,
     fileSize: fileSize ?? this.fileSize,
     pageCount: pageCount ?? this.pageCount,
+    documentType: documentType ?? this.documentType,
   );
   Document copyWithCompanion(DocumentsCompanion data) {
     return Document(
@@ -381,6 +415,9 @@ class Document extends DataClass implements Insertable<Document> {
           : this.lastModified,
       fileSize: data.fileSize.present ? data.fileSize.value : this.fileSize,
       pageCount: data.pageCount.present ? data.pageCount.value : this.pageCount,
+      documentType: data.documentType.present
+          ? data.documentType.value
+          : this.documentType,
     );
   }
 
@@ -395,7 +432,8 @@ class Document extends DataClass implements Insertable<Document> {
           ..write('lastOpened: $lastOpened, ')
           ..write('lastModified: $lastModified, ')
           ..write('fileSize: $fileSize, ')
-          ..write('pageCount: $pageCount')
+          ..write('pageCount: $pageCount, ')
+          ..write('documentType: $documentType')
           ..write(')'))
         .toString();
   }
@@ -411,6 +449,7 @@ class Document extends DataClass implements Insertable<Document> {
     lastModified,
     fileSize,
     pageCount,
+    documentType,
   );
   @override
   bool operator ==(Object other) =>
@@ -424,7 +463,8 @@ class Document extends DataClass implements Insertable<Document> {
           other.lastOpened == this.lastOpened &&
           other.lastModified == this.lastModified &&
           other.fileSize == this.fileSize &&
-          other.pageCount == this.pageCount);
+          other.pageCount == this.pageCount &&
+          other.documentType == this.documentType);
 }
 
 class DocumentsCompanion extends UpdateCompanion<Document> {
@@ -437,6 +477,7 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
   final Value<DateTime> lastModified;
   final Value<int> fileSize;
   final Value<int> pageCount;
+  final Value<String> documentType;
   const DocumentsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -447,6 +488,7 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
     this.lastModified = const Value.absent(),
     this.fileSize = const Value.absent(),
     this.pageCount = const Value.absent(),
+    this.documentType = const Value.absent(),
   });
   DocumentsCompanion.insert({
     this.id = const Value.absent(),
@@ -458,6 +500,7 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
     required DateTime lastModified,
     required int fileSize,
     this.pageCount = const Value.absent(),
+    this.documentType = const Value.absent(),
   }) : name = Value(name),
        filePath = Value(filePath),
        lastModified = Value(lastModified),
@@ -472,6 +515,7 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
     Expression<DateTime>? lastModified,
     Expression<int>? fileSize,
     Expression<int>? pageCount,
+    Expression<String>? documentType,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -483,6 +527,7 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
       if (lastModified != null) 'last_modified': lastModified,
       if (fileSize != null) 'file_size': fileSize,
       if (pageCount != null) 'page_count': pageCount,
+      if (documentType != null) 'document_type': documentType,
     });
   }
 
@@ -496,6 +541,7 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
     Value<DateTime>? lastModified,
     Value<int>? fileSize,
     Value<int>? pageCount,
+    Value<String>? documentType,
   }) {
     return DocumentsCompanion(
       id: id ?? this.id,
@@ -507,6 +553,7 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
       lastModified: lastModified ?? this.lastModified,
       fileSize: fileSize ?? this.fileSize,
       pageCount: pageCount ?? this.pageCount,
+      documentType: documentType ?? this.documentType,
     );
   }
 
@@ -540,6 +587,9 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
     if (pageCount.present) {
       map['page_count'] = Variable<int>(pageCount.value);
     }
+    if (documentType.present) {
+      map['document_type'] = Variable<String>(documentType.value);
+    }
     return map;
   }
 
@@ -554,7 +604,8 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
           ..write('lastOpened: $lastOpened, ')
           ..write('lastModified: $lastModified, ')
           ..write('fileSize: $fileSize, ')
-          ..write('pageCount: $pageCount')
+          ..write('pageCount: $pageCount, ')
+          ..write('documentType: $documentType')
           ..write(')'))
         .toString();
   }
@@ -3020,6 +3071,7 @@ typedef $$DocumentsTableCreateCompanionBuilder =
       required DateTime lastModified,
       required int fileSize,
       Value<int> pageCount,
+      Value<String> documentType,
     });
 typedef $$DocumentsTableUpdateCompanionBuilder =
     DocumentsCompanion Function({
@@ -3032,6 +3084,7 @@ typedef $$DocumentsTableUpdateCompanionBuilder =
       Value<DateTime> lastModified,
       Value<int> fileSize,
       Value<int> pageCount,
+      Value<String> documentType,
     });
 
 final class $$DocumentsTableReferences
@@ -3157,6 +3210,11 @@ class $$DocumentsTableFilterComposer
 
   ColumnFilters<int> get pageCount => $composableBuilder(
     column: $table.pageCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentType => $composableBuilder(
+    column: $table.documentType,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3289,6 +3347,11 @@ class $$DocumentsTableOrderingComposer
     column: $table.pageCount,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get documentType => $composableBuilder(
+    column: $table.documentType,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$DocumentsTableAnnotationComposer
@@ -3330,6 +3393,11 @@ class $$DocumentsTableAnnotationComposer
 
   GeneratedColumn<int> get pageCount =>
       $composableBuilder(column: $table.pageCount, builder: (column) => column);
+
+  GeneratedColumn<String> get documentType => $composableBuilder(
+    column: $table.documentType,
+    builder: (column) => column,
+  );
 
   Expression<T> documentSettingsRefs<T extends Object>(
     Expression<T> Function($$DocumentSettingsTableAnnotationComposer a) f,
@@ -3448,6 +3516,7 @@ class $$DocumentsTableTableManager
                 Value<DateTime> lastModified = const Value.absent(),
                 Value<int> fileSize = const Value.absent(),
                 Value<int> pageCount = const Value.absent(),
+                Value<String> documentType = const Value.absent(),
               }) => DocumentsCompanion(
                 id: id,
                 name: name,
@@ -3458,6 +3527,7 @@ class $$DocumentsTableTableManager
                 lastModified: lastModified,
                 fileSize: fileSize,
                 pageCount: pageCount,
+                documentType: documentType,
               ),
           createCompanionCallback:
               ({
@@ -3470,6 +3540,7 @@ class $$DocumentsTableTableManager
                 required DateTime lastModified,
                 required int fileSize,
                 Value<int> pageCount = const Value.absent(),
+                Value<String> documentType = const Value.absent(),
               }) => DocumentsCompanion.insert(
                 id: id,
                 name: name,
@@ -3480,6 +3551,7 @@ class $$DocumentsTableTableManager
                 lastModified: lastModified,
                 fileSize: fileSize,
                 pageCount: pageCount,
+                documentType: documentType,
               ),
           withReferenceMapper: (p0) => p0
               .map(

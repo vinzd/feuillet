@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:feuillet/services/annotation_service.dart';
-import 'package:feuillet/services/pdf_export_service.dart';
+import 'package:feuillet/services/document_export_service.dart';
 
 void main() {
-  group('PdfExportService', () {
+  group('DocumentExportService', () {
     group('constants', () {
       test('annotationScale matches PdfPageCacheService render scale', () {
-        expect(PdfExportService.annotationScale, 2.0);
+        expect(DocumentExportService.annotationScale, 2.0);
       });
 
       test('exportScale provides good quality (at least 2x)', () {
-        expect(PdfExportService.exportScale, greaterThanOrEqualTo(2.0));
+        expect(DocumentExportService.exportScale, greaterThanOrEqualTo(2.0));
       });
     });
 
     group('coordinate conversion', () {
       // These test the logic used in _drawStrokeToPdf
-      const annotationScale = PdfExportService.annotationScale;
+      const annotationScale = DocumentExportService.annotationScale;
 
       test('annotation X coordinate converts correctly', () {
         const annotationX = 200.0;
@@ -91,7 +91,7 @@ void main() {
       });
     });
 
-    // Note: singleton pattern test skipped because PdfExportService
+    // Note: singleton pattern test skipped because DocumentExportService
     // creates AnnotationService which requires database initialization
   });
 
