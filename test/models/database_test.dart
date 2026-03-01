@@ -14,6 +14,7 @@ void main() {
         lastModified: now,
         fileSize: 1024,
         pageCount: 10,
+        documentType: 'pdf',
       );
 
       expect(doc.id, 1);
@@ -33,6 +34,7 @@ void main() {
         lastModified: DateTime.now(),
         fileSize: 100,
         pageCount: 5,
+        documentType: 'pdf',
       );
 
       final updated = original.copyWith(name: 'Updated');

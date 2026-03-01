@@ -8,35 +8,35 @@ import 'package:flutter_test/flutter_test.dart';
 /// during the two-page view implementation (commit 18722f9) and restored later.
 /// These tests prevent that regression from happening again.
 void main() {
-  group('PDF Viewer Pre-rendering Integration', () {
+  group('Document Viewer Pre-rendering Integration', () {
     late String pdfViewerSource;
     late List<String> sourceLines;
 
     setUpAll(() {
       // Read the PDF viewer source code
-      final file = File('lib/screens/pdf_viewer_screen.dart');
+      final file = File('lib/screens/document_viewer_screen.dart');
       pdfViewerSource = file.readAsStringSync();
       sourceLines = pdfViewerSource.split('\n');
     });
 
-    test('pdf_viewer_screen.dart imports pdf_page_cache_service.dart', () {
+    test('document_viewer_screen.dart imports pdf_page_cache_service.dart', () {
       expect(
         pdfViewerSource.contains(
           "import '../services/pdf_page_cache_service.dart'",
         ),
         isTrue,
         reason:
-            'PdfViewerScreen must import pdf_page_cache_service.dart for pre-rendering. '
+            'DocumentViewerScreen must import pdf_page_cache_service.dart for pre-rendering. '
             'This import was accidentally lost in the two-page view implementation.',
       );
     });
 
-    test('pdf_viewer_screen.dart defines _preRenderPages method', () {
+    test('document_viewer_screen.dart defines _preRenderPages method', () {
       expect(
         pdfViewerSource.contains('void _preRenderPages()'),
         isTrue,
         reason:
-            'PdfViewerScreen must have a _preRenderPages() method to trigger '
+            'DocumentViewerScreen must have a _preRenderPages() method to trigger '
             'background page caching for faster navigation.',
       );
     });
@@ -196,7 +196,7 @@ void main() {
     late String pdfViewerSource;
 
     setUpAll(() {
-      final file = File('lib/screens/pdf_viewer_screen.dart');
+      final file = File('lib/screens/document_viewer_screen.dart');
       pdfViewerSource = file.readAsStringSync();
     });
 

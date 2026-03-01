@@ -4,7 +4,7 @@ import 'package:pdfx/pdfx.dart';
 
 import '../models/database.dart';
 import '../services/annotation_service.dart';
-import '../services/pdf_export_service.dart';
+import '../services/document_export_service.dart';
 
 // Conditional import for web download
 import 'export_pdf_dialog_web.dart'
@@ -42,7 +42,7 @@ class ExportPdfDialog extends StatefulWidget {
 
 class _ExportPdfDialogState extends State<ExportPdfDialog> {
   final _annotationService = AnnotationService();
-  final _exportService = PdfExportService.instance;
+  final _exportService = DocumentExportService.instance;
 
   List<AnnotationLayer> _layers = [];
   Set<int> _selectedLayerIds = {};

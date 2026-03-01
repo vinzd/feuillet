@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:watcher/watcher.dart';
 import 'package:path/path.dart' as p;
+import '../models/database.dart';
 import 'app_settings_service.dart';
 import 'file_access_service.dart';
 
@@ -24,7 +25,7 @@ class FileWatcherService {
   String? _databasePath;
   Timer? _safPollingTimer;
 
-  /// Callback for SAF polling — set by PdfService to trigger scanAndSyncLibrary
+  /// Callback for SAF polling — set by DocumentService to trigger scanAndSyncLibrary
   Future<void> Function()? onSafPollCallback;
 
   /// Stream of PDF directory changes
@@ -135,7 +136,8 @@ class FileWatcherService {
           }
 
           // Only process PDF files
-          if (p.extension(event.path).toLowerCase() == '.pdf') {
+          final ext = p.extension(event.path).toLowerCase().replaceAll('.', '');
+          if (DocumentTypes.allExtensions.contains(ext)) {
             _pdfChangesController.add(event);
           }
         },

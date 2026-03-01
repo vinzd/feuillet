@@ -61,6 +61,7 @@ void main() {
         lastModified: DateTime(2024, 3, 15),
         fileSize: 1024000,
         pageCount: 10,
+        documentType: 'pdf',
       ),
       Document(
         id: 2,
@@ -71,6 +72,7 @@ void main() {
         lastModified: DateTime(2024, 1, 10),
         fileSize: 2048000,
         pageCount: 20,
+        documentType: 'pdf',
       ),
       Document(
         id: 3,
@@ -81,6 +83,7 @@ void main() {
         lastModified: DateTime(2024, 6, 1),
         fileSize: 512000,
         pageCount: 5,
+        documentType: 'pdf',
       ),
     ];
   });
@@ -125,6 +128,7 @@ void main() {
           lastModified: DateTime(2024, 1, 1),
           fileSize: 100,
           pageCount: 1,
+          documentType: 'pdf',
         ),
         Document(
           id: 2,
@@ -135,6 +139,7 @@ void main() {
           lastModified: DateTime(2024, 1, 1),
           fileSize: 100,
           pageCount: 1,
+          documentType: 'pdf',
         ),
       ];
 
@@ -373,6 +378,7 @@ void main() {
           lastModified: DateTime(2024, 1, 1),
           fileSize: 100,
           pageCount: 1,
+          documentType: 'pdf',
         ),
         Document(
           id: 2,
@@ -383,6 +389,7 @@ void main() {
           lastModified: DateTime(2024, 2, 1),
           fileSize: 100,
           pageCount: 1,
+          documentType: 'pdf',
         ),
         Document(
           id: 3,
@@ -393,6 +400,7 @@ void main() {
           lastModified: DateTime(2024, 3, 1),
           fileSize: 100,
           pageCount: 1,
+          documentType: 'pdf',
         ),
       ];
 
@@ -423,6 +431,7 @@ void main() {
           lastModified: DateTime(2024, 1, 1),
           fileSize: 100,
           pageCount: 1,
+          documentType: 'pdf',
         ),
         Document(
           id: 2,
@@ -433,6 +442,7 @@ void main() {
           lastModified: DateTime(2024, 2, 1),
           fileSize: 100,
           pageCount: 1,
+          documentType: 'pdf',
         ),
         Document(
           id: 3,
@@ -443,6 +453,7 @@ void main() {
           lastModified: DateTime(2024, 3, 1),
           fileSize: 100,
           pageCount: 1,
+          documentType: 'pdf',
         ),
       ];
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Feuillet is a forScore clone built with Flutter - a PDF sheet music reader with multi-layer annotation support and set list management. The app is designed for **local-only operation** with Syncthing for cross-device synchronization.
+Feuillet is a forScore clone built with Flutter - a sheet music reader supporting PDF, JPG, and PNG files with multi-layer annotation support and set list management. The app is designed for **local-only operation** with Syncthing for cross-device synchronization.
 
 ## Essential Commands
 
@@ -49,7 +49,7 @@ flutter run -d macos    # or android, ios, chrome
 ### Web Platform Support
 
 The app supports web for **fast development iteration only**. Web has limited functionality:
-- ✅ PDF import and display (stores PDFs as bytes in IndexedDB)
+- ✅ PDF and image import and display (stores files as bytes in IndexedDB)
 - ✅ Annotations, layers, set lists
 - ✅ Full database persistence
 - ❌ File system watching (Syncthing integration)
@@ -123,10 +123,10 @@ The database uses **WAL mode** (Write-Ahead Logging) for Syncthing compatibility
 await customStatement('PRAGMA journal_mode=WAL;');
 ```
 
-**Schema version: 4**
+**Schema version: 5**
 
 **Tables:**
-- `Documents` - PDF metadata with file paths, timestamps, page counts
+- `Documents` - Document metadata with file paths, timestamps, page counts, and `documentType` ('pdf' or 'image')
 - `DocumentSettings` - Per-document viewing preferences (zoom, brightness, contrast, current page)
 - `AnnotationLayers` - Multiple layers per document with visibility and ordering
 - `Annotations` - Drawing data stored as JSON (points, color, thickness) per page
@@ -153,12 +153,13 @@ class ServiceName {
 ```
 
 **Services:**
-- `PdfService` - PDF import (file picker + drag-and-drop), library scanning, file management. All file I/O goes through `FileAccessService`
+- `DocumentService` - Document import (file picker + drag-and-drop for PDF/JPG/PNG), library scanning, file management, thumbnail generation. All file I/O goes through `FileAccessService`. Use `DocumentTypes` class (in `database.dart`) for file extension constants and type detection
 - `AnnotationService` - Drawing stroke CRUD, JSON serialization
 - `SetListService` - Set list CRUD, document ordering
-- `FileWatcherService` - Monitors PDF directory and database for Syncthing changes; uses 30-second polling for Android SAF directories
-- `FileAccessService` - Cross-platform file I/O abstraction (local paths + Android SAF `content://` URIs). All code that reads/writes PDF files must go through this service
-- `PdfPageCacheService` - Pre-renders PDF pages to JPEG and caches in memory. Uses a priority queue: `renderAndCachePage()` for immediate needs, `preRenderPages()` for background warming. Do not render pages directly via `pdfx` outside this service
+- `FileWatcherService` - Monitors document directory and database for Syncthing changes; uses 30-second polling for Android SAF directories. Watches for `.pdf`, `.jpg`, `.jpeg`, `.png` files
+- `FileAccessService` - Cross-platform file I/O abstraction (local paths + Android SAF `content://` URIs). All code that reads/writes files must go through this service. `listDocumentFiles()` returns PDF and image files
+- `PdfPageCacheService` - Pre-renders PDF pages to JPEG and caches in memory. Uses a priority queue: `renderAndCachePage()` for immediate needs, `preRenderPages()` for background warming. Do not render pages directly via `pdfx` outside this service. **PDF-only** — images bypass this service
+- `DocumentExportService` - Exports documents with annotations burned in. PDFs exported as annotated PDFs, images exported as flattened PNGs
 - `AppSettingsService` - Persists app-wide key-value settings (e.g., custom PDF directory) via the `AppSettings` database table
 
 ### State Management
@@ -185,32 +186,38 @@ Annotations use a **multi-layer system**:
 
 **Important:** Use `Color.toARGB32()` for serialization (not the deprecated `.value` property).
 
-### PDF Import
+### Document Import
 
-PDFs can be imported two ways:
+Documents (PDF, JPG, PNG) can be imported two ways:
 1. **File Picker** - Via the import button, supports multi-select
 2. **Drag-and-Drop** - Drag files from Finder/file manager directly into the library screen (desktop only)
 
-Both methods use `PdfService` which handles:
-- Copying files to the PDF directory with unique naming
-- Adding entries to the database with metadata
-- Validation (rejects non-PDF files with error feedback)
+Both methods use `DocumentService` which handles:
+- Copying files to the document directory with unique naming
+- Adding entries to the database with metadata and `documentType` ('pdf' or 'image')
+- Validation (rejects unsupported file types with error feedback)
 - Progress callbacks for batch imports
-- **Recursive scanning** of subdirectories within the PDF directory
+- **Recursive scanning** of subdirectories within the document directory
+- Image files get `pageCount: 1` automatically
 
 The drag-and-drop feature uses the `desktop_drop` package with `DropTarget` widget wrapping the library screen body.
 
-### PDF Viewing Pipeline
+**Document type detection:** Use `DocumentTypes.fromPath(filePath)` or `DocumentTypes.fromExtension(ext)` from `database.dart`. Supported extensions are in `DocumentTypes.allExtensions`.
 
-1. `LibraryScreen` displays grid/list of PDFs via `PdfCard` widgets
-2. Tapping opens `PdfViewerScreen` which uses a **two-stage async init**: settings/layers load first (UI shown with spinner), then the PDF document opens in the background
-3. PDF is opened through `FileAccessService.instance.openPdfDocument()` (handles local paths, SAF URIs, and web bytes)
-4. Annotations are loaded per page from `Annotations` table
-5. `DrawingCanvas` overlays on PDF for annotation mode
-6. After each page change, `PdfPageCacheService.preRenderPages()` warms ±10 pages in background
-7. Settings and annotations persist on page change/app close
+### Document Viewing Pipeline
 
-**Page navigation:** The viewer uses `PageView.builder` with `NeverScrollableScrollPhysics` in single-page mode. All gestures (pinch-zoom, pan, swipe) are owned by `ZoomPanGestureMixin`. Override `onSwipeLeft()`/`onSwipeRight()` for page navigation. Swipes are suppressed when `isZoomPanDisabled` returns true (e.g., annotation mode). Two swipe thresholds: 50px displacement at 1x zoom, 80px overscroll when zoomed in.
+1. `LibraryScreen` displays grid/list of documents via `DocumentCard` widgets
+2. Tapping opens `DocumentViewerScreen` which uses a **two-stage async init**: settings/layers load first (UI shown with spinner), then the document content loads in the background
+3. **For PDFs:** opened through `FileAccessService.instance.openPdfDocument()` (handles local paths, SAF URIs, and web bytes)
+4. **For images:** loaded as bytes via `FileAccessService.instance.readFileBytes()`, displayed with `Image.memory` widget
+5. Annotations are loaded per page from `Annotations` table (images use page 0)
+6. `DrawingCanvas` overlays on content for annotation mode
+7. For PDFs: after each page change, `PdfPageCacheService.preRenderPages()` warms ±10 pages in background
+8. Settings and annotations persist on page change/app close
+
+**Image documents:** Page navigation, view mode selection, and bottom controls are hidden. Only zoom/pan and annotation tools are available.
+
+**Page navigation (PDF only):** The viewer uses `PageView.builder` with `NeverScrollableScrollPhysics` in single-page mode. All gestures (pinch-zoom, pan, swipe) are owned by `ZoomPanGestureMixin`. Override `onSwipeLeft()`/`onSwipeRight()` for page navigation. Swipes are suppressed when `isZoomPanDisabled` returns true (e.g., annotation mode). Two swipe thresholds: 50px displacement at 1x zoom, 80px overscroll when zoomed in.
 
 ### File Watching & Syncthing Integration
 
@@ -220,7 +227,7 @@ The drag-and-drop feature uses the `desktop_drop` package with `DropTarget` widg
 
 **PDF directory is now configurable:** The path is managed by `AppSettingsService` and can be changed in settings. After changing the directory, call `FileWatcherService.instance.updatePdfDirectoryPath()` to restart the watcher on the new path.
 
-**SAF directories:** On Android, the PDF directory can be a `content://` SAF URI. These cannot be watched with `DirectoryWatcher`, so a **30-second polling timer** is used instead. The polling callback is registered by `PdfService` during initialization.
+**SAF directories:** On Android, the PDF directory can be a `content://` SAF URI. These cannot be watched with `DirectoryWatcher`, so a **30-second polling timer** is used instead. The polling callback is registered by `DocumentService` during initialization.
 
 **Filters Syncthing temporary files:**
 - `.syncthing.*`
@@ -229,7 +236,7 @@ The drag-and-drop feature uses the `desktop_drop` package with `DropTarget` widg
 - `.~*`
 
 When changes detected:
-- PDF changes trigger library rescan via `PdfService.scanAndSyncLibrary()`
+- Document changes trigger library rescan via `DocumentService.scanAndSyncLibrary()`
 - Database changes handled via WAL mode (no explicit reload needed)
 
 ### Android SAF Integration
@@ -240,8 +247,8 @@ The app supports Android's Storage Access Framework for selecting custom PDF dir
 - **URI permissions:** `pickDirectory` takes persistable URI permissions so the selected directory survives app restarts
 - **File access:** All file I/O goes through `FileAccessService.instance`. Use `isSafUri(path)` (exported from `file_access_service.dart`) to check if a path is a SAF URI
 - **Local caching:** `FileAccessService.copyToLocal()` copies SAF documents to `getTemporaryDirectory()/saf_cache/` for libraries that require a real file path (e.g., `pdfx`)
-- **Recursive scanning:** `listPdfFiles` recursively lists all `.pdf` files in both local directories and SAF tree URIs
-- **Supported operations:** `pickDirectory`, `listPdfFiles`, `readFileBytes`, `copyToLocal`, `writeFile`, `getFileMetadata`, `deleteFile`, `fileExists`
+- **Recursive scanning:** `listDocumentFiles` recursively lists all `.pdf`, `.jpg`, `.jpeg`, `.png` files in both local directories and SAF tree URIs
+- **Supported operations:** `pickDirectory`, `listDocumentFiles`, `readFileBytes`, `copyToLocal`, `writeFile`, `getFileMetadata`, `deleteFile`, `fileExists`
 
 ## Critical Implementation Details
 
@@ -316,7 +323,7 @@ Annotations are **JSON-serialized** in the database. To add new annotation types
 1. Add to `AnnotationType` enum in `annotation_service.dart`
 2. Update `DrawingStroke.toJson()` and `fromJson()` if needed
 3. Update `DrawingCanvas` widget for rendering
-4. Add tool UI in `PdfViewerScreen`
+4. Add tool UI in `DocumentViewerScreen`
 
 ## Data Storage Locations
 

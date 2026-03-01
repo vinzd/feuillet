@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:feuillet/models/database.dart';
-import 'package:feuillet/widgets/pdf_card.dart';
+import 'package:feuillet/widgets/document_card.dart';
 
 void main() {
-  group('PdfCard Widget', () {
+  group('DocumentCard Widget', () {
     late Document testDocument;
 
     setUp(() {
@@ -17,10 +17,11 @@ void main() {
         lastModified: DateTime(2024, 1, 1),
         fileSize: 1024000, // 1MB
         pageCount: 5,
+        documentType: 'pdf',
       );
     });
 
-    // Note: These tests are skipped because PdfCard now loads thumbnails
+    // Note: These tests are skipped because DocumentCard now loads thumbnails
     // asynchronously, which creates timers (from CircularProgressIndicator)
     // that don't complete before test teardown. The widget is tested
     // manually as part of the app's library screen.
@@ -29,7 +30,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfCard(document: testDocument, onTap: () {}),
+            body: DocumentCard(document: testDocument, onTap: () {}),
           ),
         ),
       );
@@ -43,7 +44,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfCard(document: testDocument, onTap: () {}),
+            body: DocumentCard(document: testDocument, onTap: () {}),
           ),
         ),
       );
@@ -59,7 +60,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfCard(
+            body: DocumentCard(
               document: testDocument,
               onTap: () {
                 tapped = true;
@@ -70,7 +71,7 @@ void main() {
       );
 
       await tester.pump();
-      await tester.tap(find.byType(PdfCard));
+      await tester.tap(find.byType(DocumentCard));
       await tester.pump();
 
       expect(tapped, isTrue);
@@ -89,14 +90,14 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
-              body: PdfCard(document: doc, onTap: () {}),
+              body: DocumentCard(document: doc, onTap: () {}),
             ),
           ),
         );
 
         await tester.pump();
 
-        expect(find.byType(PdfCard), findsOneWidget);
+        expect(find.byType(DocumentCard), findsOneWidget);
       }
     }, skip: true);
 
@@ -106,7 +107,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfCard(document: testDocument, onTap: () {}),
+            body: DocumentCard(document: testDocument, onTap: () {}),
           ),
         ),
       );
@@ -124,7 +125,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfCard(
+            body: DocumentCard(
               document: testDocument,
               onTap: () {},
               onLongPress: () {
@@ -136,7 +137,7 @@ void main() {
       );
 
       await tester.pump();
-      await tester.longPress(find.byType(PdfCard));
+      await tester.longPress(find.byType(DocumentCard));
       await tester.pump();
 
       expect(longPressed, isTrue);
@@ -148,7 +149,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfCard(
+            body: DocumentCard(
               document: testDocument,
               onTap: () {},
               isSelectionMode: true,
@@ -171,7 +172,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfCard(
+            body: DocumentCard(
               document: testDocument,
               onTap: () {},
               isSelectionMode: true,
@@ -195,7 +196,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PdfCard(
+            body: DocumentCard(
               document: testDocument,
               onTap: () {},
               onCheckboxTap: () {
@@ -219,7 +220,7 @@ void main() {
     }, skip: true);
   });
 
-  group('PdfCard selection state', () {
+  group('DocumentCard selection state', () {
     test('isSelectionMode defaults to false', () {
       // The default value is tested by the widget's constructor
       const defaultValue = false;
