@@ -9,12 +9,12 @@ import '../router/app_router.dart';
 import '../services/annotation_service.dart';
 import '../services/database_service.dart';
 import '../services/file_access_service.dart';
-import '../services/pdf_export_service.dart';
-import '../services/pdf_service.dart';
+import '../services/document_export_service.dart';
+import '../services/document_service.dart';
 import '../services/setlist_service.dart';
 import '../services/version_service.dart';
 import '../utils/fuzzy_search.dart';
-import '../widgets/pdf_card.dart';
+import '../widgets/document_card.dart';
 import '../widgets/setlist_picker_dialog.dart';
 import '../widgets/export_pdf_dialog_web.dart'
     if (dart.library.io) '../widgets/export_pdf_dialog_native.dart'
@@ -66,7 +66,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   Future<void> _syncLibrary() async {
     setState(() => _isLoading = true);
-    await PdfService.instance.scanAndSyncLibrary();
+    await DocumentService.instance.scanAndSyncLibrary();
     setState(() => _isLoading = false);
   }
 
@@ -76,7 +76,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     }
   }
 
-  void _onImportComplete(PdfImportBatchResult? result) {
+  void _onImportComplete(DocumentImportBatchResult? result) {
     if (!mounted) return;
 
     setState(() {
@@ -89,13 +89,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     }
   }
 
-  Future<void> _importPdfs() async {
+  Future<void> _importDocuments() async {
     setState(() {
       _isLoading = true;
       _importProgress = null;
     });
 
-    final result = await PdfService.instance.importPdfs(
+    final result = await DocumentService.instance.importDocuments(
       onProgress: _onImportProgress,
     );
 
@@ -111,15 +111,16 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       _isDraggingFiles = false;
     });
 
-    final result = await PdfService.instance.importPdfsFromDroppedFiles(
-      details.files,
-      onProgress: _onImportProgress,
-    );
+    final result = await DocumentService.instance
+        .importDocumentsFromDroppedFiles(
+          details.files,
+          onProgress: _onImportProgress,
+        );
 
     _onImportComplete(result);
   }
 
-  void _showImportResult(PdfImportBatchResult result) {
+  void _showImportResult(DocumentImportBatchResult result) {
     final messenger = ScaffoldMessenger.of(context);
 
     if (result.allSucceeded) {
@@ -176,7 +177,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     return 'Added $addedCount ${_pluralize(addedCount, 'document')} to set list';
   }
 
-  void _showImportFailuresDialog(List<PdfImportResult> failures) {
+  void _showImportFailuresDialog(List<DocumentImportResult> failures) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -502,7 +503,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     if (deleteFiles == null || !mounted) return;
 
     for (final docId in _selectedDocumentIds) {
-      await PdfService.instance.deletePdf(docId, deleteFile: deleteFiles);
+      await DocumentService.instance.deleteDocument(
+        docId,
+        deleteFile: deleteFiles,
+      );
     }
 
     if (mounted) {
@@ -649,7 +653,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           const SizedBox(height: 8),
           if (isLibraryEmpty)
             ElevatedButton.icon(
-              onPressed: _importPdfs,
+              onPressed: _importDocuments,
               icon: const Icon(Icons.add),
               label: const Text('Import PDFs'),
             ),
@@ -740,7 +744,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 // Show as selected if either already selected or in current drag
                 // but not both (XOR for toggle preview)
                 final showSelected = isCurrentlySelected ^ isInDragSelection;
-                return PdfCard(
+                return DocumentCard(
                   key: _getKeyForDocument(doc.id),
                   document: doc,
                   onTap: () => _handleDocumentTap(doc),
@@ -771,7 +775,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         itemCount: documents.length,
         itemBuilder: (context, index) {
           final doc = documents[index];
-          return PdfListTile(
+          return DocumentListTile(
             document: doc,
             onTap: () => _handleDocumentTap(doc),
             onLongPress: () => _enterSelectionMode(doc),
@@ -1001,7 +1005,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       floatingActionButton: _isSelectionMode
           ? null
           : FloatingActionButton.extended(
-              onPressed: _isLoading ? null : _importPdfs,
+              onPressed: _isLoading ? null : _importDocuments,
               tooltip: 'Import PDFs',
               icon: _isLoading
                   ? const SizedBox(
@@ -1027,7 +1031,7 @@ class _BulkExportDialog extends StatefulWidget {
 }
 
 class _BulkExportDialogState extends State<_BulkExportDialog> {
-  final _exportService = PdfExportService.instance;
+  final _exportService = DocumentExportService.instance;
   final _annotationService = AnnotationService();
 
   bool _isExporting = false;
@@ -1190,14 +1194,14 @@ class _BulkExportDialogState extends State<_BulkExportDialog> {
 }
 
 /// List tile widget for list view
-class PdfListTile extends StatefulWidget {
+class DocumentListTile extends StatefulWidget {
   final Document document;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final bool isSelectionMode;
   final bool isSelected;
 
-  const PdfListTile({
+  const DocumentListTile({
     super.key,
     required this.document,
     required this.onTap,
@@ -1207,10 +1211,10 @@ class PdfListTile extends StatefulWidget {
   });
 
   @override
-  State<PdfListTile> createState() => _PdfListTileState();
+  State<DocumentListTile> createState() => _DocumentListTileState();
 }
 
-class _PdfListTileState extends State<PdfListTile> {
+class _DocumentListTileState extends State<DocumentListTile> {
   Uint8List? _thumbnailBytes;
   bool _isLoading = true;
 
@@ -1221,7 +1225,7 @@ class _PdfListTileState extends State<PdfListTile> {
   }
 
   @override
-  void didUpdateWidget(PdfListTile oldWidget) {
+  void didUpdateWidget(DocumentListTile oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.document.id != widget.document.id) {
       _loadThumbnail();
@@ -1232,7 +1236,7 @@ class _PdfListTileState extends State<PdfListTile> {
     setState(() => _isLoading = true);
 
     try {
-      final bytes = await PdfService.instance.generateThumbnail(
+      final bytes = await DocumentService.instance.generateThumbnail(
         widget.document,
       );
       if (mounted) {
@@ -1264,7 +1268,10 @@ class _PdfListTileState extends State<PdfListTile> {
     }
 
     if (_thumbnailBytes == null) {
-      return const Icon(Icons.picture_as_pdf, size: 40);
+      return Icon(
+        widget.document.isImage ? Icons.image : Icons.picture_as_pdf,
+        size: 40,
+      );
     }
 
     return ClipRRect(
@@ -1275,7 +1282,10 @@ class _PdfListTileState extends State<PdfListTile> {
         height: 56,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return const Icon(Icons.picture_as_pdf, size: 40);
+          return Icon(
+            widget.document.isImage ? Icons.image : Icons.picture_as_pdf,
+            size: 40,
+          );
         },
       ),
     );
@@ -1307,7 +1317,9 @@ class _PdfListTileState extends State<PdfListTile> {
             : _buildLeadingWidget(),
         title: Text(widget.document.name),
         subtitle: Text(
-          '${widget.document.pageCount} pages • ${_formatFileSize(widget.document.fileSize)}',
+          widget.document.isImage
+              ? 'Image • ${_formatFileSize(widget.document.fileSize)}'
+              : '${widget.document.pageCount} pages • ${_formatFileSize(widget.document.fileSize)}',
         ),
         trailing: widget.isSelectionMode
             ? null

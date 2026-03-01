@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:feuillet/screens/wrappers/pdf_viewer_wrapper.dart';
+import 'package:feuillet/screens/wrappers/document_viewer_wrapper.dart';
 
 void main() {
   group('documentByIdProvider', () {
@@ -15,15 +15,15 @@ void main() {
     });
   });
 
-  group('PdfViewerWrapper', () {
+  group('DocumentViewerWrapper', () {
     test('accepts documentId parameter', () {
-      const wrapper = PdfViewerWrapper(documentId: 42);
+      const wrapper = DocumentViewerWrapper(documentId: 42);
       expect(wrapper.documentId, 42);
     });
 
     test('accepts different document IDs', () {
-      const wrapper1 = PdfViewerWrapper(documentId: 1);
-      const wrapper2 = PdfViewerWrapper(documentId: 999);
+      const wrapper1 = DocumentViewerWrapper(documentId: 1);
+      const wrapper2 = DocumentViewerWrapper(documentId: 999);
 
       expect(wrapper1.documentId, 1);
       expect(wrapper2.documentId, 999);
@@ -34,7 +34,7 @@ void main() {
     testWidgets('shows loading indicator initially', (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(home: PdfViewerWrapper(documentId: 1)),
+          child: MaterialApp(home: DocumentViewerWrapper(documentId: 1)),
         ),
       );
 
@@ -45,7 +45,7 @@ void main() {
     testWidgets('shows error for non-existent document', (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(home: PdfViewerWrapper(documentId: 99999)),
+          child: MaterialApp(home: DocumentViewerWrapper(documentId: 99999)),
         ),
       );
 
