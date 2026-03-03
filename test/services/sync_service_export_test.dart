@@ -2,10 +2,8 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart' hide Column, isNotNull, isNull;
 import 'package:drift/native.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:feuillet/models/database.dart';
-import 'package:feuillet/services/annotation_service.dart';
 import 'package:feuillet/services/sync_service.dart';
 
 void main() {
