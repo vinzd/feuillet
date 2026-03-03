@@ -1,6 +1,9 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'router/app_router.dart';
 import 'services/database_service.dart';
 import 'services/file_watcher_service.dart';
@@ -15,6 +18,9 @@ void main() async {
 
   // Skip file system operations on web (for development iteration only)
   if (!kIsWeb) {
+    // Request storage permission on Android before any file access
+    await requestStoragePermission();
+
     // Initialize file watcher for Syncthing support
     await FileWatcherService.instance.startWatching();
 
@@ -23,6 +29,17 @@ void main() async {
   }
 
   runApp(const ProviderScope(child: FeuilletApp()));
+}
+
+/// Requests MANAGE_EXTERNAL_STORAGE permission on Android.
+/// Must be called before any file access operations.
+Future<void> requestStoragePermission() async {
+  if (!kIsWeb && Platform.isAndroid) {
+    final status = await Permission.manageExternalStorage.status;
+    if (!status.isGranted) {
+      await Permission.manageExternalStorage.request();
+    }
+  }
 }
 
 class FeuilletApp extends ConsumerWidget {
