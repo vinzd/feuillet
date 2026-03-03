@@ -11,6 +11,7 @@ import '../models/view_mode.dart';
 import '../services/annotation_service.dart';
 import '../services/database_service.dart';
 import '../services/document_export_service.dart';
+import '../services/sync_service.dart';
 import '../services/file_access_service.dart';
 import '../services/pdf_page_cache_service.dart';
 import '../utils/auto_hide_controller.dart';
@@ -212,6 +213,19 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
       _pageAnnotations = leftAnnotations;
       _rightPageAnnotations = rightAnnotations;
     });
+  }
+
+  /// Called after a stroke is completed in DrawingCanvas.
+  /// Reloads annotations and schedules a sidecar write for Syncthing sync.
+  void _onStrokeCompleted() {
+    _loadPageAnnotations();
+    if (!kIsWeb) {
+      SyncManager.instance.scheduleAnnotationWrite(
+        db: DatabaseService.instance.database,
+        documentId: widget.document.id,
+        scoreFilePath: widget.document.filePath,
+      );
+    }
   }
 
   /// Pre-render pages around the current page for faster navigation
@@ -670,7 +684,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
         color: _annotationColor,
         thickness: _annotationThickness,
         layerAnnotations: _pageAnnotations,
-        onStrokeCompleted: _loadPageAnnotations,
+        onStrokeCompleted: _onStrokeCompleted,
         isEnabled: _annotationMode,
       );
     }
@@ -713,7 +727,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
             color: _annotationColor,
             thickness: _annotationThickness,
             layerAnnotations: _pageAnnotations,
-            onStrokeCompleted: _loadPageAnnotations,
+            onStrokeCompleted: _onStrokeCompleted,
             isEnabled: _annotationMode,
           );
         }
@@ -746,7 +760,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
       currentTool: _currentTool,
       annotationColor: _annotationColor,
       annotationThickness: _annotationThickness,
-      onStrokeCompleted: _loadPageAnnotations,
+      onStrokeCompleted: _onStrokeCompleted,
       backgroundDecoration: const BoxDecoration(color: Colors.black),
     );
   }
