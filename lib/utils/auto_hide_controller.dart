@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 /// Controller for auto-hiding UI controls after a period of inactivity.
 ///
@@ -22,9 +23,16 @@ class AutoHideController extends ChangeNotifier {
   /// Whether the controls are currently visible
   bool get isVisible => _isVisible;
 
+  bool get _isMobile =>
+      defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS;
+
   /// Shows the controls and starts the auto-hide timer
   void show() {
     _isVisible = true;
+    if (_isMobile) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
     notifyListeners();
     resetTimer();
   }
@@ -33,6 +41,9 @@ class AutoHideController extends ChangeNotifier {
   void hide() {
     _hideTimer?.cancel();
     _isVisible = false;
+    if (_isMobile) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    }
     notifyListeners();
   }
 
@@ -52,6 +63,9 @@ class AutoHideController extends ChangeNotifier {
     if (_isVisible) {
       _hideTimer = Timer(duration, () {
         _isVisible = false;
+        if (_isMobile) {
+          SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+        }
         notifyListeners();
       });
     }
@@ -68,6 +82,9 @@ class AutoHideController extends ChangeNotifier {
   @override
   void dispose() {
     _hideTimer?.cancel();
+    if (_isMobile) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
     super.dispose();
   }
 }
