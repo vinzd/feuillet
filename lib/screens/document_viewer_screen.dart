@@ -215,10 +215,8 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     });
   }
 
-  /// Called after a stroke is completed in DrawingCanvas.
-  /// Reloads annotations and schedules a sidecar write for Syncthing sync.
-  void _onStrokeCompleted() {
-    _loadPageAnnotations();
+  /// Schedule a sidecar write for Syncthing sync.
+  void _scheduleSidecarWrite() {
     if (!kIsWeb) {
       SyncManager.instance.scheduleAnnotationWrite(
         db: DatabaseService.instance.database,
@@ -226,6 +224,13 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
         scoreFilePath: widget.document.filePath,
       );
     }
+  }
+
+  /// Called after a stroke is completed in DrawingCanvas.
+  /// Reloads annotations and schedules a sidecar write for Syncthing sync.
+  void _onStrokeCompleted() {
+    _loadPageAnnotations();
+    _scheduleSidecarWrite();
   }
 
   /// Pre-render pages around the current page for faster navigation
@@ -621,6 +626,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                     onLayersChanged: () {
                       _loadLayers();
                       _loadPageAnnotations();
+                      _scheduleSidecarWrite();
                     },
                     onClose: () =>
                         setState(() => _showFloatingLayerPanel = false),
