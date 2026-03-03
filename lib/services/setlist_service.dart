@@ -1,10 +1,24 @@
 import 'package:drift/drift.dart' as drift;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/database.dart';
 import 'database_service.dart';
+import 'file_watcher_service.dart';
+import 'sync_service.dart';
 
 /// Service to manage set lists
 class SetListService {
   final AppDatabase _database = DatabaseService.instance.database;
+
+  void _scheduleSyncWrite(int setListId) {
+    if (kIsWeb) return;
+    FileWatcherService.instance.getPdfDirectoryPath().then((pdfDir) {
+      SyncManager.instance.scheduleSetListWrite(
+        db: _database,
+        setListId: setListId,
+        pdfDirectoryPath: pdfDir,
+      );
+    });
+  }
 
   /// Get all set lists
   Future<List<SetList>> getAllSetLists() async {
@@ -18,22 +32,33 @@ class SetListService {
 
   /// Create a new set list
   Future<int> createSetList(String name, {String? description}) async {
-    return await _database.insertSetList(
+    final id = await _database.insertSetList(
       SetListsCompanion(
         name: drift.Value(name),
         description: drift.Value(description),
       ),
     );
+    _scheduleSyncWrite(id);
+    return id;
   }
 
   /// Update a set list
   Future<void> updateSetList(SetList setList) async {
     await _database.updateSetList(setList);
+    _scheduleSyncWrite(setList.id);
   }
 
   /// Delete a set list
   Future<void> deleteSetList(int id) async {
+    final setList = await getSetList(id);
     await _database.deleteSetList(id);
+    if (setList != null && !kIsWeb) {
+      final pdfDir = await FileWatcherService.instance.getPdfDirectoryPath();
+      await deleteSetListFileFromDisk(
+        setListName: setList.name,
+        pdfDirectoryPath: pdfDir,
+      );
+    }
   }
 
   /// Get items in a set list
@@ -56,7 +81,7 @@ class SetListService {
     final items = await getSetListItems(setListId);
     final orderIndex = items.length;
 
-    return await _database.insertSetListItem(
+    final itemId = await _database.insertSetListItem(
       SetListItemsCompanion(
         setListId: drift.Value(setListId),
         documentId: drift.Value(documentId),
@@ -64,11 +89,16 @@ class SetListService {
         notes: drift.Value(notes),
       ),
     );
+    _scheduleSyncWrite(setListId);
+    return itemId;
   }
 
   /// Remove a document from a set list
-  Future<void> removeDocumentFromSetList(int itemId) async {
+  Future<void> removeDocumentFromSetList(int itemId, {int? setListId}) async {
     await _database.deleteSetListItem(itemId);
+    if (setListId != null) {
+      _scheduleSyncWrite(setListId);
+    }
   }
 
   /// Reorder items in a set list
@@ -95,6 +125,7 @@ class SetListService {
         );
       }
     }
+    _scheduleSyncWrite(setListId);
   }
 
   /// Get set lists containing a specific document

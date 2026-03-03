@@ -8,6 +8,7 @@ import 'router/app_router.dart';
 import 'services/database_service.dart';
 import 'services/file_watcher_service.dart';
 import 'services/document_service.dart';
+import 'services/sync_service.dart';
 import 'web_url_strategy.dart';
 
 void main() async {
@@ -26,6 +27,19 @@ void main() async {
 
     // Initialize PDF service
     DocumentService.instance;
+
+    // Initialize sync manager for Syncthing annotation/setlist sync
+    final pdfDir = await FileWatcherService.instance.getPdfDirectoryPath();
+    SyncManager.instance.startListening(
+      syncChanges: FileWatcherService.instance.syncChanges,
+      db: DatabaseService.instance.database,
+      getPdfDirectoryPath: () =>
+          FileWatcherService.instance.getPdfDirectoryPath(),
+    );
+    await SyncManager.instance.reconcileOnStartup(
+      db: DatabaseService.instance.database,
+      pdfDirectoryPath: pdfDir,
+    );
   }
 
   runApp(const ProviderScope(child: FeuilletApp()));
@@ -114,6 +128,7 @@ class _AppLifecycleManagerState extends State<AppLifecycleManager>
         break;
       case AppLifecycleState.detached:
         // App is closing - clean up all resources
+        SyncManager.instance.dispose();
         FileWatcherService.instance.dispose();
         DocumentService.instance.dispose();
         DatabaseService.instance.dispose();
