@@ -315,7 +315,13 @@ class AppDatabase extends _$AppDatabase {
 
     if (docIds.isEmpty) return [];
 
-    return (select(documents)..where((d) => d.id.isIn(docIds))).get();
+    final docs =
+        await (select(documents)..where((d) => d.id.isIn(docIds))).get();
+    final docsById = {for (final doc in docs) doc.id: doc};
+    return docIds
+        .where((id) => docsById.containsKey(id))
+        .map((id) => docsById[id]!)
+        .toList();
   }
 
   // App settings operations
