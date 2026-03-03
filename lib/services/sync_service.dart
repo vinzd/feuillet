@@ -1,11 +1,16 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
+
+import 'package:watcher/watcher.dart';
 
 import '../models/database.dart';
 import 'annotation_service.dart';
+import 'file_watcher_service.dart';
 
 const _prettyEncoder = JsonEncoder.withIndent('  ');
 
@@ -524,5 +529,305 @@ Future<void> deleteSetListFileFromDisk({
   final file = File(filePath);
   if (await file.exists()) {
     await file.delete();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// SyncManager — orchestration and loop suppression
+// ---------------------------------------------------------------------------
+
+/// Orchestrates annotation and set list sync: debounces writes, suppresses
+/// file-watcher loops, handles incoming sidecar/set-list changes, and performs
+/// startup reconciliation.
+class SyncManager {
+  SyncManager._();
+
+  // Singleton
+  static SyncManager? _instance;
+  static SyncManager get instance => _instance ??= SyncManager._();
+  static void resetInstance() {
+    _instance?.dispose();
+    _instance = null;
+  }
+
+  // State
+  final Map<String, DateTime> _suppressedPaths = {};
+  final Map<int, Timer> _annotationDebounceTimers = {};
+  final Map<int, Timer> _setListDebounceTimers = {};
+  StreamSubscription<dynamic>? _syncChangesSubscription;
+
+  static const _suppressionDuration = Duration(seconds: 2);
+  static const _debounceDuration = Duration(seconds: 2);
+
+  // ---------------------------------------------------------------------------
+  // Suppression
+  // ---------------------------------------------------------------------------
+
+  /// Marks [path] as suppressed so incoming file-watcher events for it are
+  /// ignored for [_suppressionDuration].
+  void suppressPath(String path) {
+    suppressPathWithDuration(path, _suppressionDuration);
+  }
+
+  /// Marks [path] as suppressed for [duration]. Visible for testing.
+  @visibleForTesting
+  void suppressPathWithDuration(String path, Duration duration) {
+    _suppressedPaths[path] = DateTime.now().add(duration);
+  }
+
+  /// Returns `true` if [path] is currently suppressed.
+  ///
+  /// Expired entries are removed lazily.
+  bool isSuppressed(String path) {
+    final expiry = _suppressedPaths[path];
+    if (expiry == null) return false;
+    if (DateTime.now().isAfter(expiry)) {
+      _suppressedPaths.remove(path);
+      return false;
+    }
+    return true;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Debounced writes
+  // ---------------------------------------------------------------------------
+
+  /// Schedules a debounced write of the annotation sidecar for [documentId].
+  ///
+  /// If a previous timer for the same document is pending it is cancelled.
+  /// After [_debounceDuration] the sidecar is written and the output path is
+  /// suppressed so the file watcher does not re-import it.
+  void scheduleAnnotationWrite({
+    required AppDatabase db,
+    required int documentId,
+    required String scoreFilePath,
+  }) {
+    _annotationDebounceTimers[documentId]?.cancel();
+    _annotationDebounceTimers[documentId] = Timer(_debounceDuration, () async {
+      try {
+        await writeAnnotationSidecarToDisk(
+          db: db,
+          documentId: documentId,
+          scoreFilePath: scoreFilePath,
+        );
+        suppressPath(sidecarFileName(scoreFilePath));
+      } catch (e) {
+        debugPrint('SyncManager: failed to write annotation sidecar: $e');
+      }
+    });
+  }
+
+  /// Schedules a debounced write of the set list file for [setListId].
+  ///
+  /// If a previous timer for the same set list is pending it is cancelled.
+  /// After [_debounceDuration] the file is written and the output path is
+  /// suppressed so the file watcher does not re-import it.
+  void scheduleSetListWrite({
+    required AppDatabase db,
+    required int setListId,
+    required String pdfDirectoryPath,
+  }) {
+    _setListDebounceTimers[setListId]?.cancel();
+    _setListDebounceTimers[setListId] = Timer(_debounceDuration, () async {
+      try {
+        await writeSetListFileToDisk(
+          db: db,
+          setListId: setListId,
+          pdfDirectoryPath: pdfDirectoryPath,
+        );
+        // Suppress the written file path.
+        final setList = await db.getSetList(setListId);
+        if (setList != null) {
+          final fileName = setListFileName(setList.name);
+          final filePath = p.join(pdfDirectoryPath, 'setlists', fileName);
+          suppressPath(filePath);
+        }
+      } catch (e) {
+        debugPrint('SyncManager: failed to write set list file: $e');
+      }
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Incoming changes listener
+  // ---------------------------------------------------------------------------
+
+  /// Subscribes to [syncChanges] and processes incoming sidecar / set list
+  /// file events, skipping any that are currently suppressed.
+  void startListening({
+    required Stream<dynamic> syncChanges,
+    required AppDatabase db,
+    required Future<String> Function() getPdfDirectoryPath,
+  }) {
+    _syncChangesSubscription?.cancel();
+    _syncChangesSubscription = syncChanges.listen((event) async {
+      try {
+        final String filePath;
+        if (event is WatchEvent) {
+          filePath = event.path;
+        } else {
+          return;
+        }
+
+        if (isSuppressed(filePath)) {
+          debugPrint('SyncManager: suppressed event for $filePath');
+          return;
+        }
+
+        if (FileWatcherService.isSidecarFile(filePath)) {
+          await _handleIncomingSidecar(filePath, db);
+        } else if (FileWatcherService.isSetListFile(filePath)) {
+          final pdfDir = await getPdfDirectoryPath();
+          await _handleIncomingSetList(filePath, db, pdfDir);
+        }
+      } catch (e) {
+        debugPrint('SyncManager: error handling sync event: $e');
+      }
+    });
+  }
+
+  Future<void> _handleIncomingSidecar(
+    String sidecarPath,
+    AppDatabase db,
+  ) async {
+    // Derive score file path: remove ".feuillet.json" suffix.
+    // e.g., "/docs/Bach - Suite 1.feuillet.json" → "/docs/Bach - Suite 1"
+    final withoutSuffix = sidecarPath.replaceAll('.feuillet.json', '');
+
+    // Find matching document by path prefix.
+    final allDocs = await db.getAllDocuments();
+    final matchingDoc = allDocs.cast<Document?>().firstWhere((d) {
+      final base = p.withoutExtension(d!.filePath);
+      return base == withoutSuffix;
+    }, orElse: () => null);
+
+    if (matchingDoc == null) {
+      debugPrint('SyncManager: no matching document for sidecar $sidecarPath');
+      return;
+    }
+
+    final sidecar = await readAnnotationSidecarFromDisk(matchingDoc.filePath);
+    if (sidecar == null) return;
+
+    await importAnnotationSidecar(db, matchingDoc.id, sidecar);
+    debugPrint('SyncManager: imported sidecar for ${matchingDoc.name}');
+  }
+
+  Future<void> _handleIncomingSetList(
+    String filePath,
+    AppDatabase db,
+    String pdfDirectoryPath,
+  ) async {
+    final setListFile = await readSetListFileFromDisk(filePath);
+    if (setListFile == null) return;
+
+    await importSetListFile(db, setListFile, pdfDirectoryPath);
+    debugPrint('SyncManager: imported set list ${setListFile.name}');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Startup reconciliation
+  // ---------------------------------------------------------------------------
+
+  /// Performs a full reconciliation on startup:
+  ///
+  /// 1. For each document in DB (skipping `web://` paths), imports the sidecar
+  ///    from disk if it exists.
+  /// 2. Scans the `setlists/` directory for `.setlist.json` files and imports
+  ///    each one.
+  /// 3. For documents that have annotations in DB but no sidecar on disk,
+  ///    exports the sidecar.
+  Future<void> reconcileOnStartup({
+    required AppDatabase db,
+    required String pdfDirectoryPath,
+  }) async {
+    debugPrint('SyncManager: starting reconciliation');
+
+    final allDocs = await db.getAllDocuments();
+
+    // 1. Import sidecars from disk.
+    for (final doc in allDocs) {
+      if (doc.filePath.startsWith('web://')) continue;
+
+      try {
+        final sidecar = await readAnnotationSidecarFromDisk(doc.filePath);
+        if (sidecar != null) {
+          await importAnnotationSidecar(db, doc.id, sidecar);
+          debugPrint('SyncManager: reconciled sidecar for ${doc.name}');
+        }
+      } catch (e) {
+        debugPrint('SyncManager: error importing sidecar for ${doc.name}: $e');
+      }
+    }
+
+    // 2. Scan setlists/ directory.
+    final setListsDir = Directory(p.join(pdfDirectoryPath, 'setlists'));
+    if (await setListsDir.exists()) {
+      await for (final entity in setListsDir.list()) {
+        if (entity is File && FileWatcherService.isSetListFile(entity.path)) {
+          try {
+            final setListFile = await readSetListFileFromDisk(entity.path);
+            if (setListFile != null) {
+              await importSetListFile(db, setListFile, pdfDirectoryPath);
+              debugPrint(
+                'SyncManager: reconciled set list ${setListFile.name}',
+              );
+            }
+          } catch (e) {
+            debugPrint(
+              'SyncManager: error importing set list ${entity.path}: $e',
+            );
+          }
+        }
+      }
+    }
+
+    // 3. Export annotations that exist in DB but have no sidecar on disk.
+    for (final doc in allDocs) {
+      if (doc.filePath.startsWith('web://')) continue;
+
+      try {
+        final sidecarPath = sidecarFileName(doc.filePath);
+        final sidecarExists = await File(sidecarPath).exists();
+        if (!sidecarExists) {
+          // Check if DB has annotations for this document.
+          final layers = await db.getAnnotationLayers(doc.id);
+          if (layers.isNotEmpty) {
+            await writeAnnotationSidecarToDisk(
+              db: db,
+              documentId: doc.id,
+              scoreFilePath: doc.filePath,
+            );
+            debugPrint('SyncManager: exported sidecar for ${doc.name}');
+          }
+        }
+      } catch (e) {
+        debugPrint('SyncManager: error exporting sidecar for ${doc.name}: $e');
+      }
+    }
+
+    debugPrint('SyncManager: reconciliation complete');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Disposal
+  // ---------------------------------------------------------------------------
+
+  /// Cancels all pending timers and subscriptions.
+  void dispose() {
+    _syncChangesSubscription?.cancel();
+    _syncChangesSubscription = null;
+
+    for (final timer in _annotationDebounceTimers.values) {
+      timer.cancel();
+    }
+    _annotationDebounceTimers.clear();
+
+    for (final timer in _setListDebounceTimers.values) {
+      timer.cancel();
+    }
+    _setListDebounceTimers.clear();
+
+    _suppressedPaths.clear();
   }
 }
