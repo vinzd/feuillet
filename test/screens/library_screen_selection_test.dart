@@ -631,14 +631,16 @@ void main() {
       expect(selectedIds, equals({1, 2}));
     });
 
-    test('dragging over empty space between cards does not change selection',
-        () {
-      simulateLongPressStart(1);
-      simulateLongPressMoveUpdate(null); // empty space
-      simulateLongPressMoveUpdate(2);
+    test(
+      'dragging over empty space between cards does not change selection',
+      () {
+        simulateLongPressStart(1);
+        simulateLongPressMoveUpdate(null); // empty space
+        simulateLongPressMoveUpdate(2);
 
-      expect(selectedIds, equals({1, 2}));
-    });
+        expect(selectedIds, equals({1, 2}));
+      },
+    );
 
     test('releasing finger ends drag but keeps selection', () {
       simulateLongPressStart(1);
