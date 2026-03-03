@@ -2,6 +2,7 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../models/database.dart';
@@ -54,6 +55,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   Offset? _dragCurrent;
   final Map<int, GlobalKey> _cardKeys = {};
   final Set<int> _dragSelectedIds = {};
+
+  // Long-press-drag selection state
+  bool _isLongPressDragging = false;
 
   // File drop state
   bool _isDraggingFiles = false;
@@ -373,6 +377,54 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       }
     }
     return false;
+  }
+
+  int? _getDocumentAtGlobalPosition(
+    Offset globalPosition,
+    List<Document> docs,
+  ) {
+    for (final doc in docs) {
+      final key = _cardKeys[doc.id];
+      if (key?.currentContext == null) continue;
+      final renderBox = key!.currentContext!.findRenderObject() as RenderBox?;
+      if (renderBox == null || !renderBox.attached) continue;
+      final localPosition = renderBox.globalToLocal(globalPosition);
+      if (renderBox.paintBounds.contains(localPosition)) {
+        return doc.id;
+      }
+    }
+    return null;
+  }
+
+  void _onLongPressStart(LongPressStartDetails details, List<Document> docs) {
+    final docId = _getDocumentAtGlobalPosition(details.globalPosition, docs);
+    if (docId == null) return;
+
+    setState(() {
+      _isLongPressDragging = true;
+      _isSelectionMode = true;
+      _selectedDocumentIds.add(docId);
+    });
+    HapticFeedback.mediumImpact();
+  }
+
+  void _onLongPressMoveUpdate(
+    LongPressMoveUpdateDetails details,
+    List<Document> docs,
+  ) {
+    if (!_isLongPressDragging) return;
+
+    final docId = _getDocumentAtGlobalPosition(details.globalPosition, docs);
+    if (docId != null && !_selectedDocumentIds.contains(docId)) {
+      setState(() {
+        _selectedDocumentIds.add(docId);
+      });
+      HapticFeedback.selectionClick();
+    }
+  }
+
+  void _onLongPressEnd(LongPressEndDetails details, List<Document> docs) {
+    _isLongPressDragging = false;
   }
 
   void _onPointerDown(PointerDownEvent event, List<Document> docs) {
@@ -724,7 +776,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         onPointerMove: (event) => _onPointerMove(event, documents),
         onPointerUp: (event) => _onPointerUp(event, documents),
         onPointerCancel: (_) => _onPointerUp(const PointerUpEvent(), documents),
-        child: Stack(
+        child: GestureDetector(
+          onLongPressStart: (details) =>
+              _onLongPressStart(details, documents),
+          onLongPressMoveUpdate: (details) =>
+              _onLongPressMoveUpdate(details, documents),
+          onLongPressEnd: (details) =>
+              _onLongPressEnd(details, documents),
+          child: Stack(
           children: [
             GridView.builder(
               padding: const EdgeInsets.all(16),
@@ -748,7 +807,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   key: _getKeyForDocument(doc.id),
                   document: doc,
                   onTap: () => _handleDocumentTap(doc),
-                  onLongPress: () => _enterSelectionMode(doc),
                   onCheckboxTap: () => _handleCheckboxTap(doc),
                   isSelectionMode: _isSelectionMode || _isDragSelecting,
                   isSelected: showSelected,
@@ -768,21 +826,30 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               ),
           ],
         ),
+        ),
       );
     } else {
-      return ListView.builder(
+      return GestureDetector(
+        onLongPressStart: (details) =>
+            _onLongPressStart(details, documents),
+        onLongPressMoveUpdate: (details) =>
+            _onLongPressMoveUpdate(details, documents),
+        onLongPressEnd: (details) =>
+            _onLongPressEnd(details, documents),
+        child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: documents.length,
         itemBuilder: (context, index) {
           final doc = documents[index];
           return DocumentListTile(
+            key: _getKeyForDocument(doc.id),
             document: doc,
             onTap: () => _handleDocumentTap(doc),
-            onLongPress: () => _enterSelectionMode(doc),
             isSelectionMode: _isSelectionMode,
             isSelected: _selectedDocumentIds.contains(doc.id),
           );
         },
+        ),
       );
     }
   }
