@@ -566,6 +566,123 @@ void main() {
     });
   });
 
+  group('Long Press Drag Selection Logic', () {
+    late Set<int> selectedIds;
+    late bool isSelectionMode;
+    late bool isLongPressDragging;
+
+    setUp(() {
+      selectedIds = {};
+      isSelectionMode = false;
+      isLongPressDragging = false;
+    });
+
+    // Simulate _onLongPressStart: enters selection mode and selects the card
+    void simulateLongPressStart(int? docId) {
+      if (docId == null) return;
+      isLongPressDragging = true;
+      isSelectionMode = true;
+      selectedIds.add(docId);
+    }
+
+    // Simulate _onLongPressMoveUpdate: adds hovered card to selection
+    void simulateLongPressMoveUpdate(int? docId) {
+      if (!isLongPressDragging) return;
+      if (docId != null && !selectedIds.contains(docId)) {
+        selectedIds.add(docId);
+      }
+    }
+
+    // Simulate _onLongPressEnd
+    void simulateLongPressEnd() {
+      isLongPressDragging = false;
+    }
+
+    test('long press on a card enters selection mode and selects it', () {
+      simulateLongPressStart(1);
+
+      expect(isSelectionMode, isTrue);
+      expect(isLongPressDragging, isTrue);
+      expect(selectedIds, equals({1}));
+    });
+
+    test('long press on empty space does nothing', () {
+      simulateLongPressStart(null);
+
+      expect(isSelectionMode, isFalse);
+      expect(isLongPressDragging, isFalse);
+      expect(selectedIds, isEmpty);
+    });
+
+    test('dragging over additional cards adds them to selection', () {
+      simulateLongPressStart(1);
+      simulateLongPressMoveUpdate(2);
+      simulateLongPressMoveUpdate(3);
+
+      expect(selectedIds, equals({1, 2, 3}));
+    });
+
+    test('dragging over same card multiple times does not duplicate', () {
+      simulateLongPressStart(1);
+      simulateLongPressMoveUpdate(2);
+      simulateLongPressMoveUpdate(2);
+      simulateLongPressMoveUpdate(2);
+
+      expect(selectedIds, equals({1, 2}));
+    });
+
+    test('dragging over empty space between cards does not change selection',
+        () {
+      simulateLongPressStart(1);
+      simulateLongPressMoveUpdate(null); // empty space
+      simulateLongPressMoveUpdate(2);
+
+      expect(selectedIds, equals({1, 2}));
+    });
+
+    test('releasing finger ends drag but keeps selection', () {
+      simulateLongPressStart(1);
+      simulateLongPressMoveUpdate(2);
+      simulateLongPressEnd();
+
+      expect(isLongPressDragging, isFalse);
+      expect(isSelectionMode, isTrue);
+      expect(selectedIds, equals({1, 2}));
+    });
+
+    test('move updates are ignored when not in long press drag', () {
+      // Simulate move without a prior long press start
+      simulateLongPressMoveUpdate(1);
+      simulateLongPressMoveUpdate(2);
+
+      expect(selectedIds, isEmpty);
+      expect(isSelectionMode, isFalse);
+    });
+
+    test('long press drag preserves existing selection', () {
+      // Pre-existing selection from a previous interaction
+      selectedIds.addAll([4, 5]);
+      isSelectionMode = true;
+
+      simulateLongPressStart(1);
+      simulateLongPressMoveUpdate(2);
+      simulateLongPressEnd();
+
+      expect(selectedIds, equals({4, 5, 1, 2}));
+    });
+
+    test('long press drag on already-selected card keeps it selected', () {
+      selectedIds.add(1);
+      isSelectionMode = true;
+
+      simulateLongPressStart(1); // already selected
+      simulateLongPressMoveUpdate(2);
+      simulateLongPressEnd();
+
+      expect(selectedIds, equals({1, 2}));
+    });
+  });
+
   group('Click on Empty Space', () {
     test('click on empty space exits selection mode', () {
       var isSelectionMode = true;
