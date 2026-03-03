@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:path/path.dart' as p;
+
+import '../models/database.dart';
 import 'annotation_service.dart';
 
 /// Given a score file name (e.g., "Bach - Suite 1.pdf"), returns the
@@ -99,6 +103,68 @@ class AnnotationSidecar {
           .toList(),
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Database → Sidecar export
+// ---------------------------------------------------------------------------
+
+/// Reads annotation layers and strokes for [documentId] from [db] and builds
+/// an [AnnotationSidecar] model.
+///
+/// Returns `null` if the document has no layers or no annotation strokes.
+Future<AnnotationSidecar?> buildAnnotationSidecar(
+  AppDatabase db,
+  int documentId,
+) async {
+  final layers = await db.getAnnotationLayers(documentId);
+  if (layers.isEmpty) return null;
+
+  final sidecarLayers = <SidecarLayer>[];
+
+  for (final layer in layers) {
+    // Query all annotations for this layer (across all pages).
+    final allAnnotations = await (db.select(
+      db.annotations,
+    )..where((a) => a.layerId.equals(layer.id))).get();
+
+    if (allAnnotations.isEmpty) continue;
+
+    // Group annotations by page number.
+    final byPage = <int, List<DrawingStroke>>{};
+    for (final annotation in allAnnotations) {
+      final stroke = DrawingStroke.fromJson(
+        jsonDecode(annotation.data) as Map<String, dynamic>,
+      );
+      byPage.putIfAbsent(annotation.pageNumber, () => []).add(stroke);
+    }
+
+    // Build sorted page list.
+    final sortedPages = byPage.keys.toList()..sort();
+    final pageAnnotations = sortedPages
+        .map(
+          (page) =>
+              SidecarPageAnnotations(pageNumber: page, strokes: byPage[page]!),
+        )
+        .toList();
+
+    sidecarLayers.add(
+      SidecarLayer(
+        name: layer.name,
+        isVisible: layer.isVisible,
+        orderIndex: layer.orderIndex,
+        annotations: pageAnnotations,
+      ),
+    );
+  }
+
+  if (sidecarLayers.isEmpty) return null;
+
+  return AnnotationSidecar(
+    version: 1,
+    modifiedAt: DateTime.now().toUtc(),
+    layers: sidecarLayers,
+  );
 }
 
 // ---------------------------------------------------------------------------
