@@ -1,10 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 
 import '../models/database.dart';
 import 'annotation_service.dart';
+
+const _prettyEncoder = JsonEncoder.withIndent('  ');
 
 /// Given a score file name (e.g., "Bach - Suite 1.pdf"), returns the
 /// corresponding sidecar file name ("Bach - Suite 1.feuillet.json").
@@ -404,5 +407,122 @@ class SetListFile {
           .map((i) => SetListFileItem.fromJson(i as Map<String, dynamic>))
           .toList(),
     );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// File I/O – Annotation sidecars
+// ---------------------------------------------------------------------------
+
+/// Writes the annotation sidecar for [documentId] to disk next to
+/// [scoreFilePath].
+///
+/// If the document has no annotations the sidecar file is deleted (if it
+/// exists). Otherwise the sidecar is serialised to pretty JSON and written
+/// atomically (write to `.tmp`, then rename).
+Future<void> writeAnnotationSidecarToDisk({
+  required AppDatabase db,
+  required int documentId,
+  required String scoreFilePath,
+}) async {
+  final sidecarPath = sidecarFileName(scoreFilePath);
+  final sidecar = await buildAnnotationSidecar(db, documentId);
+
+  if (sidecar == null) {
+    final file = File(sidecarPath);
+    if (await file.exists()) {
+      await file.delete();
+    }
+    return;
+  }
+
+  final jsonStr = _prettyEncoder.convert(sidecar.toJson());
+  final tmpPath = '$sidecarPath.tmp';
+  final tmpFile = File(tmpPath);
+  await tmpFile.writeAsString(jsonStr);
+  await tmpFile.rename(sidecarPath);
+}
+
+/// Reads and parses an [AnnotationSidecar] from the sidecar file adjacent to
+/// [scoreFilePath].
+///
+/// Returns `null` if the file does not exist or cannot be parsed.
+Future<AnnotationSidecar?> readAnnotationSidecarFromDisk(
+  String scoreFilePath,
+) async {
+  try {
+    final sidecarPath = sidecarFileName(scoreFilePath);
+    final file = File(sidecarPath);
+    if (!await file.exists()) return null;
+
+    final content = await file.readAsString();
+    final json = jsonDecode(content) as Map<String, dynamic>;
+    return AnnotationSidecar.fromJson(json);
+  } catch (_) {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// File I/O – Set list files
+// ---------------------------------------------------------------------------
+
+/// Writes the set list identified by [setListId] to disk as
+/// `<pdfDirectoryPath>/setlists/<sanitized-name>.setlist.json`.
+///
+/// Creates the `setlists/` subdirectory if it does not exist. The file is
+/// written atomically (write to `.tmp`, then rename).
+Future<void> writeSetListFileToDisk({
+  required AppDatabase db,
+  required int setListId,
+  required String pdfDirectoryPath,
+}) async {
+  final setListFile = await buildSetListFile(db, setListId, pdfDirectoryPath);
+  if (setListFile == null) return;
+
+  final setListsDir = Directory(p.join(pdfDirectoryPath, 'setlists'));
+  if (!await setListsDir.exists()) {
+    await setListsDir.create(recursive: true);
+  }
+
+  final fileName = setListFileName(setListFile.name);
+  final filePath = p.join(setListsDir.path, fileName);
+  final jsonStr = _prettyEncoder.convert(setListFile.toJson());
+
+  final tmpPath = '$filePath.tmp';
+  final tmpFile = File(tmpPath);
+  await tmpFile.writeAsString(jsonStr);
+  await tmpFile.rename(filePath);
+}
+
+/// Reads and parses a [SetListFile] from [filePath].
+///
+/// Returns `null` if the file does not exist or cannot be parsed.
+Future<SetListFile?> readSetListFileFromDisk(String filePath) async {
+  try {
+    final file = File(filePath);
+    if (!await file.exists()) return null;
+
+    final content = await file.readAsString();
+    final json = jsonDecode(content) as Map<String, dynamic>;
+    return SetListFile.fromJson(json);
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Deletes the set list file for [setListName] from
+/// `<pdfDirectoryPath>/setlists/`.
+///
+/// Does nothing if the file does not exist.
+Future<void> deleteSetListFileFromDisk({
+  required String setListName,
+  required String pdfDirectoryPath,
+}) async {
+  final fileName = setListFileName(setListName);
+  final filePath = p.join(pdfDirectoryPath, 'setlists', fileName);
+  final file = File(filePath);
+  if (await file.exists()) {
+    await file.delete();
   }
 }
