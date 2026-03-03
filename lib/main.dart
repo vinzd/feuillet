@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -96,45 +97,48 @@ class AppLifecycleManager extends StatefulWidget {
   State<AppLifecycleManager> createState() => _AppLifecycleManagerState();
 }
 
-class _AppLifecycleManagerState extends State<AppLifecycleManager>
-    with WidgetsBindingObserver {
+class _AppLifecycleManagerState extends State<AppLifecycleManager> {
+  late final AppLifecycleListener _lifecycleListener;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    _lifecycleListener = AppLifecycleListener(
+      onExitRequested: _handleExitRequest,
+      onStateChange: _handleStateChange,
+    );
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    _lifecycleListener.dispose();
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Skip file system operations on web
+  /// Handle app exit request (desktop only) - allows async cleanup before exit.
+  Future<AppExitResponse> _handleExitRequest() async {
+    if (kIsWeb) return AppExitResponse.exit;
+
+    debugPrint('AppLifecycleManager: Exit requested, cleaning up...');
+    SyncManager.instance.dispose();
+    await FileWatcherService.instance.dispose();
+    DocumentService.instance.dispose();
+    await DatabaseService.instance.dispose();
+    debugPrint('AppLifecycleManager: Cleanup complete, exiting.');
+    return AppExitResponse.exit;
+  }
+
+  /// Handle lifecycle state changes (background/foreground).
+  void _handleStateChange(AppLifecycleState state) {
     if (kIsWeb) return;
 
     switch (state) {
       case AppLifecycleState.resumed:
-        // Restart file watching when app comes to foreground
         FileWatcherService.instance.startWatching();
-        // Rescan library for changes made while app was in background
         DocumentService.instance.scanAndSyncLibrary();
         break;
       case AppLifecycleState.paused:
-        // Stop file watching when app goes to background
-        FileWatcherService.instance.stopWatching();
-        break;
-      case AppLifecycleState.detached:
-        // App is closing - clean up all resources
-        SyncManager.instance.dispose();
-        FileWatcherService.instance.dispose();
-        DocumentService.instance.dispose();
-        DatabaseService.instance.dispose();
-        break;
       case AppLifecycleState.hidden:
-        // macOS: window minimized or hidden, stop watching to save resources
         FileWatcherService.instance.stopWatching();
         break;
       default:
