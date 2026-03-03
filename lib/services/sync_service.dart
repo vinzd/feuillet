@@ -552,6 +552,7 @@ class SyncManager {
   final Map<String, DateTime> _suppressedPaths = {};
   final Map<int, Timer> _annotationDebounceTimers = {};
   final Map<int, Timer> _setListDebounceTimers = {};
+  final Map<String, Timer> _incomingDebounceTimers = {};
   StreamSubscription<dynamic>? _syncChangesSubscription;
 
   static const _suppressionDuration = Duration(seconds: 2);
@@ -672,12 +673,25 @@ class SyncManager {
           return;
         }
 
-        if (FileWatcherService.isSidecarFile(filePath)) {
-          await _handleIncomingSidecar(filePath, db);
-        } else if (FileWatcherService.isSetListFile(filePath)) {
-          final pdfDir = await getPdfDirectoryPath();
-          await _handleIncomingSetList(filePath, db, pdfDir);
-        }
+        // Debounce incoming events — file watchers often emit multiple
+        // events (create, modify, …) for a single Syncthing sync.
+        _incomingDebounceTimers[filePath]?.cancel();
+        _incomingDebounceTimers[filePath] = Timer(
+          const Duration(milliseconds: 500),
+          () async {
+            _incomingDebounceTimers.remove(filePath);
+            try {
+              if (FileWatcherService.isSidecarFile(filePath)) {
+                await _handleIncomingSidecar(filePath, db);
+              } else if (FileWatcherService.isSetListFile(filePath)) {
+                final pdfDir = await getPdfDirectoryPath();
+                await _handleIncomingSetList(filePath, db, pdfDir);
+              }
+            } catch (e) {
+              debugPrint('SyncManager: error handling sync event: $e');
+            }
+          },
+        );
       } catch (e) {
         debugPrint('SyncManager: error handling sync event: $e');
       }
@@ -871,6 +885,11 @@ class SyncManager {
       timer.cancel();
     }
     _setListDebounceTimers.clear();
+
+    for (final timer in _incomingDebounceTimers.values) {
+      timer.cancel();
+    }
+    _incomingDebounceTimers.clear();
 
     _suppressedPaths.clear();
   }
