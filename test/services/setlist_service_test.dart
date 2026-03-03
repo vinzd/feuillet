@@ -1,4 +1,7 @@
+import 'package:drift/drift.dart' hide isNull;
+import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:feuillet/models/database.dart';
 import 'package:feuillet/services/setlist_service.dart';
 
 void main() {
@@ -50,6 +53,71 @@ void main() {
 
       expect(items, [1, 0, 2, 3]);
       expect(items.toSet().length, 4); // All unique
+    });
+  });
+
+  group('updateSetListItemLabel', () {
+    late AppDatabase db;
+
+    setUp(() async {
+      db = AppDatabase.forTesting(NativeDatabase.memory());
+    });
+
+    tearDown(() async {
+      await db.close();
+    });
+
+    /// Helper to insert a test document and return its id.
+    Future<int> createTestDocument(String name) async {
+      return db.insertDocument(
+        DocumentsCompanion(
+          name: Value(name),
+          filePath: Value('/test/$name'),
+          lastModified: Value(DateTime.utc(2026, 1, 1)),
+          fileSize: const Value(1000),
+          pageCount: const Value(1),
+        ),
+      );
+    }
+
+    test('updateSetListItemNotes updates the label on a set list item',
+        () async {
+      final setListId = await db.insertSetList(
+        SetListsCompanion(name: const Value('Concert')),
+      );
+      final docId = await createTestDocument('Sonate.pdf');
+      final itemId = await db.insertSetListItem(
+        SetListItemsCompanion(
+          setListId: Value(setListId),
+          documentId: Value(docId),
+          orderIndex: const Value(0),
+        ),
+      );
+
+      await db.updateSetListItemNotes(itemId, 'Introduction');
+
+      final items = await db.getSetListItems(setListId);
+      expect(items.first.notes, 'Introduction');
+    });
+
+    test('updateSetListItemNotes clears label when set to null', () async {
+      final setListId = await db.insertSetList(
+        SetListsCompanion(name: const Value('Concert')),
+      );
+      final docId = await createTestDocument('Sonate.pdf');
+      final itemId = await db.insertSetListItem(
+        SetListItemsCompanion(
+          setListId: Value(setListId),
+          documentId: Value(docId),
+          orderIndex: const Value(0),
+          notes: const Value('Old label'),
+        ),
+      );
+
+      await db.updateSetListItemNotes(itemId, null);
+
+      final items = await db.getSetListItems(setListId);
+      expect(items.first.notes, isNull);
     });
   });
 }

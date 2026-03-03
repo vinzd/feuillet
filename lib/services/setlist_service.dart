@@ -149,6 +149,11 @@ class SetListService {
     }
   }
 
+  /// Update the label for a set list item
+  Future<void> updateSetListItemLabel(int itemId, String? label) async {
+    await _database.updateSetListItemNotes(itemId, label);
+  }
+
   /// Duplicate a set list
   Future<int> duplicateSetList(int setListId) async {
     final originalSetList = await getSetList(setListId);
