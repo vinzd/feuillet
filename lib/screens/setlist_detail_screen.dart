@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../models/database.dart';
 import '../router/app_router.dart';
@@ -24,11 +25,25 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
   List<Document> _documents = [];
   List<SetListItem> _items = [];
   bool _isLoading = true;
+  bool _isEditingTitle = false;
+  late TextEditingController _titleController;
+  late FocusNode _titleFocusNode;
 
   @override
   void initState() {
     super.initState();
+    _titleController = TextEditingController();
+    _titleFocusNode = FocusNode();
+    _titleFocusNode.addListener(_onTitleFocusChange);
     _loadSetList();
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _titleFocusNode.removeListener(_onTitleFocusChange);
+    _titleFocusNode.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSetList() async {
@@ -39,6 +54,35 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
     _items = await _setListService.getSetListItems(widget.setListId);
 
     setState(() => _isLoading = false);
+  }
+
+  void _onTitleFocusChange() {
+    if (!_titleFocusNode.hasFocus && _isEditingTitle) {
+      _saveTitleEdit();
+    }
+  }
+
+  void _startTitleEdit() {
+    setState(() {
+      _isEditingTitle = true;
+      _titleController.text = _setList!.name;
+    });
+    _titleFocusNode.requestFocus();
+  }
+
+  Future<void> _saveTitleEdit() async {
+    final newName = _titleController.text.trim();
+    setState(() => _isEditingTitle = false);
+
+    if (newName.isNotEmpty && newName != _setList!.name) {
+      final updated = _setList!.copyWith(name: newName, modifiedAt: DateTime.now());
+      await _setListService.updateSetList(updated);
+      await _loadSetList();
+    }
+  }
+
+  void _cancelTitleEdit() {
+    setState(() => _isEditingTitle = false);
   }
 
   Future<void> _addDocuments() async {
@@ -133,7 +177,33 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_setList!.name),
+        title: _isEditingTitle
+            ? KeyboardListener(
+                focusNode: FocusNode(),
+                onKeyEvent: (event) {
+                  if (event is KeyDownEvent) {
+                    if (event.logicalKey == LogicalKeyboardKey.escape) {
+                      _cancelTitleEdit();
+                    }
+                  }
+                },
+                child: TextField(
+                  controller: _titleController,
+                  focusNode: _titleFocusNode,
+                  style: Theme.of(context).appBarTheme.titleTextStyle ??
+                      Theme.of(context).textTheme.titleLarge,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  onSubmitted: (_) => _saveTitleEdit(),
+                ),
+              )
+            : GestureDetector(
+                onTap: _startTitleEdit,
+                child: Text(_setList!.name),
+              ),
         actions: [
           IconButton(
             icon: const Icon(Icons.play_arrow),
