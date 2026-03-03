@@ -6,7 +6,6 @@ import 'package:watcher/watcher.dart';
 import 'package:path/path.dart' as p;
 import '../models/database.dart';
 import 'app_settings_service.dart';
-import 'file_access_service.dart';
 
 /// Service to monitor file system changes for Syncthing compatibility
 /// Watches the database and PDF directory for external modifications
@@ -23,10 +22,6 @@ class FileWatcherService {
   bool _isWatching = false;
   String? _pdfDirectoryPath;
   String? _databasePath;
-  Timer? _safPollingTimer;
-
-  /// Callback for SAF polling — set by DocumentService to trigger scanAndSyncLibrary
-  Future<void> Function()? onSafPollCallback;
 
   /// Stream of PDF directory changes
   Stream<WatchEvent> get pdfChanges => _pdfChangesController.stream;
@@ -61,12 +56,10 @@ class FileWatcherService {
       final appDocDir = await getApplicationDocumentsDirectory();
       _databasePath = p.join(appDocDir.path, 'feuillet', 'feuillet_db.sqlite');
 
-      // Create PDF directory if it doesn't exist (skip for SAF URIs)
-      if (!isSafUri(_pdfDirectoryPath!)) {
-        final pdfDir = Directory(_pdfDirectoryPath!);
-        if (!await pdfDir.exists()) {
-          await pdfDir.create(recursive: true);
-        }
+      // Create PDF directory if it doesn't exist
+      final pdfDir = Directory(_pdfDirectoryPath!);
+      if (!await pdfDir.exists()) {
+        await pdfDir.create(recursive: true);
       }
 
       // Start watching PDF directory
@@ -93,8 +86,6 @@ class FileWatcherService {
 
     _pdfDirectoryWatcher = null;
     _databaseWatcher = null;
-    _safPollingTimer?.cancel();
-    _safPollingTimer = null;
 
     _isWatching = false;
     debugPrint('FileWatcherService: Stopped watching');
@@ -110,16 +101,6 @@ class FileWatcherService {
   /// Start watching the PDF directory
   Future<void> _startPdfDirectoryWatcher() async {
     if (_pdfDirectoryPath == null) return;
-
-    // SAF URIs can't be watched with DirectoryWatcher — use periodic polling
-    if (isSafUri(_pdfDirectoryPath!)) {
-      debugPrint('FileWatcherService: Using polling for SAF directory');
-      _safPollingTimer = Timer.periodic(
-        const Duration(seconds: 30),
-        (_) => _pollSafDirectory(),
-      );
-      return;
-    }
 
     try {
       _pdfDirectoryWatcher = DirectoryWatcher(_pdfDirectoryPath!);
@@ -148,14 +129,6 @@ class FileWatcherService {
     } catch (e) {
       debugPrint('FileWatcherService: Could not watch PDF directory: $e');
     }
-  }
-
-  /// Poll SAF directory for changes by triggering a library rescan.
-  Future<void> _pollSafDirectory() async {
-    final callback = onSafPollCallback;
-    if (callback == null) return;
-    debugPrint('FileWatcherService: Polling SAF directory for changes');
-    await callback();
   }
 
   /// Start watching the database file
@@ -215,12 +188,10 @@ class FileWatcherService {
     // Delegate to AppSettingsService for configurable path
     _pdfDirectoryPath = await AppSettingsService.instance.getPdfDirectoryPath();
 
-    // Create directory if it doesn't exist (skip for SAF URIs)
-    if (!isSafUri(_pdfDirectoryPath!)) {
-      final pdfDir = Directory(_pdfDirectoryPath!);
-      if (!await pdfDir.exists()) {
-        await pdfDir.create(recursive: true);
-      }
+    // Create directory if it doesn't exist
+    final pdfDir = Directory(_pdfDirectoryPath!);
+    if (!await pdfDir.exists()) {
+      await pdfDir.create(recursive: true);
     }
 
     return _pdfDirectoryPath!;
@@ -251,7 +222,5 @@ class FileWatcherService {
     _databaseChangesController.close();
     _pdfDirectoryWatcher = null;
     _databaseWatcher = null;
-    _safPollingTimer?.cancel();
-    _safPollingTimer = null;
   }
 }
