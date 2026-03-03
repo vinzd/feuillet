@@ -110,6 +110,50 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
     }
   }
 
+  Future<void> _renameSetList(SetList setList) async {
+    final nameController = TextEditingController(text: setList.name);
+
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename Set List'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: 'Name',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+          onSubmitted: (value) {
+            if (value.trim().isNotEmpty) {
+              Navigator.pop(context, value.trim());
+            }
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = nameController.text.trim();
+              if (value.isNotEmpty) {
+                Navigator.pop(context, value);
+              }
+            },
+            child: const Text('Rename'),
+          ),
+        ],
+      ),
+    );
+
+    if (newName != null && newName != setList.name) {
+      final updated = setList.copyWith(name: newName, modifiedAt: DateTime.now());
+      await _setListService.updateSetList(updated);
+    }
+  }
+
   Future<void> _duplicateSetList(SetList setList) async {
     await _setListService.duplicateSetList(setList.id);
     if (mounted) {
@@ -201,6 +245,9 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
                       PopupMenuButton<String>(
                         onSelected: (value) {
                           switch (value) {
+                            case 'rename':
+                              _renameSetList(setList);
+                              break;
                             case 'duplicate':
                               _duplicateSetList(setList);
                               break;
@@ -210,6 +257,16 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
                           }
                         },
                         itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'rename',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit),
+                                SizedBox(width: 8),
+                                Text('Rename'),
+                              ],
+                            ),
+                          ),
                           const PopupMenuItem(
                             value: 'duplicate',
                             child: Row(
