@@ -80,7 +80,10 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
   }
 
   Future<void> _removeDocument(int itemId) async {
-    await _setListService.removeDocumentFromSetList(itemId);
+    await _setListService.removeDocumentFromSetList(
+      itemId,
+      setListId: widget.setListId,
+    );
     await _setListService.touchSetList(widget.setListId);
     await _loadSetList();
   }
