@@ -149,7 +149,10 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
     );
 
     if (newName != null && newName != setList.name) {
-      final updated = setList.copyWith(name: newName, modifiedAt: DateTime.now());
+      final updated = setList.copyWith(
+        name: newName,
+        modifiedAt: DateTime.now(),
+      );
       await _setListService.updateSetList(updated);
     }
   }

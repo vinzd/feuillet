@@ -75,7 +75,10 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
     setState(() => _isEditingTitle = false);
 
     if (newName.isNotEmpty && newName != _setList!.name) {
-      final updated = _setList!.copyWith(name: newName, modifiedAt: DateTime.now());
+      final updated = _setList!.copyWith(
+        name: newName,
+        modifiedAt: DateTime.now(),
+      );
       await _setListService.updateSetList(updated);
       await _loadSetList();
     }
@@ -190,7 +193,8 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
                 child: TextField(
                   controller: _titleController,
                   focusNode: _titleFocusNode,
-                  style: Theme.of(context).appBarTheme.titleTextStyle ??
+                  style:
+                      Theme.of(context).appBarTheme.titleTextStyle ??
                       Theme.of(context).textTheme.titleLarge,
                   decoration: const InputDecoration(
                     border: InputBorder.none,
