@@ -64,9 +64,6 @@ class DocumentService {
       return;
     }
 
-    // Register SAF polling callback for Android SAF directories
-    FileWatcherService.instance.onSafPollCallback = () => scanAndSyncLibrary();
-
     // Listen to PDF directory changes from Syncthing
     _pdfChangesSubscription = FileWatcherService.instance.pdfChanges.listen(
       _handlePdfDirectoryChange,
@@ -164,12 +161,6 @@ class DocumentService {
     final fileAccess = FileAccessService.instance;
     final pdfDir = await FileWatcherService.instance.getPdfDirectoryPath();
     final fileName = p.basename(sourcePath);
-
-    if (isSafUri(pdfDir)) {
-      // SAF directory: read source bytes and write to SAF
-      final bytes = await File(sourcePath).readAsBytes();
-      return fileAccess.writeFileToDirectory(pdfDir, fileName, bytes);
-    }
 
     final destPath = p.join(pdfDir, fileName);
 
@@ -455,9 +446,7 @@ class DocumentService {
       }
 
       final metadata = await fileAccess.getFileMetadata(filePath);
-      final fileName = isSafUri(filePath)
-          ? p.basenameWithoutExtension(Uri.parse(filePath).pathSegments.last)
-          : p.basenameWithoutExtension(filePath);
+      final fileName = p.basenameWithoutExtension(filePath);
       final docType = DocumentTypes.fromPath(filePath);
       final pageCount = docType == DocumentTypes.pdf
           ? await _getPdfPageCount(filePath)
@@ -527,13 +516,13 @@ class DocumentService {
 
       // Add new PDFs to database
       for (final file in pdfFiles) {
-        if (!dbPaths.contains(file.uri)) {
-          await addDocumentToLibrary(file.uri);
+        if (!dbPaths.contains(file.path)) {
+          await addDocumentToLibrary(file.path);
         }
       }
 
       // Remove deleted PDFs from database
-      final filePaths = pdfFiles.map((f) => f.uri).toSet();
+      final filePaths = pdfFiles.map((f) => f.path).toSet();
       for (final doc in dbDocuments) {
         // Skip web-stored PDFs (they don't have files on disk)
         if (doc.filePath.startsWith('web://')) continue;

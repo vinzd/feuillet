@@ -1,70 +1,25 @@
 import 'dart:io';
-import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:feuillet/services/file_access_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('isSafUri', () {
-    test('returns true for content:// URIs', () {
-      expect(
-        isSafUri(
-          'content://com.android.externalstorage.documents/tree/primary%3AMusic',
-        ),
-        isTrue,
-      );
-      expect(
-        isSafUri(
-          'content://com.android.providers.downloads.documents/document/123',
-        ),
-        isTrue,
-      );
-    });
-
-    test('returns false for regular file paths', () {
-      expect(isSafUri('/home/user/documents/file.pdf'), isFalse);
-      expect(isSafUri('/Users/test/pdfs/music.pdf'), isFalse);
-      expect(isSafUri('C:\\Users\\test\\file.pdf'), isFalse);
-    });
-
-    test('returns false for web paths', () {
-      expect(isSafUri('web://file.pdf'), isFalse);
-      expect(isSafUri('http://example.com/file.pdf'), isFalse);
-    });
-
-    test('returns false for empty string', () {
-      expect(isSafUri(''), isFalse);
-    });
-  });
-
   group('DocumentFileInfo', () {
     test('creates instance with all fields', () {
       final now = DateTime.now();
       final info = DocumentFileInfo(
-        uri: '/path/to/file.pdf',
+        path: '/path/to/file.pdf',
         name: 'file.pdf',
         size: 1024,
         lastModified: now,
       );
 
-      expect(info.uri, '/path/to/file.pdf');
+      expect(info.path, '/path/to/file.pdf');
       expect(info.name, 'file.pdf');
       expect(info.size, 1024);
       expect(info.lastModified, now);
-    });
-
-    test('works with SAF URIs', () {
-      final info = DocumentFileInfo(
-        uri:
-            'content://com.android.externalstorage.documents/document/primary%3Afile.pdf',
-        name: 'file.pdf',
-        size: 2048,
-        lastModified: DateTime(2024, 1, 15),
-      );
-
-      expect(isSafUri(info.uri), isTrue);
-      expect(info.name, 'file.pdf');
     });
   });
 
@@ -105,7 +60,7 @@ void main() {
       expect(files.map((f) => f.name).toSet(), {'doc1.pdf', 'doc2.pdf'});
       for (final file in files) {
         expect(file.size, greaterThan(0));
-        expect(file.uri, startsWith(tempDir.path));
+        expect(file.path, startsWith(tempDir.path));
       }
     });
 
@@ -131,7 +86,7 @@ void main() {
       });
       for (final file in files) {
         expect(file.size, greaterThan(0));
-        expect(file.uri, startsWith(tempDir.path));
+        expect(file.path, startsWith(tempDir.path));
       }
     });
 
@@ -246,79 +201,6 @@ void main() {
         '${tempDir.path}/nonexistent',
       );
       expect(exists, isFalse);
-    });
-  });
-
-  group('FileAccessService SAF routing', () {
-    // These tests verify that SAF URIs are correctly identified and routed
-    // through a mock platform channel that simulates SAF responses.
-
-    const channel = MethodChannel('com.feuillet.app/saf');
-
-    setUp(() {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, (call) async {
-            switch (call.method) {
-              case 'listDocumentFiles':
-                // Return an empty list as if the directory was empty
-                return <Map>[];
-              case 'fileExists':
-                // Simulate file not found
-                return false;
-              case 'readFileBytes':
-                return Uint8List.fromList([1, 2, 3]);
-              case 'getFileMetadata':
-                return {'size': 1024, 'lastModified': 1700000000000};
-              default:
-                return null;
-            }
-          });
-    });
-
-    tearDown(() {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, null);
-    });
-
-    test('listDocumentFiles routes SAF URIs to SAF channel', () async {
-      final files = await FileAccessService.instance.listDocumentFiles(
-        'content://com.android.externalstorage.documents/tree/primary%3AMusic',
-      );
-      expect(files, isEmpty);
-    });
-
-    test('directoryExists uses SAF channel for content:// URIs', () async {
-      final exists = await FileAccessService.instance.directoryExists(
-        'content://com.android.externalstorage.documents/tree/primary%3AMusic',
-      );
-      // Mock returns empty list, which means directory is accessible
-      expect(exists, isTrue);
-    });
-
-    test('fileExists uses SAF channel for content:// URIs', () async {
-      final exists = await FileAccessService.instance.fileExists(
-        'content://com.android.externalstorage.documents/document/primary%3Afile.pdf',
-      );
-      // Mock returns false
-      expect(exists, isFalse);
-    });
-
-    test('readFileBytes uses SAF channel for content:// URIs', () async {
-      final bytes = await FileAccessService.instance.readFileBytes(
-        'content://com.android.externalstorage.documents/document/primary%3Afile.pdf',
-      );
-      expect(bytes, Uint8List.fromList([1, 2, 3]));
-    });
-
-    test('getFileMetadata uses SAF channel for content:// URIs', () async {
-      final metadata = await FileAccessService.instance.getFileMetadata(
-        'content://com.android.externalstorage.documents/document/primary%3Afile.pdf',
-      );
-      expect(metadata.size, 1024);
-      expect(
-        metadata.lastModified,
-        DateTime.fromMillisecondsSinceEpoch(1700000000000),
-      );
     });
   });
 }
