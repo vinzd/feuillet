@@ -507,7 +507,7 @@ class DocumentService {
         return;
       }
 
-      // Get all PDF files in directory (works for both SAF and local)
+      // Get all document files in directory
       final pdfFiles = await fileAccess.listDocumentFiles(pdfDirPath);
 
       // Get all documents in database
