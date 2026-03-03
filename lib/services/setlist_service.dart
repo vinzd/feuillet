@@ -75,7 +75,7 @@ class SetListService {
   Future<int> addDocumentToSetList({
     required int setListId,
     required int documentId,
-    String? notes,
+    String? label,
   }) async {
     // Get current items to determine order index
     final items = await getSetListItems(setListId);
@@ -86,7 +86,7 @@ class SetListService {
         setListId: drift.Value(setListId),
         documentId: drift.Value(documentId),
         orderIndex: drift.Value(orderIndex),
-        notes: drift.Value(notes),
+        notes: drift.Value(label),
       ),
     );
     _scheduleSyncWrite(setListId);
@@ -173,7 +173,7 @@ class SetListService {
       await addDocumentToSetList(
         setListId: newSetListId,
         documentId: item.documentId,
-        notes: item.notes,
+        label: item.notes,
       );
     }
 
