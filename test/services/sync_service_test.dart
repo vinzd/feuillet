@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:feuillet/services/annotation_service.dart';
@@ -250,6 +252,219 @@ void main() {
       expect(restored.layers[1].name, 'Hidden');
       expect(restored.layers[1].isVisible, false);
       expect(restored.layers[1].annotations, isEmpty);
+    });
+  });
+
+  group('setListFileName', () {
+    test('sanitizes unsafe characters', () {
+      expect(setListFileName('Concert: 12/25'), 'Concert 1225.setlist.json');
+    });
+
+    test('preserves safe characters', () {
+      expect(setListFileName('My Set List'), 'My Set List.setlist.json');
+    });
+
+    test('removes all unsafe file system characters', () {
+      expect(
+        setListFileName(r'a/b\c:d*e?f"g<h>i|j'),
+        'abcdefghij.setlist.json',
+      );
+    });
+
+    test('handles name with only unsafe characters', () {
+      expect(setListFileName('/:*?'), '.setlist.json');
+    });
+  });
+
+  group('SetListFileItem', () {
+    test('toJson serializes correctly', () {
+      final item = SetListFileItem(
+        documentPath: 'Bach - Cello Suite 1.pdf',
+        orderIndex: 0,
+        notes: 'No repeat',
+      );
+      final json = item.toJson();
+
+      expect(json['documentPath'], 'Bach - Cello Suite 1.pdf');
+      expect(json['orderIndex'], 0);
+      expect(json['notes'], 'No repeat');
+    });
+
+    test('toJson serializes null notes', () {
+      final item = SetListFileItem(
+        documentPath: 'piece.pdf',
+        orderIndex: 1,
+        notes: null,
+      );
+      final json = item.toJson();
+
+      expect(json['documentPath'], 'piece.pdf');
+      expect(json['orderIndex'], 1);
+      expect(json.containsKey('notes'), isTrue);
+      expect(json['notes'], isNull);
+    });
+
+    test('fromJson deserializes correctly', () {
+      final json = {
+        'documentPath': 'subfolder/piece.png',
+        'orderIndex': 2,
+        'notes': 'Play slowly',
+      };
+      final item = SetListFileItem.fromJson(json);
+
+      expect(item.documentPath, 'subfolder/piece.png');
+      expect(item.orderIndex, 2);
+      expect(item.notes, 'Play slowly');
+    });
+
+    test('fromJson handles missing notes', () {
+      final json = {'documentPath': 'score.pdf', 'orderIndex': 0};
+      final item = SetListFileItem.fromJson(json);
+
+      expect(item.notes, isNull);
+    });
+
+    test('roundtrip preserves data', () {
+      final original = SetListFileItem(
+        documentPath: 'folder/score.pdf',
+        orderIndex: 3,
+        notes: 'Important',
+      );
+      final jsonStr = jsonEncode(original.toJson());
+      final restored = SetListFileItem.fromJson(
+        jsonDecode(jsonStr) as Map<String, dynamic>,
+      );
+
+      expect(restored.documentPath, original.documentPath);
+      expect(restored.orderIndex, original.orderIndex);
+      expect(restored.notes, original.notes);
+    });
+  });
+
+  group('SetListFile', () {
+    test('toJson serializes correctly', () {
+      final setListFile = SetListFile(
+        version: 1,
+        modifiedAt: DateTime.utc(2026, 3, 3, 14, 30),
+        name: 'Concert Dec 2026',
+        description: 'Winter recital',
+        items: [
+          SetListFileItem(
+            documentPath: 'Bach - Cello Suite 1.pdf',
+            orderIndex: 0,
+            notes: 'No repeat',
+          ),
+        ],
+      );
+
+      final json = setListFile.toJson();
+      expect(json['version'], 1);
+      expect(json['name'], 'Concert Dec 2026');
+      expect(json['description'], 'Winter recital');
+      expect(json['modifiedAt'], '2026-03-03T14:30:00.000Z');
+      expect((json['items'] as List).length, 1);
+      expect(
+        (json['items'] as List)[0]['documentPath'],
+        'Bach - Cello Suite 1.pdf',
+      );
+      expect((json['items'] as List)[0]['notes'], 'No repeat');
+    });
+
+    test('toJson serializes null description', () {
+      final setListFile = SetListFile(
+        version: 1,
+        modifiedAt: DateTime.utc(2026, 3, 3),
+        name: 'Practice',
+        description: null,
+        items: [],
+      );
+
+      final json = setListFile.toJson();
+      expect(json['description'], isNull);
+    });
+
+    test('fromJson deserializes correctly', () {
+      final json = {
+        'version': 1,
+        'modifiedAt': '2026-03-03T14:30:00.000Z',
+        'name': 'Concert',
+        'description': 'A description',
+        'items': [
+          {'documentPath': 'score.pdf', 'orderIndex': 0, 'notes': null},
+        ],
+      };
+      final setListFile = SetListFile.fromJson(json);
+
+      expect(setListFile.version, 1);
+      expect(setListFile.modifiedAt, DateTime.utc(2026, 3, 3, 14, 30));
+      expect(setListFile.name, 'Concert');
+      expect(setListFile.description, 'A description');
+      expect(setListFile.items.length, 1);
+      expect(setListFile.items[0].documentPath, 'score.pdf');
+    });
+
+    test('fromJson handles missing description', () {
+      final json = {
+        'version': 1,
+        'modifiedAt': '2026-01-01T00:00:00.000Z',
+        'name': 'Test',
+        'items': <Map<String, dynamic>>[],
+      };
+      final setListFile = SetListFile.fromJson(json);
+
+      expect(setListFile.description, isNull);
+    });
+
+    test('modifiedAt is serialized as UTC ISO 8601', () {
+      final localTime = DateTime(2026, 6, 15, 12, 0, 0);
+      final setListFile = SetListFile(
+        version: 1,
+        modifiedAt: localTime,
+        name: 'Test',
+        description: null,
+        items: [],
+      );
+      final json = setListFile.toJson();
+      final dateStr = json['modifiedAt'] as String;
+
+      expect(dateStr, endsWith('Z'));
+    });
+
+    test('full roundtrip with all data', () {
+      final original = SetListFile(
+        version: 1,
+        modifiedAt: DateTime.utc(2026, 3, 3),
+        name: 'Practice',
+        description: 'Daily practice set',
+        items: [
+          SetListFileItem(
+            documentPath: 'subfolder/piece.png',
+            orderIndex: 0,
+            notes: null,
+          ),
+          SetListFileItem(
+            documentPath: 'Bach - Suite 1.pdf',
+            orderIndex: 1,
+            notes: 'Play twice',
+          ),
+        ],
+      );
+
+      final jsonStr = jsonEncode(original.toJson());
+      final restored = SetListFile.fromJson(
+        jsonDecode(jsonStr) as Map<String, dynamic>,
+      );
+
+      expect(restored.version, original.version);
+      expect(restored.modifiedAt, original.modifiedAt);
+      expect(restored.name, original.name);
+      expect(restored.description, original.description);
+      expect(restored.items.length, 2);
+      expect(restored.items[0].documentPath, 'subfolder/piece.png');
+      expect(restored.items[0].notes, isNull);
+      expect(restored.items[1].documentPath, 'Bach - Suite 1.pdf');
+      expect(restored.items[1].notes, 'Play twice');
+      expect(restored.items[1].orderIndex, 1);
     });
   });
 }
