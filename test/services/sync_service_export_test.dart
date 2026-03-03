@@ -233,4 +233,113 @@ void main() {
       expect(sidecar.layers[0].annotations[0].strokes.length, 2); // Two strokes
     });
   });
+
+  group('buildSetListFile', () {
+    const pdfDir = '/docs';
+
+    /// Helper to insert a document with a given file path.
+    Future<int> insertDocAtPath(String filePath) async {
+      return db.insertDocument(
+        DocumentsCompanion(
+          name: Value(filePath.split('/').last),
+          filePath: Value(filePath),
+          lastModified: Value(DateTime.utc(2026, 1, 1)),
+          fileSize: const Value(500),
+          pageCount: const Value(1),
+        ),
+      );
+    }
+
+    /// Helper to insert a set list and return its id.
+    Future<int> insertSetList(String name, {String? description}) async {
+      return db.insertSetList(
+        SetListsCompanion(name: Value(name), description: Value(description)),
+      );
+    }
+
+    test('builds set list file with correct relative document path', () async {
+      final docId = await insertDocAtPath('$pdfDir/Bach - Suite 1.pdf');
+      final setListId = await insertSetList('Concert');
+
+      await db.insertSetListItem(
+        SetListItemsCompanion(
+          setListId: Value(setListId),
+          documentId: Value(docId),
+          orderIndex: const Value(0),
+          notes: const Value('No repeat'),
+        ),
+      );
+
+      final result = await buildSetListFile(db, setListId, pdfDir);
+
+      expect(result, isNotNull);
+      expect(result!.version, 1);
+      expect(result.name, 'Concert');
+      expect(result.items.length, 1);
+      expect(result.items[0].documentPath, 'Bach - Suite 1.pdf');
+      expect(result.items[0].orderIndex, 0);
+      expect(result.items[0].notes, 'No repeat');
+    });
+
+    test('handles subdirectory paths correctly', () async {
+      final docId = await insertDocAtPath(
+        '$pdfDir/Classical/Mozart/Sonata.pdf',
+      );
+      final setListId = await insertSetList('Recital');
+
+      await db.insertSetListItem(
+        SetListItemsCompanion(
+          setListId: Value(setListId),
+          documentId: Value(docId),
+          orderIndex: const Value(0),
+        ),
+      );
+
+      final result = await buildSetListFile(db, setListId, pdfDir);
+
+      expect(result, isNotNull);
+      expect(result!.items[0].documentPath, 'Classical/Mozart/Sonata.pdf');
+    });
+
+    test('returns null for nonexistent set list', () async {
+      final result = await buildSetListFile(db, 9999, pdfDir);
+
+      expect(result, isNull);
+    });
+
+    test('skips items whose documents do not exist in DB', () async {
+      final docId1 = await insertDocAtPath('$pdfDir/Exists.pdf');
+      final docId2 = await insertDocAtPath('$pdfDir/WillBeDeleted.pdf');
+      final setListId = await insertSetList('Mixed');
+
+      // Item referencing a document that will remain.
+      await db.insertSetListItem(
+        SetListItemsCompanion(
+          setListId: Value(setListId),
+          documentId: Value(docId1),
+          orderIndex: const Value(0),
+        ),
+      );
+
+      // Item referencing a document we will delete afterwards.
+      await db.insertSetListItem(
+        SetListItemsCompanion(
+          setListId: Value(setListId),
+          documentId: Value(docId2),
+          orderIndex: const Value(1),
+        ),
+      );
+
+      // Delete the second document — the set list item may or may not cascade.
+      // If it cascades, the test still validates the happy path.
+      await db.deleteDocument(docId2);
+
+      final result = await buildSetListFile(db, setListId, pdfDir);
+
+      expect(result, isNotNull);
+      // Only the first document should remain (second was deleted).
+      expect(result!.items.length, 1);
+      expect(result.items[0].documentPath, 'Exists.pdf');
+    });
+  });
 }

@@ -185,6 +185,59 @@ String setListFileName(String name) {
   return '$sanitized.setlist.json';
 }
 
+// ---------------------------------------------------------------------------
+// Database → Set List file export
+// ---------------------------------------------------------------------------
+
+/// Returns the portion of [fullPath] relative to [basePath].
+///
+/// If [fullPath] starts with `basePath/`, the prefix (including the trailing
+/// separator) is stripped. Otherwise falls back to `p.basename(fullPath)`.
+String _relativePath(String fullPath, String basePath) {
+  final prefix = basePath.endsWith('/') ? basePath : '$basePath/';
+  if (fullPath.startsWith(prefix)) {
+    return fullPath.substring(prefix.length);
+  }
+  return p.basename(fullPath);
+}
+
+/// Reads a set list and its items from [db] and builds a [SetListFile] model,
+/// resolving document IDs to relative paths under [pdfDirectoryPath].
+///
+/// Returns `null` if the set list does not exist.
+Future<SetListFile?> buildSetListFile(
+  AppDatabase db,
+  int setListId,
+  String pdfDirectoryPath,
+) async {
+  final setList = await db.getSetList(setListId);
+  if (setList == null) return null;
+
+  final items = await db.getSetListItems(setListId);
+  final fileItems = <SetListFileItem>[];
+
+  for (final item in items) {
+    final doc = await db.getDocument(item.documentId);
+    if (doc == null) continue;
+
+    fileItems.add(
+      SetListFileItem(
+        documentPath: _relativePath(doc.filePath, pdfDirectoryPath),
+        orderIndex: item.orderIndex,
+        notes: item.notes,
+      ),
+    );
+  }
+
+  return SetListFile(
+    version: 1,
+    modifiedAt: setList.modifiedAt,
+    name: setList.name,
+    description: setList.description,
+    items: fileItems,
+  );
+}
+
 /// A single item (document reference) within a set list file.
 class SetListFileItem {
   final String documentPath;
