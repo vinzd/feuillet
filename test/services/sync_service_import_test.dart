@@ -285,4 +285,132 @@ void main() {
       expect(layers, isEmpty);
     });
   });
+
+  group('importSetListFile', () {
+    const pdfDir = '/docs';
+
+    /// Helper to insert a document with a specific file path.
+    Future<int> insertDocWithPath(String filePath) async {
+      return db.insertDocument(
+        DocumentsCompanion(
+          name: Value(filePath.split('/').last),
+          filePath: Value(filePath),
+          lastModified: Value(DateTime.utc(2026, 1, 1)),
+          fileSize: const Value(1000),
+          pageCount: const Value(3),
+        ),
+      );
+    }
+
+    test('creates set list and items matching documents by path', () async {
+      final docId1 = await insertDocWithPath('/docs/Bach.pdf');
+      final docId2 = await insertDocWithPath('/docs/Mozart.pdf');
+
+      final setListFile = SetListFile(
+        version: 1,
+        modifiedAt: DateTime.utc(2026, 3, 1),
+        name: 'Concert',
+        description: 'Spring concert',
+        items: [
+          SetListFileItem(
+            documentPath: 'Bach.pdf',
+            orderIndex: 0,
+            notes: 'opener',
+          ),
+          SetListFileItem(documentPath: 'Mozart.pdf', orderIndex: 1),
+        ],
+      );
+
+      final id = await importSetListFile(db, setListFile, pdfDir);
+      expect(id, isNotNull);
+
+      final setList = await db.getSetList(id!);
+      expect(setList, isNotNull);
+      expect(setList!.name, 'Concert');
+      expect(setList.description, 'Spring concert');
+      expect(setList.modifiedAt, DateTime.utc(2026, 3, 1));
+
+      final items = await db.getSetListItems(id);
+      expect(items.length, 2);
+      expect(items[0].documentId, docId1);
+      expect(items[0].orderIndex, 0);
+      expect(items[0].notes, 'opener');
+      expect(items[1].documentId, docId2);
+      expect(items[1].orderIndex, 1);
+      expect(items[1].notes, isNull);
+    });
+
+    test('skips items whose documents are not yet synced', () async {
+      await insertDocWithPath('/docs/Bach.pdf');
+
+      final setListFile = SetListFile(
+        version: 1,
+        modifiedAt: DateTime.utc(2026, 3, 1),
+        name: 'Partial',
+        description: null,
+        items: [
+          SetListFileItem(documentPath: 'Bach.pdf', orderIndex: 0),
+          SetListFileItem(documentPath: 'Missing.pdf', orderIndex: 1),
+        ],
+      );
+
+      final id = await importSetListFile(db, setListFile, pdfDir);
+      expect(id, isNotNull);
+
+      final items = await db.getSetListItems(id!);
+      expect(items.length, 1);
+      expect(items[0].orderIndex, 0);
+    });
+
+    test('replaces existing set list with same name', () async {
+      // Insert an existing set list with the same name.
+      final oldId = await db.insertSetList(
+        SetListsCompanion(
+          name: const Value('Concert'),
+          description: const Value('Old description'),
+          modifiedAt: Value(DateTime.utc(2025, 1, 1)),
+        ),
+      );
+
+      await insertDocWithPath('/docs/Bach.pdf');
+
+      final setListFile = SetListFile(
+        version: 1,
+        modifiedAt: DateTime.utc(2026, 3, 1),
+        name: 'Concert',
+        description: 'New description',
+        items: [SetListFileItem(documentPath: 'Bach.pdf', orderIndex: 0)],
+      );
+
+      final newId = await importSetListFile(db, setListFile, pdfDir);
+      expect(newId, isNotNull);
+
+      // Old set list should be gone.
+      final oldSetList = await db.getSetList(oldId);
+      expect(oldSetList, isNull);
+
+      // New set list should exist.
+      final newSetList = await db.getSetList(newId!);
+      expect(newSetList, isNotNull);
+      expect(newSetList!.description, 'New description');
+    });
+
+    test('handles set list with null description', () async {
+      final setListFile = SetListFile(
+        version: 1,
+        modifiedAt: DateTime.utc(2026, 3, 1),
+        name: 'No Desc',
+        description: null,
+        items: [],
+      );
+
+      final id = await importSetListFile(db, setListFile, pdfDir);
+      expect(id, isNotNull);
+
+      final setList = await db.getSetList(id!);
+      expect(setList, isNotNull);
+      expect(setList!.name, 'No Desc');
+      expect(setList.description, isNull);
+    });
+  });
 }
