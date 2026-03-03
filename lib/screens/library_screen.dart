@@ -777,78 +777,74 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         onPointerUp: (event) => _onPointerUp(event, documents),
         onPointerCancel: (_) => _onPointerUp(const PointerUpEvent(), documents),
         child: GestureDetector(
-          onLongPressStart: (details) =>
-              _onLongPressStart(details, documents),
+          onLongPressStart: (details) => _onLongPressStart(details, documents),
           onLongPressMoveUpdate: (details) =>
               _onLongPressMoveUpdate(details, documents),
-          onLongPressEnd: (details) =>
-              _onLongPressEnd(details, documents),
+          onLongPressEnd: (details) => _onLongPressEnd(details, documents),
           child: Stack(
-          children: [
-            GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 200,
-                childAspectRatio: 0.7,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
+            children: [
+              GridView.builder(
+                padding: const EdgeInsets.all(16),
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 200,
+                  childAspectRatio: 0.7,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                ),
+                itemCount: documents.length,
+                itemBuilder: (context, index) {
+                  final doc = documents[index];
+                  final isInDragSelection = _dragSelectedIds.contains(doc.id);
+                  final isCurrentlySelected = _selectedDocumentIds.contains(
+                    doc.id,
+                  );
+                  // Show as selected if either already selected or in current drag
+                  // but not both (XOR for toggle preview)
+                  final showSelected = isCurrentlySelected ^ isInDragSelection;
+                  return DocumentCard(
+                    key: _getKeyForDocument(doc.id),
+                    document: doc,
+                    onTap: () => _handleDocumentTap(doc),
+                    onCheckboxTap: () => _handleCheckboxTap(doc),
+                    isSelectionMode: _isSelectionMode || _isDragSelecting,
+                    isSelected: showSelected,
+                  );
+                },
               ),
-              itemCount: documents.length,
-              itemBuilder: (context, index) {
-                final doc = documents[index];
-                final isInDragSelection = _dragSelectedIds.contains(doc.id);
-                final isCurrentlySelected = _selectedDocumentIds.contains(
-                  doc.id,
-                );
-                // Show as selected if either already selected or in current drag
-                // but not both (XOR for toggle preview)
-                final showSelected = isCurrentlySelected ^ isInDragSelection;
-                return DocumentCard(
-                  key: _getKeyForDocument(doc.id),
-                  document: doc,
-                  onTap: () => _handleDocumentTap(doc),
-                  onCheckboxTap: () => _handleCheckboxTap(doc),
-                  isSelectionMode: _isSelectionMode || _isDragSelecting,
-                  isSelected: showSelected,
-                );
-              },
-            ),
-            if (_isDragSelecting && _selectionRect != null)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: CustomPaint(
-                    painter: _SelectionRectPainter(
-                      rect: _selectionRect!,
-                      color: Theme.of(context).colorScheme.primary,
+              if (_isDragSelecting && _selectionRect != null)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: _SelectionRectPainter(
+                        rect: _selectionRect!,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ),
                 ),
-              ),
-          ],
-        ),
+            ],
+          ),
         ),
       );
     } else {
       return GestureDetector(
-        onLongPressStart: (details) =>
-            _onLongPressStart(details, documents),
+        onLongPressStart: (details) => _onLongPressStart(details, documents),
         onLongPressMoveUpdate: (details) =>
             _onLongPressMoveUpdate(details, documents),
-        onLongPressEnd: (details) =>
-            _onLongPressEnd(details, documents),
+        onLongPressEnd: (details) => _onLongPressEnd(details, documents),
         child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: documents.length,
-        itemBuilder: (context, index) {
-          final doc = documents[index];
-          return DocumentListTile(
-            key: _getKeyForDocument(doc.id),
-            document: doc,
-            onTap: () => _handleDocumentTap(doc),
-            isSelectionMode: _isSelectionMode,
-            isSelected: _selectedDocumentIds.contains(doc.id),
-          );
-        },
+          padding: const EdgeInsets.all(16),
+          itemCount: documents.length,
+          itemBuilder: (context, index) {
+            final doc = documents[index];
+            return DocumentListTile(
+              key: _getKeyForDocument(doc.id),
+              document: doc,
+              onTap: () => _handleDocumentTap(doc),
+              isSelectionMode: _isSelectionMode,
+              isSelected: _selectedDocumentIds.contains(doc.id),
+            );
+          },
         ),
       );
     }
