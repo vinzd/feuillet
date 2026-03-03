@@ -283,6 +283,67 @@ Future<SetListFile?> buildSetListFile(
 }
 
 /// A single item (document reference) within a set list file.
+// ---------------------------------------------------------------------------
+// Set List file → Database import
+// ---------------------------------------------------------------------------
+
+/// Imports a [SetListFile] into the database, replacing any existing set list
+/// with the same name.
+///
+/// Document references are resolved by prepending [pdfDirectoryPath] to each
+/// item's relative `documentPath` and matching against `filePath` in the
+/// database. Items whose documents are not found are silently skipped.
+///
+/// Returns the new set list ID, or `null` on failure.
+Future<int?> importSetListFile(
+  AppDatabase db,
+  SetListFile setListFile,
+  String pdfDirectoryPath,
+) async {
+  try {
+    // 1. Delete existing set lists with the same name (replace semantics).
+    final existing = await db.getAllSetLists();
+    for (final sl in existing) {
+      if (sl.name == setListFile.name) {
+        await db.deleteSetList(sl.id);
+      }
+    }
+
+    // 2. Create the new set list.
+    final setListId = await db.insertSetList(
+      SetListsCompanion(
+        name: Value(setListFile.name),
+        description: Value(setListFile.description),
+        modifiedAt: Value(setListFile.modifiedAt),
+      ),
+    );
+
+    // 3. Resolve each item's document and insert set list items.
+    final allDocuments = await db.getAllDocuments();
+    for (final item in setListFile.items) {
+      final fullPath = p.join(pdfDirectoryPath, item.documentPath);
+      final matchingDoc = allDocuments.cast<Document?>().firstWhere(
+        (d) => d!.filePath == fullPath,
+        orElse: () => null,
+      );
+      if (matchingDoc == null) continue;
+
+      await db.insertSetListItem(
+        SetListItemsCompanion(
+          setListId: Value(setListId),
+          documentId: Value(matchingDoc.id),
+          orderIndex: Value(item.orderIndex),
+          notes: Value(item.notes),
+        ),
+      );
+    }
+
+    return setListId;
+  } catch (_) {
+    return null;
+  }
+}
+
 class SetListFileItem {
   final String documentPath;
   final int orderIndex;
