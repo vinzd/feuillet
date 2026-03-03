@@ -566,7 +566,9 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
                       ),
                     ),
                     subtitle: Text(
-                      '${doc.pageCount} pages',
+                      widget.items[index].notes != null
+                          ? '${widget.items[index].notes} — ${doc.pageCount} pages'
+                          : '${doc.pageCount} pages',
                       style: const TextStyle(color: Colors.white70),
                     ),
                     onTap: () {
