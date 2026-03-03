@@ -55,6 +55,8 @@ class DocumentService {
 
   StreamSubscription? _pdfChangesSubscription;
   final _database = DatabaseService.instance.database;
+  Future<void>? _activeScan;
+  bool _rescanRequested = false;
 
   /// Initialize the service and set up file watchers
   void _initialize() {
@@ -486,8 +488,12 @@ class DocumentService {
     }
   }
 
-  /// Scan the PDF directory and sync with database
-  /// Useful for initial load or manual sync
+  /// Scan the PDF directory and sync with database.
+  /// Useful for initial load or manual sync.
+  ///
+  /// If a scan is already in progress, requests a re-scan after the current
+  /// one finishes (prevents duplicate imports from concurrent scans, e.g.
+  /// lifecycle resume + settings change on Android).
   Future<void> scanAndSyncLibrary() async {
     // Skip on web (for development iteration only)
     if (kIsWeb) {
@@ -495,6 +501,32 @@ class DocumentService {
       return;
     }
 
+    if (_activeScan != null) {
+      // Another scan is running. Request a re-scan and wait for it.
+      _rescanRequested = true;
+      debugPrint('DocumentService: Scan already in progress, queuing rescan');
+      await _activeScan;
+      return;
+    }
+
+    final scan = _runScanLoop();
+    _activeScan = scan;
+    try {
+      await scan;
+    } finally {
+      _activeScan = null;
+    }
+  }
+
+  /// Runs the scan, repeating if a re-scan was requested during execution.
+  Future<void> _runScanLoop() async {
+    do {
+      _rescanRequested = false;
+      await _doScanAndSyncLibrary();
+    } while (_rescanRequested);
+  }
+
+  Future<void> _doScanAndSyncLibrary() async {
     try {
       debugPrint('DocumentService: Scanning PDF directory...');
 
