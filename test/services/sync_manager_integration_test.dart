@@ -1,13 +1,10 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:drift/drift.dart' hide Column, isNotNull, isNull;
 import 'package:drift/native.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:feuillet/models/database.dart';
-import 'package:feuillet/services/annotation_service.dart';
 import 'package:feuillet/services/sync_service.dart';
 
 void main() {
@@ -144,7 +141,7 @@ void main() {
 
     test('imports set list files from disk on reconciliation', () async {
       // Create a document for the set list to reference.
-      final docId = await insertDoc('Bach.pdf');
+      await insertDoc('Bach.pdf');
 
       // Create the setlists directory and file.
       final setListsDir = Directory('${tempDir.path}/setlists');
