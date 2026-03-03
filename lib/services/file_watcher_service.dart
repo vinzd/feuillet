@@ -18,6 +18,7 @@ class FileWatcherService {
 
   final _pdfChangesController = StreamController<WatchEvent>.broadcast();
   final _databaseChangesController = StreamController<WatchEvent>.broadcast();
+  final _syncChangesController = StreamController<WatchEvent>.broadcast();
 
   bool _isWatching = false;
   String? _pdfDirectoryPath;
@@ -28,6 +29,17 @@ class FileWatcherService {
 
   /// Stream of database file changes
   Stream<WatchEvent> get databaseChanges => _databaseChangesController.stream;
+
+  /// Stream of sidecar and set list file changes
+  Stream<WatchEvent> get syncChanges => _syncChangesController.stream;
+
+  /// Check if a file is a sidecar metadata file
+  static bool isSidecarFile(String fileName) =>
+      fileName.endsWith('.feuillet.json');
+
+  /// Check if a file is a set list file
+  static bool isSetListFile(String fileName) =>
+      fileName.endsWith('.setlist.json');
 
   /// Check if the watcher is currently active
   bool get isWatching => _isWatching;
@@ -116,7 +128,14 @@ class FileWatcherService {
             return;
           }
 
-          // Only process PDF files
+          // Sidecar and set list files
+          final fileName = p.basename(event.path);
+          if (isSidecarFile(fileName) || isSetListFile(fileName)) {
+            _syncChangesController.add(event);
+            return;
+          }
+
+          // Document files
           final ext = p.extension(event.path).toLowerCase().replaceAll('.', '');
           if (DocumentTypes.allExtensions.contains(ext)) {
             _pdfChangesController.add(event);
@@ -220,6 +239,7 @@ class FileWatcherService {
   void dispose() {
     _pdfChangesController.close();
     _databaseChangesController.close();
+    _syncChangesController.close();
     _pdfDirectoryWatcher = null;
     _databaseWatcher = null;
   }

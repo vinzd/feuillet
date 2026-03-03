@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:feuillet/services/file_watcher_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +37,45 @@ void main() {
       expect('normal.pdf'.startsWith('.syncthing.'), isFalse);
       expect('normal.pdf'.startsWith('~syncthing~'), isFalse);
       expect('normal.pdf'.endsWith('.tmp'), isFalse);
+    });
+  });
+
+  group('Sidecar file detection', () {
+    test('isSidecarFile identifies .feuillet.json files correctly', () {
+      expect(
+        FileWatcherService.isSidecarFile('song.pdf.feuillet.json'),
+        isTrue,
+      );
+      expect(
+        FileWatcherService.isSidecarFile('photo.jpg.feuillet.json'),
+        isTrue,
+      );
+      expect(FileWatcherService.isSidecarFile('.feuillet.json'), isTrue);
+    });
+
+    test('isSidecarFile returns false for non-sidecar files', () {
+      expect(FileWatcherService.isSidecarFile('song.pdf'), isFalse);
+      expect(FileWatcherService.isSidecarFile('photo.jpg'), isFalse);
+      expect(FileWatcherService.isSidecarFile('song.json'), isFalse);
+      expect(FileWatcherService.isSidecarFile('feuillet.json'), isFalse);
+    });
+  });
+
+  group('Set list file detection', () {
+    test('isSetListFile identifies .setlist.json files correctly', () {
+      expect(
+        FileWatcherService.isSetListFile('my-setlist.setlist.json'),
+        isTrue,
+      );
+      expect(FileWatcherService.isSetListFile('concert.setlist.json'), isTrue);
+      expect(FileWatcherService.isSetListFile('.setlist.json'), isTrue);
+    });
+
+    test('isSetListFile returns false for non-setlist files', () {
+      expect(FileWatcherService.isSetListFile('song.pdf'), isFalse);
+      expect(FileWatcherService.isSetListFile('photo.png'), isFalse);
+      expect(FileWatcherService.isSetListFile('setlist.json'), isFalse);
+      expect(FileWatcherService.isSetListFile('song.feuillet.json'), isFalse);
     });
   });
 }
