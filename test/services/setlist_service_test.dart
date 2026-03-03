@@ -80,25 +80,27 @@ void main() {
       );
     }
 
-    test('updateSetListItemNotes updates the label on a set list item',
-        () async {
-      final setListId = await db.insertSetList(
-        SetListsCompanion(name: const Value('Concert')),
-      );
-      final docId = await createTestDocument('Sonate.pdf');
-      final itemId = await db.insertSetListItem(
-        SetListItemsCompanion(
-          setListId: Value(setListId),
-          documentId: Value(docId),
-          orderIndex: const Value(0),
-        ),
-      );
+    test(
+      'updateSetListItemNotes updates the label on a set list item',
+      () async {
+        final setListId = await db.insertSetList(
+          SetListsCompanion(name: const Value('Concert')),
+        );
+        final docId = await createTestDocument('Sonate.pdf');
+        final itemId = await db.insertSetListItem(
+          SetListItemsCompanion(
+            setListId: Value(setListId),
+            documentId: Value(docId),
+            orderIndex: const Value(0),
+          ),
+        );
 
-      await db.updateSetListItemNotes(itemId, 'Introduction');
+        await db.updateSetListItemNotes(itemId, 'Introduction');
 
-      final items = await db.getSetListItems(setListId);
-      expect(items.first.notes, 'Introduction');
-    });
+        final items = await db.getSetListItems(setListId);
+        expect(items.first.notes, 'Introduction');
+      },
+    );
 
     test('updateSetListItemNotes clears label when set to null', () async {
       final setListId = await db.insertSetList(
