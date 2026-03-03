@@ -6,17 +6,16 @@ import '../../services/setlist_service.dart';
 import '../../widgets/error_placeholder_screen.dart';
 import '../setlist_performance_screen.dart';
 
-/// Provider to fetch a setlist with its documents by ID
-final setListWithDocumentsProvider =
-    FutureProvider.family<({SetList? setList, List<Document> documents}), int>((
-      ref,
-      id,
-    ) async {
-      final setListService = SetListService();
-      final setList = await setListService.getSetList(id);
-      final documents = await setListService.getSetListDocuments(id);
-      return (setList: setList, documents: documents);
-    });
+/// Provider to fetch a setlist with its documents and items by ID
+final setListWithDocumentsProvider = FutureProvider.family<
+    ({SetList? setList, List<Document> documents, List<SetListItem> items}),
+    int>((ref, id) async {
+  final setListService = SetListService();
+  final setList = await setListService.getSetList(id);
+  final documents = await setListService.getSetListDocuments(id);
+  final items = await setListService.getSetListItems(id);
+  return (setList: setList, documents: documents, items: items);
+});
 
 /// Wrapper that loads a setlist and its documents before displaying
 /// SetListPerformanceScreen. Used for URL-based navigation
@@ -55,6 +54,7 @@ class SetListPerformanceWrapper extends ConsumerWidget {
         return SetListPerformanceScreen(
           setListId: setListId,
           documents: data.documents,
+          items: data.items,
         );
       },
       loading: () => const LoadingScreen(),

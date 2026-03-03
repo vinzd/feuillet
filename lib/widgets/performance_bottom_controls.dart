@@ -21,6 +21,7 @@ class PerformanceBottomControls extends StatelessWidget {
     this.onNextDoc,
     this.onPrevPage,
     this.onNextPage,
+    this.currentDocLabel,
     this.onZoomChanged,
     this.onInteraction,
     super.key,
@@ -34,6 +35,9 @@ class PerformanceBottomControls extends StatelessWidget {
 
   /// Name of the current document
   final String currentDocName;
+
+  /// Optional label for the current document in this set list
+  final String? currentDocLabel;
 
   /// Current page number (1-indexed, left page in two-page mode)
   final int currentPage;
@@ -96,7 +100,9 @@ class PerformanceBottomControls extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      currentDocName,
+                      currentDocLabel != null
+                          ? '$currentDocName — $currentDocLabel'
+                          : currentDocName,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 14,
