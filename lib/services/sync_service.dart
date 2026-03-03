@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 
 import '../models/database.dart';
@@ -165,6 +166,49 @@ Future<AnnotationSidecar?> buildAnnotationSidecar(
     modifiedAt: DateTime.now().toUtc(),
     layers: sidecarLayers,
   );
+}
+
+// ---------------------------------------------------------------------------
+// Sidecar → Database import
+// ---------------------------------------------------------------------------
+
+/// Imports an [AnnotationSidecar] into the database for [documentId],
+/// replacing all existing annotation layers and their annotations.
+Future<void> importAnnotationSidecar(
+  AppDatabase db,
+  int documentId,
+  AnnotationSidecar sidecar,
+) async {
+  // 1. Delete all existing layers (cascade deletes annotations too).
+  final existingLayers = await db.getAnnotationLayers(documentId);
+  for (final layer in existingLayers) {
+    await db.deleteAnnotationLayer(layer.id);
+  }
+
+  // 2. Create new layers and annotations from the sidecar model.
+  for (final sidecarLayer in sidecar.layers) {
+    final layerId = await db.insertAnnotationLayer(
+      AnnotationLayersCompanion(
+        documentId: Value(documentId),
+        name: Value(sidecarLayer.name),
+        orderIndex: Value(sidecarLayer.orderIndex),
+        isVisible: Value(sidecarLayer.isVisible),
+      ),
+    );
+
+    for (final pageAnnotation in sidecarLayer.annotations) {
+      for (final stroke in pageAnnotation.strokes) {
+        await db.insertAnnotation(
+          AnnotationsCompanion(
+            layerId: Value(layerId),
+            pageNumber: Value(pageAnnotation.pageNumber),
+            type: Value(stroke.type.toString()),
+            data: Value(jsonEncode(stroke.toJson())),
+          ),
+        );
+      }
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
