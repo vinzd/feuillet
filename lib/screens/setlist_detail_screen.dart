@@ -289,12 +289,14 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
                                   controller: _labelController,
                                   autofocus: true,
                                   style: const TextStyle(
-                                      fontStyle: FontStyle.italic),
+                                    fontStyle: FontStyle.italic,
+                                  ),
                                   decoration: const InputDecoration(
                                     hintText: 'Enter label...',
                                     isDense: true,
-                                    contentPadding:
-                                        EdgeInsets.symmetric(vertical: 4),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      vertical: 4,
+                                    ),
                                     border: InputBorder.none,
                                   ),
                                   onSubmitted: (_) => _saveLabel(item.id),
@@ -304,8 +306,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
                                   onTap: () {
                                     setState(() {
                                       _editingItemId = item.id;
-                                      _labelController.text =
-                                          item.notes ?? '';
+                                      _labelController.text = item.notes ?? '';
                                     });
                                   },
                                   child: Text(

@@ -309,8 +309,9 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateSetListItemNotes(int itemId, String? notes) async {
-    await (update(setListItems)..where((t) => t.id.equals(itemId)))
-        .write(SetListItemsCompanion(notes: Value(notes)));
+    await (update(setListItems)..where((t) => t.id.equals(itemId))).write(
+      SetListItemsCompanion(notes: Value(notes)),
+    );
   }
 
   // Join query to get documents in a set list
