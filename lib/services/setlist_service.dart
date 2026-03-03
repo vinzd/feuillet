@@ -21,13 +21,13 @@ class SetListService {
   }
 
   /// Get all set lists
-  Future<List<SetList>> getAllSetLists() async {
-    return await _database.getAllSetLists();
+  Future<List<SetList>> getAllSetLists() {
+    return _database.getAllSetLists();
   }
 
   /// Get a specific set list
-  Future<SetList?> getSetList(int id) async {
-    return await _database.getSetList(id);
+  Future<SetList?> getSetList(int id) {
+    return _database.getSetList(id);
   }
 
   /// Create a new set list
@@ -62,13 +62,13 @@ class SetListService {
   }
 
   /// Get items in a set list
-  Future<List<SetListItem>> getSetListItems(int setListId) async {
-    return await _database.getSetListItems(setListId);
+  Future<List<SetListItem>> getSetListItems(int setListId) {
+    return _database.getSetListItems(setListId);
   }
 
   /// Get documents in a set list
-  Future<List<Document>> getSetListDocuments(int setListId) async {
-    return await _database.getDocumentsInSetList(setListId);
+  Future<List<Document>> getSetListDocuments(int setListId) {
+    return _database.getDocumentsInSetList(setListId);
   }
 
   /// Add a document to a set list
@@ -103,27 +103,24 @@ class SetListService {
 
   /// Reorder items in a set list
   Future<void> reorderSetListItems(int setListId, List<int> itemIds) async {
-    for (int i = 0; i < itemIds.length; i++) {
-      final items = await getSetListItems(setListId);
-      final item = items.cast<SetListItem?>().firstWhere(
-        (it) => it?.id == itemIds[i],
-        orElse: () => null,
-      );
+    final items = await getSetListItems(setListId);
+    final itemsById = {for (final item in items) item.id: item};
 
-      if (item != null) {
-        // Note: We need to add an update method to the database
-        // For now, we'll delete and re-insert
-        await _database.deleteSetListItem(item.id);
-        await _database.insertSetListItem(
-          SetListItemsCompanion(
-            id: drift.Value(item.id),
-            setListId: drift.Value(item.setListId),
-            documentId: drift.Value(item.documentId),
-            orderIndex: drift.Value(i),
-            notes: drift.Value(item.notes),
-          ),
-        );
-      }
+    for (int i = 0; i < itemIds.length; i++) {
+      final item = itemsById[itemIds[i]];
+      if (item == null) continue;
+
+      // Delete and re-insert with updated order index
+      await _database.deleteSetListItem(item.id);
+      await _database.insertSetListItem(
+        SetListItemsCompanion(
+          id: drift.Value(item.id),
+          setListId: drift.Value(item.setListId),
+          documentId: drift.Value(item.documentId),
+          orderIndex: drift.Value(i),
+          notes: drift.Value(item.notes),
+        ),
+      );
     }
     _scheduleSyncWrite(setListId);
   }
