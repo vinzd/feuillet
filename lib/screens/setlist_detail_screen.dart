@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -53,13 +54,15 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
 
   Future<void> _saveLabel(int itemId) async {
     final text = _labelController.text.trim();
-    await _setListService.updateSetListItemLabel(
-      itemId,
-      text.isEmpty ? null : text,
-    );
+    final label = text.isEmpty ? null : text;
+    await _setListService.updateSetListItemLabel(itemId, label);
     await _setListService.touchSetList(widget.setListId);
+    // Update local state directly to avoid full reload blink
+    final index = _items.indexWhere((i) => i.id == itemId);
+    if (index != -1) {
+      _items[index] = _items[index].copyWith(notes: Value(label));
+    }
     setState(() => _editingItemId = null);
-    await _loadSetList();
   }
 
   Future<void> _loadSetList() async {
