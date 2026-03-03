@@ -15,6 +15,8 @@ class FileWatcherService {
 
   DirectoryWatcher? _pdfDirectoryWatcher;
   FileWatcher? _databaseWatcher;
+  StreamSubscription? _pdfWatcherSubscription;
+  StreamSubscription? _databaseWatcherSubscription;
 
   final _pdfChangesController = StreamController<WatchEvent>.broadcast();
   final _databaseChangesController = StreamController<WatchEvent>.broadcast();
@@ -96,6 +98,10 @@ class FileWatcherService {
   Future<void> stopWatching() async {
     if (!_isWatching) return;
 
+    await _pdfWatcherSubscription?.cancel();
+    await _databaseWatcherSubscription?.cancel();
+    _pdfWatcherSubscription = null;
+    _databaseWatcherSubscription = null;
     _pdfDirectoryWatcher = null;
     _databaseWatcher = null;
 
@@ -117,7 +123,7 @@ class FileWatcherService {
     try {
       _pdfDirectoryWatcher = DirectoryWatcher(_pdfDirectoryPath!);
 
-      _pdfDirectoryWatcher!.events.listen(
+      _pdfWatcherSubscription = _pdfDirectoryWatcher!.events.listen(
         (event) {
           debugPrint(
             'FileWatcherService: PDF directory event: ${event.type} - ${event.path}',
@@ -163,7 +169,7 @@ class FileWatcherService {
 
       _databaseWatcher = FileWatcher(_databasePath!);
 
-      _databaseWatcher!.events.listen(
+      _databaseWatcherSubscription = _databaseWatcher!.events.listen(
         (event) {
           debugPrint('FileWatcherService: Database event: ${event.type}');
 
@@ -236,11 +242,10 @@ class FileWatcherService {
   }
 
   /// Dispose resources
-  void dispose() {
+  Future<void> dispose() async {
+    await stopWatching();
     _pdfChangesController.close();
     _databaseChangesController.close();
     _syncChangesController.close();
-    _pdfDirectoryWatcher = null;
-    _databaseWatcher = null;
   }
 }
