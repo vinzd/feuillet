@@ -706,8 +706,16 @@ class SyncManager {
       return;
     }
 
-    final sidecar = await readAnnotationSidecarFromDisk(matchingDoc.filePath);
-    if (sidecar == null) return;
+    final sidecarFile = File(sidecarPath);
+    if (!await sidecarFile.exists()) return;
+    AnnotationSidecar sidecar;
+    try {
+      final content = await sidecarFile.readAsString();
+      sidecar = AnnotationSidecar.fromJson(jsonDecode(content));
+    } catch (e) {
+      debugPrint('SyncManager: error reading sidecar $sidecarPath: $e');
+      return;
+    }
 
     await importAnnotationSidecar(db, matchingDoc.id, sidecar);
     debugPrint('SyncManager: imported sidecar for ${matchingDoc.name}');
@@ -752,8 +760,16 @@ class SyncManager {
       try {
         final sidecar = await readAnnotationSidecarFromDisk(doc.filePath);
         if (sidecar != null) {
-          await importAnnotationSidecar(db, doc.id, sidecar);
-          debugPrint('SyncManager: reconciled sidecar for ${doc.name}');
+          // Compare timestamps: only import if sidecar is newer than DB
+          final latestDbModified = await _latestAnnotationModifiedAt(
+            db,
+            doc.id,
+          );
+          if (latestDbModified == null ||
+              sidecar.modifiedAt.isAfter(latestDbModified)) {
+            await importAnnotationSidecar(db, doc.id, sidecar);
+            debugPrint('SyncManager: reconciled sidecar for ${doc.name}');
+          }
         }
       } catch (e) {
         debugPrint('SyncManager: error importing sidecar for ${doc.name}: $e');
@@ -807,6 +823,37 @@ class SyncManager {
     }
 
     debugPrint('SyncManager: reconciliation complete');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+
+  /// Get the most recent annotation modifiedAt timestamp for a document.
+  /// Returns null if the document has no annotations.
+  Future<DateTime?> _latestAnnotationModifiedAt(
+    AppDatabase db,
+    int documentId,
+  ) async {
+    final layers = await db.getAnnotationLayers(documentId);
+    if (layers.isEmpty) return null;
+
+    DateTime? latest;
+    for (final layer in layers) {
+      final annotations =
+          await (db.select(db.annotations)
+                ..where((a) => a.layerId.equals(layer.id))
+                ..orderBy([(a) => OrderingTerm.desc(a.modifiedAt)])
+                ..limit(1))
+              .get();
+      if (annotations.isNotEmpty) {
+        final mod = annotations.first.modifiedAt;
+        if (latest == null || mod.isAfter(latest)) {
+          latest = mod;
+        }
+      }
+    }
+    return latest;
   }
 
   // ---------------------------------------------------------------------------
