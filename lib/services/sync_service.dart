@@ -100,3 +100,85 @@ class AnnotationSidecar {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Set List file serialization
+// ---------------------------------------------------------------------------
+
+/// Characters unsafe for file names on common file systems.
+final _unsafeFileNameChars = RegExp(r'[/\\:*?"<>|]');
+
+/// Sanitizes a set list [name] and returns `"<sanitized>.setlist.json"`.
+///
+/// Removes characters that are unsafe on Windows, macOS, and Linux file
+/// systems (`/\:*?"<>|`).
+///
+/// Example: `"Concert: 12/25"` → `"Concert 1225.setlist.json"`.
+String setListFileName(String name) {
+  final sanitized = name.replaceAll(_unsafeFileNameChars, '');
+  return '$sanitized.setlist.json';
+}
+
+/// A single item (document reference) within a set list file.
+class SetListFileItem {
+  final String documentPath;
+  final int orderIndex;
+  final String? notes;
+
+  SetListFileItem({
+    required this.documentPath,
+    required this.orderIndex,
+    this.notes,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'documentPath': documentPath,
+    'orderIndex': orderIndex,
+    'notes': notes,
+  };
+
+  factory SetListFileItem.fromJson(Map<String, dynamic> json) {
+    return SetListFileItem(
+      documentPath: json['documentPath'] as String,
+      orderIndex: json['orderIndex'] as int,
+      notes: json['notes'] as String?,
+    );
+  }
+}
+
+/// Top-level data model for a `.setlist.json` file synced via Syncthing.
+class SetListFile {
+  final int version;
+  final DateTime modifiedAt;
+  final String name;
+  final String? description;
+  final List<SetListFileItem> items;
+
+  SetListFile({
+    required this.version,
+    required this.modifiedAt,
+    required this.name,
+    this.description,
+    required this.items,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'version': version,
+    'modifiedAt': modifiedAt.toUtc().toIso8601String(),
+    'name': name,
+    'description': description,
+    'items': items.map((i) => i.toJson()).toList(),
+  };
+
+  factory SetListFile.fromJson(Map<String, dynamic> json) {
+    return SetListFile(
+      version: json['version'] as int,
+      modifiedAt: DateTime.parse(json['modifiedAt'] as String),
+      name: json['name'] as String,
+      description: json['description'] as String?,
+      items: (json['items'] as List)
+          .map((i) => SetListFileItem.fromJson(i as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+}
