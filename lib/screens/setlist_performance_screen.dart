@@ -24,11 +24,13 @@ import '../widgets/performance_document_view.dart';
 class SetListPerformanceScreen extends StatefulWidget {
   final int setListId;
   final List<Document> documents;
+  final List<SetListItem> items;
 
   const SetListPerformanceScreen({
     super.key,
     required this.setListId,
     required this.documents,
+    required this.items,
   });
 
   @override
@@ -487,6 +489,7 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
                   currentDocIndex: _currentDocIndex,
                   totalDocs: widget.documents.length,
                   currentDocName: widget.documents[_currentDocIndex].name,
+                  currentDocLabel: widget.items[_currentDocIndex].notes,
                   currentPage: _currentPage,
                   rightPage: _currentRightPage,
                   totalPages: widget.documents[_currentDocIndex].pageCount,
