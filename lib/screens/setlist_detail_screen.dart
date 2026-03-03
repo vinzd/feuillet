@@ -29,12 +29,16 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
   late TextEditingController _titleController;
   late FocusNode _titleFocusNode;
 
+  int? _editingItemId;
+  late TextEditingController _labelController;
+
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController();
     _titleFocusNode = FocusNode();
     _titleFocusNode.addListener(_onTitleFocusChange);
+    _labelController = TextEditingController();
     _loadSetList();
   }
 
@@ -43,7 +47,19 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
     _titleController.dispose();
     _titleFocusNode.removeListener(_onTitleFocusChange);
     _titleFocusNode.dispose();
+    _labelController.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveLabel(int itemId) async {
+    final text = _labelController.text.trim();
+    await _setListService.updateSetListItemLabel(
+      itemId,
+      text.isEmpty ? null : text,
+    );
+    await _setListService.touchSetList(widget.setListId);
+    setState(() => _editingItemId = null);
+    await _loadSetList();
   }
 
   Future<void> _loadSetList() async {
@@ -265,7 +281,40 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
                         child: ListTile(
                           leading: CircleAvatar(child: Text('${index + 1}')),
                           title: Text(doc.name),
-                          subtitle: Text('${doc.pageCount} pages'),
+                          subtitle: _editingItemId == item.id
+                              ? TextField(
+                                  controller: _labelController,
+                                  autofocus: true,
+                                  style: const TextStyle(
+                                      fontStyle: FontStyle.italic),
+                                  decoration: const InputDecoration(
+                                    hintText: 'Enter label...',
+                                    isDense: true,
+                                    contentPadding:
+                                        EdgeInsets.symmetric(vertical: 4),
+                                    border: InputBorder.none,
+                                  ),
+                                  onSubmitted: (_) => _saveLabel(item.id),
+                                  onTapOutside: (_) => _saveLabel(item.id),
+                                )
+                              : GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _editingItemId = item.id;
+                                      _labelController.text =
+                                          item.notes ?? '';
+                                    });
+                                  },
+                                  child: Text(
+                                    item.notes ?? 'Add label',
+                                    style: TextStyle(
+                                      fontStyle: FontStyle.italic,
+                                      color: item.notes != null
+                                          ? null
+                                          : Theme.of(context).disabledColor,
+                                    ),
+                                  ),
+                                ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
