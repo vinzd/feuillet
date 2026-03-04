@@ -115,6 +115,27 @@ class SetListItems extends Table {
   TextColumn get notes => text().nullable()();
 }
 
+// Labels — reusable tags for documents
+class Labels extends Table {
+  TextColumn get name => text().withLength(min: 1, max: 100)();
+  IntColumn get color => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {name};
+}
+
+// Document-label associations (many-to-many join table)
+@DataClassName('DocumentLabel')
+class DocumentLabels extends Table {
+  IntColumn get documentId =>
+      integer().references(Documents, #id, onDelete: KeyAction.cascade)();
+  TextColumn get labelName =>
+      text().references(Labels, #name, onDelete: KeyAction.cascade)();
+
+  @override
+  Set<Column> get primaryKey => {documentId, labelName};
+}
+
 // App-wide settings stored as key-value pairs
 class AppSettings extends Table {
   IntColumn get id => integer().autoIncrement()();
@@ -132,6 +153,8 @@ class AppSettings extends Table {
     Annotations,
     SetLists,
     SetListItems,
+    Labels,
+    DocumentLabels,
     AppSettings,
   ],
 )
@@ -142,7 +165,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration {
@@ -166,6 +189,10 @@ class AppDatabase extends _$AppDatabase {
         if (from < 5) {
           // Add documentType column for image support
           await m.addColumn(documents, documents.documentType);
+        }
+        if (from < 6) {
+          await m.createTable(labels);
+          await m.createTable(documentLabels);
         }
       },
       beforeOpen: (details) async {
@@ -360,6 +387,121 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteAppSetting(String key) async {
     await (delete(appSettings)..where((s) => s.key.equals(key))).go();
+  }
+
+  // Label operations
+  Future<void> insertLabel(LabelsCompanion label) {
+    return into(labels).insert(label);
+  }
+
+  Future<List<Label>> getAllLabels() {
+    return (select(labels)..orderBy([(l) => OrderingTerm.asc(l.name)])).get();
+  }
+
+  Stream<List<Label>> watchAllLabels() {
+    return (select(labels)..orderBy([(l) => OrderingTerm.asc(l.name)])).watch();
+  }
+
+  Future<Label?> getLabel(String name) {
+    return (select(
+      labels,
+    )..where((l) => l.name.equals(name))).getSingleOrNull();
+  }
+
+  Future<void> deleteLabel(String name) {
+    return (delete(labels)..where((l) => l.name.equals(name))).go();
+  }
+
+  Future<void> updateLabelColor(String name, int? color) async {
+    await (update(labels)..where((l) => l.name.equals(name))).write(
+      LabelsCompanion(color: Value(color)),
+    );
+  }
+
+  Future<void> renameLabel(String oldName, String newName) async {
+    await transaction(() async {
+      // Get old label to preserve color
+      final old = await (select(
+        labels,
+      )..where((l) => l.name.equals(oldName))).getSingleOrNull();
+      if (old == null) return;
+
+      // Insert new label with same color
+      await into(
+        labels,
+      ).insert(LabelsCompanion(name: Value(newName), color: Value(old.color)));
+
+      // Move document associations to new label name
+      await customStatement(
+        "UPDATE document_labels SET label_name = ? WHERE label_name = ?",
+        [newName, oldName],
+      );
+
+      // Delete old label
+      await (delete(labels)..where((l) => l.name.equals(oldName))).go();
+    });
+  }
+
+  // DocumentLabel operations
+  Future<void> addLabelToDocument(int documentId, String labelName) {
+    return into(documentLabels).insert(
+      DocumentLabelsCompanion(
+        documentId: Value(documentId),
+        labelName: Value(labelName),
+      ),
+      mode: InsertMode.insertOrIgnore,
+    );
+  }
+
+  Future<void> removeLabelFromDocument(int documentId, String labelName) {
+    return (delete(documentLabels)..where(
+          (dl) =>
+              dl.documentId.equals(documentId) & dl.labelName.equals(labelName),
+        ))
+        .go();
+  }
+
+  Future<List<Label>> getLabelsForDocument(int documentId) {
+    final query =
+        select(labels).join([
+            innerJoin(
+              documentLabels,
+              documentLabels.labelName.equalsExp(labels.name),
+            ),
+          ])
+          ..where(documentLabels.documentId.equals(documentId))
+          ..orderBy([OrderingTerm.asc(labels.name)]);
+    return query.map((row) => row.readTable(labels)).get();
+  }
+
+  Stream<List<Label>> watchLabelsForDocument(int documentId) {
+    final query =
+        select(labels).join([
+            innerJoin(
+              documentLabels,
+              documentLabels.labelName.equalsExp(labels.name),
+            ),
+          ])
+          ..where(documentLabels.documentId.equals(documentId))
+          ..orderBy([OrderingTerm.asc(labels.name)]);
+    return query.map((row) => row.readTable(labels)).watch();
+  }
+
+  Future<List<int>> getDocumentIdsWithAllLabels(List<String> labelNames) async {
+    if (labelNames.isEmpty) return [];
+    final placeholders = List.filled(labelNames.length, '?').join(', ');
+    final results = await customSelect(
+      'SELECT document_id FROM document_labels '
+      'WHERE label_name IN ($placeholders) '
+      'GROUP BY document_id '
+      'HAVING COUNT(DISTINCT label_name) = ?',
+      variables: [
+        ...labelNames.map((n) => Variable.withString(n)),
+        Variable.withInt(labelNames.length),
+      ],
+      readsFrom: {documentLabels},
+    ).get();
+    return results.map((row) => row.read<int>('document_id')).toList();
   }
 }
 
