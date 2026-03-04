@@ -85,22 +85,46 @@ class SidecarLayer {
   }
 }
 
+/// A label entry within a sidecar file.
+class SidecarLabel {
+  final String name;
+  final int? color;
+
+  SidecarLabel({required this.name, this.color});
+
+  Map<String, dynamic> toJson() {
+    final json = <String, dynamic>{'name': name};
+    if (color != null) json['color'] = color;
+    return json;
+  }
+
+  factory SidecarLabel.fromJson(Map<String, dynamic> json) {
+    return SidecarLabel(
+      name: json['name'] as String,
+      color: json['color'] as int?,
+    );
+  }
+}
+
 /// Top-level sidecar file data model for annotation sync via Syncthing.
 class AnnotationSidecar {
   final int version;
   final DateTime modifiedAt;
   final List<SidecarLayer> layers;
+  final List<SidecarLabel> labels;
 
   AnnotationSidecar({
     required this.version,
     required this.modifiedAt,
     required this.layers,
+    this.labels = const [],
   });
 
   Map<String, dynamic> toJson() => {
     'version': version,
     'modifiedAt': modifiedAt.toUtc().toIso8601String(),
     'layers': layers.map((l) => l.toJson()).toList(),
+    if (labels.isNotEmpty) 'labels': labels.map((l) => l.toJson()).toList(),
   };
 
   factory AnnotationSidecar.fromJson(Map<String, dynamic> json) {
@@ -110,6 +134,11 @@ class AnnotationSidecar {
       layers: (json['layers'] as List)
           .map((l) => SidecarLayer.fromJson(l as Map<String, dynamic>))
           .toList(),
+      labels:
+          (json['labels'] as List?)
+              ?.map((l) => SidecarLabel.fromJson(l as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 }
@@ -121,13 +150,13 @@ class AnnotationSidecar {
 /// Reads annotation layers and strokes for [documentId] from [db] and builds
 /// an [AnnotationSidecar] model.
 ///
-/// Returns `null` if the document has no layers or no annotation strokes.
+/// Returns `null` if the document has no layers/strokes and no labels.
 Future<AnnotationSidecar?> buildAnnotationSidecar(
   AppDatabase db,
   int documentId,
 ) async {
   final layers = await db.getAnnotationLayers(documentId);
-  if (layers.isEmpty) return null;
+  final docLabels = await db.getLabelsForDocument(documentId);
 
   final sidecarLayers = <SidecarLayer>[];
 
@@ -167,12 +196,17 @@ Future<AnnotationSidecar?> buildAnnotationSidecar(
     );
   }
 
-  if (sidecarLayers.isEmpty) return null;
+  if (sidecarLayers.isEmpty && docLabels.isEmpty) return null;
+
+  final sidecarLabels = docLabels
+      .map((l) => SidecarLabel(name: l.name, color: l.color))
+      .toList();
 
   return AnnotationSidecar(
-    version: 1,
+    version: sidecarLabels.isNotEmpty ? 2 : 1,
     modifiedAt: DateTime.now().toUtc(),
     layers: sidecarLayers,
+    labels: sidecarLabels,
   );
 }
 
@@ -216,6 +250,21 @@ Future<void> importAnnotationSidecar(
         );
       }
     }
+  }
+
+  // Import labels
+  for (final sidecarLabel in sidecar.labels) {
+    final existing = await db.getLabel(sidecarLabel.name);
+    if (existing == null) {
+      await db.insertLabel(
+        LabelsCompanion(
+          name: Value(sidecarLabel.name),
+          color: Value(sidecarLabel.color),
+        ),
+      );
+    }
+    // Don't overwrite existing label color — keep local color
+    await db.addLabelToDocument(documentId, sidecarLabel.name);
   }
 }
 
