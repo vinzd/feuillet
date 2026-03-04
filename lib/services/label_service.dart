@@ -1,9 +1,26 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 
 import '../models/database.dart';
 import 'database_service.dart';
 import 'sync_service.dart';
+
+/// Preset label colors, cycled through automatically when creating labels.
+const _labelPalette = [
+  Colors.blue,
+  Colors.teal,
+  Colors.green,
+  Colors.amber,
+  Colors.orange,
+  Colors.red,
+  Colors.pink,
+  Colors.purple,
+  Colors.deepPurple,
+  Colors.indigo,
+  Colors.cyan,
+  Colors.lime,
+];
 
 class LabelService {
   LabelService._() : _database = DatabaseService.instance.database;
@@ -24,12 +41,19 @@ class LabelService {
 
   Future<void> createLabel(String name, {int? color}) async {
     try {
+      final assignedColor = color ?? await _nextColor();
       await _database.insertLabel(
-        LabelsCompanion(name: Value(name), color: Value(color)),
+        LabelsCompanion(name: Value(name), color: Value(assignedColor)),
       );
     } catch (_) {
       // Label already exists, ignore
     }
+  }
+
+  /// Picks the next color from the palette based on how many labels exist.
+  Future<int> _nextColor() async {
+    final count = (await _database.getAllLabels()).length;
+    return _labelPalette[count % _labelPalette.length].toARGB32();
   }
 
   Future<void> deleteLabel(String name) => _database.deleteLabel(name);

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../models/database.dart';
 import '../services/document_service.dart';
+import '../services/label_service.dart';
 
 /// Card widget to display a document in the library grid view
 class DocumentCard extends StatefulWidget {
@@ -31,11 +32,13 @@ class _DocumentCardState extends State<DocumentCard> {
   bool _isLoading = true;
   bool _hasFailed = false;
   bool _isHovered = false;
+  List<Label> _labels = [];
 
   @override
   void initState() {
     super.initState();
     _loadThumbnail();
+    _loadLabels();
   }
 
   @override
@@ -43,7 +46,17 @@ class _DocumentCardState extends State<DocumentCard> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.document.id != widget.document.id) {
       _loadThumbnail();
+      _loadLabels();
     }
+  }
+
+  Future<void> _loadLabels() async {
+    try {
+      final labels = await LabelService.instance.getLabelsForDocument(
+        widget.document.id,
+      );
+      if (mounted) setState(() => _labels = labels);
+    } catch (_) {}
   }
 
   Future<void> _loadThumbnail() async {
@@ -159,13 +172,39 @@ class _DocumentCardState extends State<DocumentCard> {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
-          Text(
-            widget.document.isImage
-                ? 'Image'
-                : '${widget.document.pageCount} pages',
-            style: textTheme.bodySmall?.copyWith(
-              color: textTheme.bodySmall?.color?.withValues(alpha: 0.6),
-            ),
+          Row(
+            children: [
+              Text(
+                widget.document.isImage
+                    ? 'Image'
+                    : '${widget.document.pageCount} pages',
+                style: textTheme.bodySmall?.copyWith(
+                  color: textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                ),
+              ),
+              if (_labels.isNotEmpty) ...[
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Wrap(
+                    spacing: 3,
+                    runSpacing: 3,
+                    children: _labels
+                        .where((l) => l.color != null)
+                        .map(
+                          (l) => Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: Color(l.color!),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),
