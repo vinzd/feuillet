@@ -1,7 +1,8 @@
+import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:feuillet/models/database.dart';
-import 'package:drift/drift.dart';
+import 'package:sqlite3/sqlite3.dart';
 
 void main() {
   late AppDatabase db;
@@ -32,7 +33,7 @@ void main() {
       await db.insertLabel(LabelsCompanion(name: const Value('Classical')));
       expect(
         () => db.insertLabel(LabelsCompanion(name: const Value('Classical'))),
-        throwsA(anything),
+        throwsA(isA<SqliteException>()),
       );
     });
 
@@ -146,11 +147,42 @@ void main() {
       },
     );
 
-    test('watchAllLabels emits updates', () async {
-      final stream = db.watchAllLabels();
-      final first = await stream.first;
-      // setUp already inserted 'Bach' and 'Classical'
-      expect(first.length, 2);
+    test('getDocumentIdsWithAllLabels with empty list returns empty', () async {
+      final ids = await db.getDocumentIdsWithAllLabels([]);
+      expect(ids, isEmpty);
+    });
+
+    test('getDocumentIdsWithAllLabels with single label', () async {
+      await db.addLabelToDocument(docId, 'Classical');
+      final ids = await db.getDocumentIdsWithAllLabels(['Classical']);
+      expect(ids, [docId]);
+    });
+
+    test(
+      'getDocumentIdsWithAllLabels returns empty when no doc matches all',
+      () async {
+        await db.addLabelToDocument(docId, 'Classical');
+        // docId has only 'Classical', not 'Bach'
+        final ids = await db.getDocumentIdsWithAllLabels(['Classical', 'Bach']);
+        expect(ids, isEmpty);
+      },
+    );
+
+    test('watchAllLabels emits updates after insert', () async {
+      final emissions = <List<Label>>[];
+      final sub = db.watchAllLabels().listen(emissions.add);
+
+      // Wait for initial emission (setUp inserted 'Bach' and 'Classical')
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(emissions.last.length, 2);
+
+      // Insert a new label and verify stream emits updated list
+      await db.insertLabel(LabelsCompanion(name: const Value('Jazz')));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(emissions.last.length, 3);
+      expect(emissions.last.map((l) => l.name), contains('Jazz'));
+
+      await sub.cancel();
     });
   });
 }
