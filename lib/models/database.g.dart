@@ -2690,6 +2690,447 @@ class SetListItemsCompanion extends UpdateCompanion<SetListItem> {
   }
 }
 
+class $LabelsTable extends Labels with TableInfo<$LabelsTable, Label> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LabelsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 100,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
+  @override
+  late final GeneratedColumn<int> color = GeneratedColumn<int>(
+    'color',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [name, color];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'labels';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Label> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('color')) {
+      context.handle(
+        _colorMeta,
+        color.isAcceptableOrUnknown(data['color']!, _colorMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {name};
+  @override
+  Label map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Label(
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      color: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}color'],
+      ),
+    );
+  }
+
+  @override
+  $LabelsTable createAlias(String alias) {
+    return $LabelsTable(attachedDatabase, alias);
+  }
+}
+
+class Label extends DataClass implements Insertable<Label> {
+  final String name;
+  final int? color;
+  const Label({required this.name, this.color});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || color != null) {
+      map['color'] = Variable<int>(color);
+    }
+    return map;
+  }
+
+  LabelsCompanion toCompanion(bool nullToAbsent) {
+    return LabelsCompanion(
+      name: Value(name),
+      color: color == null && nullToAbsent
+          ? const Value.absent()
+          : Value(color),
+    );
+  }
+
+  factory Label.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Label(
+      name: serializer.fromJson<String>(json['name']),
+      color: serializer.fromJson<int?>(json['color']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'name': serializer.toJson<String>(name),
+      'color': serializer.toJson<int?>(color),
+    };
+  }
+
+  Label copyWith({String? name, Value<int?> color = const Value.absent()}) =>
+      Label(
+        name: name ?? this.name,
+        color: color.present ? color.value : this.color,
+      );
+  Label copyWithCompanion(LabelsCompanion data) {
+    return Label(
+      name: data.name.present ? data.name.value : this.name,
+      color: data.color.present ? data.color.value : this.color,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Label(')
+          ..write('name: $name, ')
+          ..write('color: $color')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(name, color);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Label && other.name == this.name && other.color == this.color);
+}
+
+class LabelsCompanion extends UpdateCompanion<Label> {
+  final Value<String> name;
+  final Value<int?> color;
+  final Value<int> rowid;
+  const LabelsCompanion({
+    this.name = const Value.absent(),
+    this.color = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LabelsCompanion.insert({
+    required String name,
+    this.color = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : name = Value(name);
+  static Insertable<Label> custom({
+    Expression<String>? name,
+    Expression<int>? color,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (name != null) 'name': name,
+      if (color != null) 'color': color,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LabelsCompanion copyWith({
+    Value<String>? name,
+    Value<int?>? color,
+    Value<int>? rowid,
+  }) {
+    return LabelsCompanion(
+      name: name ?? this.name,
+      color: color ?? this.color,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (color.present) {
+      map['color'] = Variable<int>(color.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LabelsCompanion(')
+          ..write('name: $name, ')
+          ..write('color: $color, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DocumentLabelsTable extends DocumentLabels
+    with TableInfo<$DocumentLabelsTable, DocumentLabel> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DocumentLabelsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _documentIdMeta = const VerificationMeta(
+    'documentId',
+  );
+  @override
+  late final GeneratedColumn<int> documentId = GeneratedColumn<int>(
+    'document_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES documents (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _labelNameMeta = const VerificationMeta(
+    'labelName',
+  );
+  @override
+  late final GeneratedColumn<String> labelName = GeneratedColumn<String>(
+    'label_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES labels (name) ON DELETE CASCADE',
+    ),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [documentId, labelName];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'document_labels';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DocumentLabel> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('document_id')) {
+      context.handle(
+        _documentIdMeta,
+        documentId.isAcceptableOrUnknown(data['document_id']!, _documentIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_documentIdMeta);
+    }
+    if (data.containsKey('label_name')) {
+      context.handle(
+        _labelNameMeta,
+        labelName.isAcceptableOrUnknown(data['label_name']!, _labelNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_labelNameMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {documentId, labelName};
+  @override
+  DocumentLabel map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DocumentLabel(
+      documentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}document_id'],
+      )!,
+      labelName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label_name'],
+      )!,
+    );
+  }
+
+  @override
+  $DocumentLabelsTable createAlias(String alias) {
+    return $DocumentLabelsTable(attachedDatabase, alias);
+  }
+}
+
+class DocumentLabel extends DataClass implements Insertable<DocumentLabel> {
+  final int documentId;
+  final String labelName;
+  const DocumentLabel({required this.documentId, required this.labelName});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['document_id'] = Variable<int>(documentId);
+    map['label_name'] = Variable<String>(labelName);
+    return map;
+  }
+
+  DocumentLabelsCompanion toCompanion(bool nullToAbsent) {
+    return DocumentLabelsCompanion(
+      documentId: Value(documentId),
+      labelName: Value(labelName),
+    );
+  }
+
+  factory DocumentLabel.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DocumentLabel(
+      documentId: serializer.fromJson<int>(json['documentId']),
+      labelName: serializer.fromJson<String>(json['labelName']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'documentId': serializer.toJson<int>(documentId),
+      'labelName': serializer.toJson<String>(labelName),
+    };
+  }
+
+  DocumentLabel copyWith({int? documentId, String? labelName}) => DocumentLabel(
+    documentId: documentId ?? this.documentId,
+    labelName: labelName ?? this.labelName,
+  );
+  DocumentLabel copyWithCompanion(DocumentLabelsCompanion data) {
+    return DocumentLabel(
+      documentId: data.documentId.present
+          ? data.documentId.value
+          : this.documentId,
+      labelName: data.labelName.present ? data.labelName.value : this.labelName,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DocumentLabel(')
+          ..write('documentId: $documentId, ')
+          ..write('labelName: $labelName')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(documentId, labelName);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DocumentLabel &&
+          other.documentId == this.documentId &&
+          other.labelName == this.labelName);
+}
+
+class DocumentLabelsCompanion extends UpdateCompanion<DocumentLabel> {
+  final Value<int> documentId;
+  final Value<String> labelName;
+  final Value<int> rowid;
+  const DocumentLabelsCompanion({
+    this.documentId = const Value.absent(),
+    this.labelName = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DocumentLabelsCompanion.insert({
+    required int documentId,
+    required String labelName,
+    this.rowid = const Value.absent(),
+  }) : documentId = Value(documentId),
+       labelName = Value(labelName);
+  static Insertable<DocumentLabel> custom({
+    Expression<int>? documentId,
+    Expression<String>? labelName,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (documentId != null) 'document_id': documentId,
+      if (labelName != null) 'label_name': labelName,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DocumentLabelsCompanion copyWith({
+    Value<int>? documentId,
+    Value<String>? labelName,
+    Value<int>? rowid,
+  }) {
+    return DocumentLabelsCompanion(
+      documentId: documentId ?? this.documentId,
+      labelName: labelName ?? this.labelName,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (documentId.present) {
+      map['document_id'] = Variable<int>(documentId.value);
+    }
+    if (labelName.present) {
+      map['label_name'] = Variable<String>(labelName.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DocumentLabelsCompanion(')
+          ..write('documentId: $documentId, ')
+          ..write('labelName: $labelName, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $AppSettingsTable extends AppSettings
     with TableInfo<$AppSettingsTable, AppSetting> {
   @override
@@ -3003,6 +3444,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $AnnotationsTable annotations = $AnnotationsTable(this);
   late final $SetListsTable setLists = $SetListsTable(this);
   late final $SetListItemsTable setListItems = $SetListItemsTable(this);
+  late final $LabelsTable labels = $LabelsTable(this);
+  late final $DocumentLabelsTable documentLabels = $DocumentLabelsTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -3015,6 +3458,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     annotations,
     setLists,
     setListItems,
+    labels,
+    documentLabels,
     appSettings,
   ];
   @override
@@ -3053,6 +3498,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('set_list_items', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'documents',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('document_labels', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'labels',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('document_labels', kind: UpdateKind.delete)],
     ),
   ]);
   @override
@@ -3153,6 +3612,27 @@ final class $$DocumentsTableReferences
     ).filter((f) => f.documentId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_setListItemsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$DocumentLabelsTable, List<DocumentLabel>>
+  _documentLabelsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.documentLabels,
+    aliasName: $_aliasNameGenerator(
+      db.documents.id,
+      db.documentLabels.documentId,
+    ),
+  );
+
+  $$DocumentLabelsTableProcessedTableManager get documentLabelsRefs {
+    final manager = $$DocumentLabelsTableTableManager(
+      $_db,
+      $_db.documentLabels,
+    ).filter((f) => f.documentId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_documentLabelsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -3284,6 +3764,31 @@ class $$DocumentsTableFilterComposer
           }) => $$SetListItemsTableFilterComposer(
             $db: $db,
             $table: $db.setListItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> documentLabelsRefs(
+    Expression<bool> Function($$DocumentLabelsTableFilterComposer f) f,
+  ) {
+    final $$DocumentLabelsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.documentLabels,
+      getReferencedColumn: (t) => t.documentId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DocumentLabelsTableFilterComposer(
+            $db: $db,
+            $table: $db.documentLabels,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -3473,6 +3978,31 @@ class $$DocumentsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> documentLabelsRefs<T extends Object>(
+    Expression<T> Function($$DocumentLabelsTableAnnotationComposer a) f,
+  ) {
+    final $$DocumentLabelsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.documentLabels,
+      getReferencedColumn: (t) => t.documentId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DocumentLabelsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.documentLabels,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$DocumentsTableTableManager
@@ -3492,6 +4022,7 @@ class $$DocumentsTableTableManager
             bool documentSettingsRefs,
             bool annotationLayersRefs,
             bool setListItemsRefs,
+            bool documentLabelsRefs,
           })
         > {
   $$DocumentsTableTableManager(_$AppDatabase db, $DocumentsTable table)
@@ -3566,6 +4097,7 @@ class $$DocumentsTableTableManager
                 documentSettingsRefs = false,
                 annotationLayersRefs = false,
                 setListItemsRefs = false,
+                documentLabelsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -3573,6 +4105,7 @@ class $$DocumentsTableTableManager
                     if (documentSettingsRefs) db.documentSettings,
                     if (annotationLayersRefs) db.annotationLayers,
                     if (setListItemsRefs) db.setListItems,
+                    if (documentLabelsRefs) db.documentLabels,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -3640,6 +4173,27 @@ class $$DocumentsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (documentLabelsRefs)
+                        await $_getPrefetchedData<
+                          Document,
+                          $DocumentsTable,
+                          DocumentLabel
+                        >(
+                          currentTable: table,
+                          referencedTable: $$DocumentsTableReferences
+                              ._documentLabelsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$DocumentsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).documentLabelsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.documentId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -3664,6 +4218,7 @@ typedef $$DocumentsTableProcessedTableManager =
         bool documentSettingsRefs,
         bool annotationLayersRefs,
         bool setListItemsRefs,
+        bool documentLabelsRefs,
       })
     >;
 typedef $$DocumentSettingsTableCreateCompanionBuilder =
@@ -5546,6 +6101,608 @@ typedef $$SetListItemsTableProcessedTableManager =
       SetListItem,
       PrefetchHooks Function({bool setListId, bool documentId})
     >;
+typedef $$LabelsTableCreateCompanionBuilder =
+    LabelsCompanion Function({
+      required String name,
+      Value<int?> color,
+      Value<int> rowid,
+    });
+typedef $$LabelsTableUpdateCompanionBuilder =
+    LabelsCompanion Function({
+      Value<String> name,
+      Value<int?> color,
+      Value<int> rowid,
+    });
+
+final class $$LabelsTableReferences
+    extends BaseReferences<_$AppDatabase, $LabelsTable, Label> {
+  $$LabelsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$DocumentLabelsTable, List<DocumentLabel>>
+  _documentLabelsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.documentLabels,
+    aliasName: $_aliasNameGenerator(
+      db.labels.name,
+      db.documentLabels.labelName,
+    ),
+  );
+
+  $$DocumentLabelsTableProcessedTableManager get documentLabelsRefs {
+    final manager = $$DocumentLabelsTableTableManager(
+      $_db,
+      $_db.documentLabels,
+    ).filter((f) => f.labelName.name.sqlEquals($_itemColumn<String>('name')!));
+
+    final cache = $_typedResult.readTableOrNull(_documentLabelsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$LabelsTableFilterComposer
+    extends Composer<_$AppDatabase, $LabelsTable> {
+  $$LabelsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> documentLabelsRefs(
+    Expression<bool> Function($$DocumentLabelsTableFilterComposer f) f,
+  ) {
+    final $$DocumentLabelsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.name,
+      referencedTable: $db.documentLabels,
+      getReferencedColumn: (t) => t.labelName,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DocumentLabelsTableFilterComposer(
+            $db: $db,
+            $table: $db.documentLabels,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$LabelsTableOrderingComposer
+    extends Composer<_$AppDatabase, $LabelsTable> {
+  $$LabelsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LabelsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LabelsTable> {
+  $$LabelsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get color =>
+      $composableBuilder(column: $table.color, builder: (column) => column);
+
+  Expression<T> documentLabelsRefs<T extends Object>(
+    Expression<T> Function($$DocumentLabelsTableAnnotationComposer a) f,
+  ) {
+    final $$DocumentLabelsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.name,
+      referencedTable: $db.documentLabels,
+      getReferencedColumn: (t) => t.labelName,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DocumentLabelsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.documentLabels,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$LabelsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LabelsTable,
+          Label,
+          $$LabelsTableFilterComposer,
+          $$LabelsTableOrderingComposer,
+          $$LabelsTableAnnotationComposer,
+          $$LabelsTableCreateCompanionBuilder,
+          $$LabelsTableUpdateCompanionBuilder,
+          (Label, $$LabelsTableReferences),
+          Label,
+          PrefetchHooks Function({bool documentLabelsRefs})
+        > {
+  $$LabelsTableTableManager(_$AppDatabase db, $LabelsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LabelsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LabelsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LabelsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> name = const Value.absent(),
+                Value<int?> color = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LabelsCompanion(name: name, color: color, rowid: rowid),
+          createCompanionCallback:
+              ({
+                required String name,
+                Value<int?> color = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LabelsCompanion.insert(
+                name: name,
+                color: color,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) =>
+                    (e.readTable(table), $$LabelsTableReferences(db, table, e)),
+              )
+              .toList(),
+          prefetchHooksCallback: ({documentLabelsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (documentLabelsRefs) db.documentLabels,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (documentLabelsRefs)
+                    await $_getPrefetchedData<
+                      Label,
+                      $LabelsTable,
+                      DocumentLabel
+                    >(
+                      currentTable: table,
+                      referencedTable: $$LabelsTableReferences
+                          ._documentLabelsRefsTable(db),
+                      managerFromTypedResult: (p0) => $$LabelsTableReferences(
+                        db,
+                        table,
+                        p0,
+                      ).documentLabelsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where(
+                            (e) => e.labelName == item.name,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$LabelsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LabelsTable,
+      Label,
+      $$LabelsTableFilterComposer,
+      $$LabelsTableOrderingComposer,
+      $$LabelsTableAnnotationComposer,
+      $$LabelsTableCreateCompanionBuilder,
+      $$LabelsTableUpdateCompanionBuilder,
+      (Label, $$LabelsTableReferences),
+      Label,
+      PrefetchHooks Function({bool documentLabelsRefs})
+    >;
+typedef $$DocumentLabelsTableCreateCompanionBuilder =
+    DocumentLabelsCompanion Function({
+      required int documentId,
+      required String labelName,
+      Value<int> rowid,
+    });
+typedef $$DocumentLabelsTableUpdateCompanionBuilder =
+    DocumentLabelsCompanion Function({
+      Value<int> documentId,
+      Value<String> labelName,
+      Value<int> rowid,
+    });
+
+final class $$DocumentLabelsTableReferences
+    extends BaseReferences<_$AppDatabase, $DocumentLabelsTable, DocumentLabel> {
+  $$DocumentLabelsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $DocumentsTable _documentIdTable(_$AppDatabase db) =>
+      db.documents.createAlias(
+        $_aliasNameGenerator(db.documentLabels.documentId, db.documents.id),
+      );
+
+  $$DocumentsTableProcessedTableManager get documentId {
+    final $_column = $_itemColumn<int>('document_id')!;
+
+    final manager = $$DocumentsTableTableManager(
+      $_db,
+      $_db.documents,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_documentIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $LabelsTable _labelNameTable(_$AppDatabase db) =>
+      db.labels.createAlias(
+        $_aliasNameGenerator(db.documentLabels.labelName, db.labels.name),
+      );
+
+  $$LabelsTableProcessedTableManager get labelName {
+    final $_column = $_itemColumn<String>('label_name')!;
+
+    final manager = $$LabelsTableTableManager(
+      $_db,
+      $_db.labels,
+    ).filter((f) => f.name.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_labelNameTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$DocumentLabelsTableFilterComposer
+    extends Composer<_$AppDatabase, $DocumentLabelsTable> {
+  $$DocumentLabelsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $$DocumentsTableFilterComposer get documentId {
+    final $$DocumentsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.documentId,
+      referencedTable: $db.documents,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DocumentsTableFilterComposer(
+            $db: $db,
+            $table: $db.documents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$LabelsTableFilterComposer get labelName {
+    final $$LabelsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.labelName,
+      referencedTable: $db.labels,
+      getReferencedColumn: (t) => t.name,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LabelsTableFilterComposer(
+            $db: $db,
+            $table: $db.labels,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DocumentLabelsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DocumentLabelsTable> {
+  $$DocumentLabelsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $$DocumentsTableOrderingComposer get documentId {
+    final $$DocumentsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.documentId,
+      referencedTable: $db.documents,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DocumentsTableOrderingComposer(
+            $db: $db,
+            $table: $db.documents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$LabelsTableOrderingComposer get labelName {
+    final $$LabelsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.labelName,
+      referencedTable: $db.labels,
+      getReferencedColumn: (t) => t.name,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LabelsTableOrderingComposer(
+            $db: $db,
+            $table: $db.labels,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DocumentLabelsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DocumentLabelsTable> {
+  $$DocumentLabelsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $$DocumentsTableAnnotationComposer get documentId {
+    final $$DocumentsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.documentId,
+      referencedTable: $db.documents,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$DocumentsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.documents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$LabelsTableAnnotationComposer get labelName {
+    final $$LabelsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.labelName,
+      referencedTable: $db.labels,
+      getReferencedColumn: (t) => t.name,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LabelsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.labels,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$DocumentLabelsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DocumentLabelsTable,
+          DocumentLabel,
+          $$DocumentLabelsTableFilterComposer,
+          $$DocumentLabelsTableOrderingComposer,
+          $$DocumentLabelsTableAnnotationComposer,
+          $$DocumentLabelsTableCreateCompanionBuilder,
+          $$DocumentLabelsTableUpdateCompanionBuilder,
+          (DocumentLabel, $$DocumentLabelsTableReferences),
+          DocumentLabel,
+          PrefetchHooks Function({bool documentId, bool labelName})
+        > {
+  $$DocumentLabelsTableTableManager(
+    _$AppDatabase db,
+    $DocumentLabelsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DocumentLabelsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DocumentLabelsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DocumentLabelsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> documentId = const Value.absent(),
+                Value<String> labelName = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DocumentLabelsCompanion(
+                documentId: documentId,
+                labelName: labelName,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int documentId,
+                required String labelName,
+                Value<int> rowid = const Value.absent(),
+              }) => DocumentLabelsCompanion.insert(
+                documentId: documentId,
+                labelName: labelName,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$DocumentLabelsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({documentId = false, labelName = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (documentId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.documentId,
+                                referencedTable: $$DocumentLabelsTableReferences
+                                    ._documentIdTable(db),
+                                referencedColumn:
+                                    $$DocumentLabelsTableReferences
+                                        ._documentIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+                    if (labelName) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.labelName,
+                                referencedTable: $$DocumentLabelsTableReferences
+                                    ._labelNameTable(db),
+                                referencedColumn:
+                                    $$DocumentLabelsTableReferences
+                                        ._labelNameTable(db)
+                                        .name,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$DocumentLabelsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DocumentLabelsTable,
+      DocumentLabel,
+      $$DocumentLabelsTableFilterComposer,
+      $$DocumentLabelsTableOrderingComposer,
+      $$DocumentLabelsTableAnnotationComposer,
+      $$DocumentLabelsTableCreateCompanionBuilder,
+      $$DocumentLabelsTableUpdateCompanionBuilder,
+      (DocumentLabel, $$DocumentLabelsTableReferences),
+      DocumentLabel,
+      PrefetchHooks Function({bool documentId, bool labelName})
+    >;
 typedef $$AppSettingsTableCreateCompanionBuilder =
     AppSettingsCompanion Function({
       Value<int> id,
@@ -5737,6 +6894,10 @@ class $AppDatabaseManager {
       $$SetListsTableTableManager(_db, _db.setLists);
   $$SetListItemsTableTableManager get setListItems =>
       $$SetListItemsTableTableManager(_db, _db.setListItems);
+  $$LabelsTableTableManager get labels =>
+      $$LabelsTableTableManager(_db, _db.labels);
+  $$DocumentLabelsTableTableManager get documentLabels =>
+      $$DocumentLabelsTableTableManager(_db, _db.documentLabels);
   $$AppSettingsTableTableManager get appSettings =>
       $$AppSettingsTableTableManager(_db, _db.appSettings);
 }
