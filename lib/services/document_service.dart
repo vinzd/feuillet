@@ -14,6 +14,7 @@ import '../models/database.dart';
 import 'database_service.dart';
 import 'file_access_service.dart';
 import 'file_watcher_service.dart';
+import 'label_service.dart';
 
 /// Result of importing a single document file
 class DocumentImportResult {
@@ -109,6 +110,14 @@ class DocumentService {
       // Add to database
       await addDocumentToLibrary(filePath);
       debugPrint('DocumentService: Added new PDF from Syncthing: $filePath');
+
+      // Auto-label from subdirectory path
+      final newDoc = await _database.getAllDocuments()
+          .then((docs) => docs.where((d) => d.filePath == filePath).firstOrNull);
+      if (newDoc != null) {
+        final pdfDir = await FileWatcherService.instance.getPdfDirectoryPath();
+        await LabelService.instance.ensureLabelsFromPath(newDoc.id, newDoc.filePath, pdfDir);
+      }
     } catch (e) {
       debugPrint('DocumentService: Error handling new PDF: $e');
     }
@@ -550,6 +559,12 @@ class DocumentService {
       for (final file in pdfFiles) {
         if (!dbPaths.contains(file.path)) {
           await addDocumentToLibrary(file.path);
+          // Auto-label from subdirectory path
+          final newDoc = await _database.getAllDocuments()
+              .then((docs) => docs.where((d) => d.filePath == file.path).firstOrNull);
+          if (newDoc != null) {
+            await LabelService.instance.ensureLabelsFromPath(newDoc.id, newDoc.filePath, pdfDirPath);
+          }
         }
       }
 
