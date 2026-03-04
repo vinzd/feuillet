@@ -5,6 +5,7 @@ import '../screens/home_screen.dart';
 import '../screens/library_screen.dart';
 import '../screens/setlist_detail_screen.dart';
 import '../screens/setlists_screen.dart';
+import '../screens/label_management_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/wrappers/document_viewer_wrapper.dart';
 import '../screens/wrappers/setlist_performance_wrapper.dart';
@@ -18,6 +19,7 @@ class AppRoutes {
   static const document = '/document/:documentId';
   static const setlistDetail = '/setlist/:setListId';
   static const setlistPerformance = '/setlist/:setListId/perform';
+  static const labelManagement = '/settings/labels';
 
   /// Generate path for a specific document
   static String documentPath(int id) => '/document/$id';
@@ -85,6 +87,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.settings,
         builder: (context, state) => const SettingsScreen(),
+      ),
+
+      // Label management
+      GoRoute(
+        path: AppRoutes.labelManagement,
+        builder: (context, state) => const LabelManagementScreen(),
       ),
     ],
 

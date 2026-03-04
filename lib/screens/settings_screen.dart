@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../router/app_router.dart';
 import '../services/app_settings_service.dart';
 import '../services/file_access_service.dart';
 import '../services/file_watcher_service.dart';
@@ -171,6 +173,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       style: TextStyle(fontStyle: FontStyle.italic),
                     ),
                   ),
+
+                ListTile(
+                  leading: const Icon(Icons.label),
+                  title: const Text('Manage Labels'),
+                  subtitle: const Text('Rename, recolor, or delete labels'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push(AppRoutes.labelManagement),
+                ),
 
                 const Divider(),
 
