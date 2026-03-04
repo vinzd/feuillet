@@ -108,7 +108,8 @@ class LabelService {
     for (final segment in segments) {
       if (segment == '.' || segment.isEmpty) continue;
       await createLabel(segment);
-      await addLabelToDocument(documentId, segment);
+      // Call database directly to avoid triggering sidecar writes during scan
+      await _database.addLabelToDocument(documentId, segment);
     }
   }
 }
