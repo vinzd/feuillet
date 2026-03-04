@@ -22,6 +22,8 @@ class SetListsScreen extends ConsumerStatefulWidget {
 
 class _SetListsScreenState extends ConsumerState<SetListsScreen> {
   final _setListService = SetListService();
+  final Map<int, List<_SetListDocInfo>> _expandedItems = {};
+  final Set<int> _loadingIds = {};
 
   Future<void> _createSetList() async {
     final nameController = TextEditingController();
@@ -166,6 +168,29 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
     }
   }
 
+  Future<void> _loadSetListItems(int setListId) async {
+    if (_expandedItems.containsKey(setListId)) return;
+    setState(() => _loadingIds.add(setListId));
+    final documents = await _setListService.getSetListDocuments(setListId);
+    final items = await _setListService.getSetListItems(setListId);
+    final docInfos = <_SetListDocInfo>[];
+    for (int i = 0; i < documents.length && i < items.length; i++) {
+      docInfos.add(
+        _SetListDocInfo(
+          documentId: documents[i].id,
+          name: documents[i].name,
+          label: items[i].notes,
+        ),
+      );
+    }
+    if (mounted) {
+      setState(() {
+        _expandedItems[setListId] = docInfos;
+        _loadingIds.remove(setListId);
+      });
+    }
+  }
+
   Future<void> _startPerformance(SetList setList) async {
     final documents = await _setListService.getSetListDocuments(setList.id);
 
@@ -224,10 +249,18 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
             itemCount: setLists.length,
             itemBuilder: (context, index) {
               final setList = setLists[index];
+              final items = _expandedItems[setList.id];
+              final isLoading = _loadingIds.contains(setList.id);
               return Card(
-                child: ListTile(
+                clipBehavior: Clip.antiAlias,
+                child: ExpansionTile(
                   leading: const CircleAvatar(child: Icon(Icons.queue_music)),
-                  title: Text(setList.name),
+                  title: GestureDetector(
+                    onTap: () {
+                      context.push(AppRoutes.setlistDetailPath(setList.id));
+                    },
+                    child: Text(setList.name),
+                  ),
                   subtitle:
                       setList.description != null &&
                           setList.description!.isNotEmpty
@@ -297,9 +330,56 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
                       ),
                     ],
                   ),
-                  onTap: () {
-                    context.push(AppRoutes.setlistDetailPath(setList.id));
+                  onExpansionChanged: (expanded) {
+                    if (expanded) {
+                      _loadSetListItems(setList.id);
+                    }
                   },
+                  children: [
+                    if (isLoading)
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      )
+                    else if (items != null && items.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                          'No documents',
+                          style: TextStyle(fontStyle: FontStyle.italic),
+                        ),
+                      )
+                    else if (items != null)
+                      ...items.map(
+                        (doc) => ListTile(
+                          dense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                          ),
+                          leading: const Icon(Icons.music_note, size: 18),
+                          title: Text(doc.name),
+                          subtitle: doc.label != null && doc.label!.isNotEmpty
+                              ? Text(
+                                  doc.label!,
+                                  style: TextStyle(
+                                    color: Theme.of(context).hintColor,
+                                  ),
+                                )
+                              : null,
+                          onTap: () {
+                            context.push(
+                              AppRoutes.documentPath(doc.documentId),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
                 ),
               );
             },
@@ -324,4 +404,12 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
       ),
     );
   }
+}
+
+class _SetListDocInfo {
+  final int documentId;
+  final String name;
+  final String? label;
+
+  _SetListDocInfo({required this.documentId, required this.name, this.label});
 }
