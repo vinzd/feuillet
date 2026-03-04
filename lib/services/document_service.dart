@@ -112,11 +112,16 @@ class DocumentService {
       debugPrint('DocumentService: Added new PDF from Syncthing: $filePath');
 
       // Auto-label from subdirectory path
-      final newDoc = await _database.getAllDocuments()
-          .then((docs) => docs.where((d) => d.filePath == filePath).firstOrNull);
+      final newDoc = await _database.getAllDocuments().then(
+        (docs) => docs.where((d) => d.filePath == filePath).firstOrNull,
+      );
       if (newDoc != null) {
         final pdfDir = await FileWatcherService.instance.getPdfDirectoryPath();
-        await LabelService.instance.ensureLabelsFromPath(newDoc.id, newDoc.filePath, pdfDir);
+        await LabelService.instance.ensureLabelsFromPath(
+          newDoc.id,
+          newDoc.filePath,
+          pdfDir,
+        );
       }
     } catch (e) {
       debugPrint('DocumentService: Error handling new PDF: $e');
@@ -560,10 +565,15 @@ class DocumentService {
         if (!dbPaths.contains(file.path)) {
           await addDocumentToLibrary(file.path);
           // Auto-label from subdirectory path
-          final newDoc = await _database.getAllDocuments()
-              .then((docs) => docs.where((d) => d.filePath == file.path).firstOrNull);
+          final newDoc = await _database.getAllDocuments().then(
+            (docs) => docs.where((d) => d.filePath == file.path).firstOrNull,
+          );
           if (newDoc != null) {
-            await LabelService.instance.ensureLabelsFromPath(newDoc.id, newDoc.filePath, pdfDirPath);
+            await LabelService.instance.ensureLabelsFromPath(
+              newDoc.id,
+              newDoc.filePath,
+              pdfDirPath,
+            );
           }
         }
       }

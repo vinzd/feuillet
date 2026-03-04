@@ -647,9 +647,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
     final result = await showDialog<Set<String>>(
       context: context,
-      builder: (context) => _LabelPickerDialog(
-        allLabels: allLabels,
-      ),
+      builder: (context) => _LabelPickerDialog(allLabels: allLabels),
     );
 
     if (result != null && result.isNotEmpty) {
