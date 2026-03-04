@@ -8,7 +8,9 @@ final allLabelsProvider = StreamProvider<List<Label>>((ref) {
 });
 
 /// Watches labels for a specific document.
-final documentLabelsProvider =
-    StreamProvider.family<List<Label>, int>((ref, documentId) {
+final documentLabelsProvider = StreamProvider.family<List<Label>, int>((
+  ref,
+  documentId,
+) {
   return LabelService.instance.watchLabelsForDocument(documentId);
 });
