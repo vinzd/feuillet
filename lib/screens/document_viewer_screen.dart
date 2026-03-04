@@ -8,9 +8,11 @@ import 'package:pdfx/pdfx.dart';
 
 import '../models/database.dart';
 import '../models/view_mode.dart';
+import '../providers/label_providers.dart';
 import '../services/annotation_service.dart';
 import '../services/database_service.dart';
 import '../services/document_export_service.dart';
+import '../services/label_service.dart';
 import '../services/sync_service.dart';
 import '../services/file_access_service.dart';
 import '../services/pdf_page_cache_service.dart';
@@ -530,6 +532,24 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                 child: AppBar(
                   title: Text(widget.document.name),
                   backgroundColor: ViewerConstants.overlayBackground,
+                  bottom: PreferredSize(
+                    preferredSize: const Size.fromHeight(40),
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final labelsAsync = ref.watch(
+                          documentLabelsProvider(widget.document.id),
+                        );
+                        return labelsAsync.when(
+                          data: (labels) => _buildDocumentLabelRow(
+                            labels,
+                            widget.document.id,
+                          ),
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, _) => const SizedBox.shrink(),
+                        );
+                      },
+                    ),
+                  ),
                   actions: [
                     if (!widget.document.isImage)
                       PopupMenuButton<PdfViewMode>(
@@ -672,6 +692,135 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
         ),
       ),
     );
+  }
+
+  Widget _buildDocumentLabelRow(List<Label> labels, int documentId) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      child: SizedBox(
+        height: 32,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          children: [
+            ...labels.map(
+              (label) => Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: Chip(
+                  label: Text(label.name, style: const TextStyle(fontSize: 12)),
+                  deleteIcon: const Icon(Icons.close, size: 14),
+                  onDeleted: () async {
+                    await LabelService.instance.removeLabelFromDocument(
+                      documentId,
+                      label.name,
+                    );
+                  },
+                  avatar: label.color != null
+                      ? CircleAvatar(
+                          backgroundColor: Color(label.color!),
+                          radius: 6,
+                        )
+                      : null,
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ),
+            ActionChip(
+              label: const Icon(Icons.add, size: 16),
+              onPressed: () => _showAddLabelDialog(documentId),
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showAddLabelDialog(int documentId) async {
+    final allLabels = await LabelService.instance.getAllLabels();
+    final currentLabels = await LabelService.instance.getLabelsForDocument(
+      documentId,
+    );
+    final currentNames = currentLabels.map((l) => l.name).toSet();
+
+    if (!mounted) return;
+
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        final availableLabels = allLabels
+            .where((l) => !currentNames.contains(l.name))
+            .toList();
+        return AlertDialog(
+          title: const Text('Add Label'),
+          content: SizedBox(
+            width: 300,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (availableLabels.isNotEmpty) ...[
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 200),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: availableLabels.length,
+                      itemBuilder: (context, index) {
+                        final label = availableLabels[index];
+                        return ListTile(
+                          title: Text(label.name),
+                          leading: label.color != null
+                              ? CircleAvatar(
+                                  backgroundColor: Color(label.color!),
+                                  radius: 8,
+                                )
+                              : null,
+                          dense: true,
+                          onTap: () => Navigator.pop(context, label.name),
+                        );
+                      },
+                    ),
+                  ),
+                  const Divider(),
+                ],
+                TextField(
+                  controller: controller,
+                  decoration: const InputDecoration(
+                    labelText: 'Or create new label',
+                    isDense: true,
+                  ),
+                  onSubmitted: (value) {
+                    if (value.trim().isNotEmpty) {
+                      Navigator.pop(context, value.trim());
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final text = controller.text.trim();
+                if (text.isNotEmpty) Navigator.pop(context, text);
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+
+    if (result != null && result.isNotEmpty) {
+      await LabelService.instance.createLabel(result);
+      await LabelService.instance.addLabelToDocument(documentId, result);
+    }
   }
 
   Widget _buildImageView() {
