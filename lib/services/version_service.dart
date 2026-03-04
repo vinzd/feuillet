@@ -16,10 +16,10 @@ class VersionInfo {
     required this.gitHash,
   });
 
-  /// Returns a short display string like "1.0.0 (abc1234)"
+  /// Returns a display string like "0.0.0-alpha573964d"
   String get displayString {
     final shortHash = gitHash.length > 7 ? gitHash.substring(0, 7) : gitHash;
-    return 'v$version ($shortHash)';
+    return '$version$shortHash';
   }
 }
 
