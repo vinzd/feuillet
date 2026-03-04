@@ -12,8 +12,10 @@ import '../services/database_service.dart';
 import '../services/file_access_service.dart';
 import '../services/document_export_service.dart';
 import '../services/document_service.dart';
+import '../services/label_service.dart';
 import '../services/setlist_service.dart';
 import '../services/version_service.dart';
+import '../providers/label_providers.dart';
 import '../utils/fuzzy_search.dart';
 import '../widgets/document_card.dart';
 import '../widgets/setlist_picker_dialog.dart';
@@ -58,6 +60,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   // Long-press-drag selection state
   bool _isLongPressDragging = false;
+
+  // Label filter state
+  final Set<String> _selectedLabelNames = {};
 
   // File drop state
   bool _isDraggingFiles = false;
@@ -1006,6 +1011,64 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     );
   }
 
+  Widget _buildLabelFilterBar(List<Label> labels) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: SizedBox(
+        height: 40,
+        child: Row(
+          children: [
+            if (_selectedLabelNames.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(right: 4.0),
+                child: IconButton(
+                  icon: const Icon(Icons.clear, size: 18),
+                  onPressed: () => setState(() => _selectedLabelNames.clear()),
+                  tooltip: 'Clear filters',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                ),
+              ),
+            Expanded(
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: labels.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 6),
+                itemBuilder: (context, index) {
+                  final label = labels[index];
+                  final isSelected = _selectedLabelNames.contains(label.name);
+                  return FilterChip(
+                    label: Text(label.name),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      setState(() {
+                        if (selected) {
+                          _selectedLabelNames.add(label.name);
+                        } else {
+                          _selectedLabelNames.remove(label.name);
+                        }
+                      });
+                    },
+                    avatar: label.color != null
+                        ? CircleAvatar(
+                            backgroundColor: Color(label.color!),
+                            radius: 6,
+                          )
+                        : null,
+                    visualDensity: VisualDensity.compact,
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final documentsAsync = ref.watch(documentsProvider);
@@ -1040,15 +1103,54 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   ),
                 ),
 
+                // Label filter bar
+                Consumer(
+                  builder: (context, ref, _) {
+                    final labelsAsync = ref.watch(allLabelsProvider);
+                    return labelsAsync.when(
+                      data: (labels) {
+                        if (labels.isEmpty) return const SizedBox.shrink();
+                        return _buildLabelFilterBar(labels);
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, __) => const SizedBox.shrink(),
+                    );
+                  },
+                ),
+
                 // Document grid/list
                 Expanded(
                   child: documentsAsync.when(
                     data: (documents) {
-                      final filteredDocs = _filterDocuments(documents);
-                      if (filteredDocs.isEmpty) {
-                        return _buildEmptyState(documents.isEmpty);
+                      if (_selectedLabelNames.isEmpty) {
+                        final filteredDocs = _filterDocuments(documents);
+                        if (filteredDocs.isEmpty) {
+                          return _buildEmptyState(documents.isEmpty);
+                        }
+                        return _buildDocumentList(filteredDocs);
                       }
-                      return _buildDocumentList(filteredDocs);
+                      return FutureBuilder<List<int>>(
+                        future: LabelService.instance
+                            .getDocumentIdsWithAllLabels(
+                              _selectedLabelNames.toList(),
+                            ),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+                          final allowedIds = snapshot.data!.toSet();
+                          final labelFiltered = documents
+                              .where((d) => allowedIds.contains(d.id))
+                              .toList();
+                          final filteredDocs = _filterDocuments(labelFiltered);
+                          if (filteredDocs.isEmpty) {
+                            return _buildEmptyState(false);
+                          }
+                          return _buildDocumentList(filteredDocs);
+                        },
+                      );
                     },
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
