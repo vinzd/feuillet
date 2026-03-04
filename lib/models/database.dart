@@ -392,6 +392,10 @@ class AppDatabase extends _$AppDatabase {
   }
 
   // Label operations
+
+  /// Inserts a new label. Throws [SqliteException] if a label with the same
+  /// name already exists — callers should catch or use [LabelService.createLabel]
+  /// which silently ignores duplicates.
   Future<void> insertLabel(LabelsCompanion label) {
     return into(labels).insert(label);
   }
@@ -428,16 +432,30 @@ class AppDatabase extends _$AppDatabase {
       )..where((l) => l.name.equals(oldName))).getSingleOrNull();
       if (old == null) return;
 
+      // Fetch all document associations for the old label
+      final assocs = await (select(
+        documentLabels,
+      )..where((dl) => dl.labelName.equals(oldName))).get();
+
+      // Delete old associations (before deleting old label to avoid FK issues)
+      await (delete(
+        documentLabels,
+      )..where((dl) => dl.labelName.equals(oldName))).go();
+
       // Insert new label with same color
       await into(
         labels,
       ).insert(LabelsCompanion(name: Value(newName), color: Value(old.color)));
 
-      // Move document associations to new label name
-      await customStatement(
-        "UPDATE document_labels SET label_name = ? WHERE label_name = ?",
-        [newName, oldName],
-      );
+      // Re-insert associations pointing to new label
+      for (final a in assocs) {
+        await into(documentLabels).insert(
+          DocumentLabelsCompanion(
+            documentId: Value(a.documentId),
+            labelName: Value(newName),
+          ),
+        );
+      }
 
       // Delete old label
       await (delete(labels)..where((l) => l.name.equals(oldName))).go();
