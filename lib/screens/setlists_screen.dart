@@ -24,6 +24,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
   final _setListService = SetListService();
   final Map<int, List<_SetListDocInfo>> _expandedItems = {};
   final Set<int> _loadingIds = {};
+  final Set<int> _expandedIds = {};
 
   Future<void> _createSetList() async {
     final nameController = TextEditingController();
@@ -254,7 +255,12 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
               return Card(
                 clipBehavior: Clip.antiAlias,
                 child: ExpansionTile(
-                  leading: const CircleAvatar(child: Icon(Icons.queue_music)),
+                  leading: Icon(
+                    _expandedIds.contains(setList.id)
+                        ? Icons.expand_less
+                        : Icons.expand_more,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   title: GestureDetector(
                     onTap: () {
                       context.push(AppRoutes.setlistDetailPath(setList.id));
@@ -331,9 +337,14 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
                     ],
                   ),
                   onExpansionChanged: (expanded) {
-                    if (expanded) {
-                      _loadSetListItems(setList.id);
-                    }
+                    setState(() {
+                      if (expanded) {
+                        _expandedIds.add(setList.id);
+                        _loadSetListItems(setList.id);
+                      } else {
+                        _expandedIds.remove(setList.id);
+                      }
+                    });
                   },
                   children: [
                     if (isLoading)
