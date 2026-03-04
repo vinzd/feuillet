@@ -3,6 +3,7 @@ import 'package:path/path.dart' as p;
 
 import '../models/database.dart';
 import 'database_service.dart';
+import 'sync_service.dart';
 
 class LabelService {
   LabelService._() : _database = DatabaseService.instance.database;
@@ -41,11 +42,15 @@ class LabelService {
 
   // Associations
 
-  Future<void> addLabelToDocument(int documentId, String labelName) =>
-      _database.addLabelToDocument(documentId, labelName);
+  Future<void> addLabelToDocument(int documentId, String labelName) async {
+    await _database.addLabelToDocument(documentId, labelName);
+    await _scheduleSidecarWrite(documentId);
+  }
 
-  Future<void> removeLabelFromDocument(int documentId, String labelName) =>
-      _database.removeLabelFromDocument(documentId, labelName);
+  Future<void> removeLabelFromDocument(int documentId, String labelName) async {
+    await _database.removeLabelFromDocument(documentId, labelName);
+    await _scheduleSidecarWrite(documentId);
+  }
 
   Future<void> addLabelToDocuments(
     List<int> documentIds,
@@ -53,7 +58,19 @@ class LabelService {
   ) async {
     for (final docId in documentIds) {
       await _database.addLabelToDocument(docId, labelName);
+      await _scheduleSidecarWrite(docId);
     }
+  }
+
+  Future<void> _scheduleSidecarWrite(int documentId) async {
+    final doc = await _database.getDocument(documentId);
+    if (doc == null || doc.filePath.startsWith('web://')) return;
+
+    SyncManager.instance.scheduleAnnotationWrite(
+      db: _database,
+      documentId: documentId,
+      scoreFilePath: doc.filePath,
+    );
   }
 
   // Queries
