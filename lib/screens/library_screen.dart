@@ -641,6 +641,30 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     );
   }
 
+  Future<void> _labelSelected() async {
+    final allLabels = await LabelService.instance.getAllLabels();
+    if (!mounted) return;
+
+    final result = await showDialog<Set<String>>(
+      context: context,
+      builder: (context) => _LabelPickerDialog(
+        allLabels: allLabels,
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      for (final labelName in result) {
+        // Ensure label exists (createLabel is idempotent - ignores duplicates)
+        await LabelService.instance.createLabel(labelName);
+        await LabelService.instance.addLabelToDocuments(
+          _selectedDocumentIds.toList(),
+          labelName,
+        );
+      }
+      _exitSelectionMode();
+    }
+  }
+
   Widget _buildSelectionActionBar() {
     final hasSelection = _selectedDocumentIds.isNotEmpty;
 
@@ -665,6 +689,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 onPressed: hasSelection ? _addSelectedToSetList : null,
                 icon: const Icon(Icons.playlist_add),
                 label: const Text('Add to Set List'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: hasSelection ? _labelSelected : null,
+                icon: const Icon(Icons.label),
+                label: const Text('Label'),
               ),
             ),
             const SizedBox(width: 8),
@@ -1528,5 +1560,95 @@ class _SelectionRectPainter extends CustomPainter {
   @override
   bool shouldRepaint(_SelectionRectPainter oldDelegate) {
     return rect != oldDelegate.rect || color != oldDelegate.color;
+  }
+}
+
+class _LabelPickerDialog extends StatefulWidget {
+  final List<Label> allLabels;
+
+  const _LabelPickerDialog({required this.allLabels});
+
+  @override
+  State<_LabelPickerDialog> createState() => _LabelPickerDialogState();
+}
+
+class _LabelPickerDialogState extends State<_LabelPickerDialog> {
+  final Set<String> _selected = {};
+  final _newLabelController = TextEditingController();
+
+  @override
+  void dispose() {
+    _newLabelController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Add Labels'),
+      content: SizedBox(
+        width: 300,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.allLabels.isNotEmpty)
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 300),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: widget.allLabels.length,
+                  itemBuilder: (context, index) {
+                    final label = widget.allLabels[index];
+                    return CheckboxListTile(
+                      title: Text(label.name),
+                      secondary: label.color != null
+                          ? CircleAvatar(
+                              backgroundColor: Color(label.color!),
+                              radius: 8,
+                            )
+                          : null,
+                      value: _selected.contains(label.name),
+                      onChanged: (checked) {
+                        setState(() {
+                          if (checked == true) {
+                            _selected.add(label.name);
+                          } else {
+                            _selected.remove(label.name);
+                          }
+                        });
+                      },
+                    );
+                  },
+                ),
+              ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _newLabelController,
+              decoration: const InputDecoration(
+                labelText: 'New label name',
+                isDense: true,
+              ),
+              onSubmitted: (value) {
+                final trimmed = value.trim();
+                if (trimmed.isNotEmpty) {
+                  setState(() => _selected.add(trimmed));
+                  _newLabelController.clear();
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_selected),
+          child: const Text('Apply'),
+        ),
+      ],
+    );
   }
 }
