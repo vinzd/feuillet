@@ -63,6 +63,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   // Label filter state
   final Set<String> _selectedLabelNames = {};
+  Future<List<int>>? _labelFilterFuture;
 
   // File drop state
   bool _isDraggingFiles = false;
@@ -1053,7 +1054,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 padding: const EdgeInsets.only(right: 4.0),
                 child: IconButton(
                   icon: const Icon(Icons.clear, size: 18),
-                  onPressed: () => setState(() => _selectedLabelNames.clear()),
+                  onPressed: () => setState(() {
+                    _selectedLabelNames.clear();
+                    _labelFilterFuture = null;
+                  }),
                   tooltip: 'Clear filters',
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
@@ -1080,6 +1084,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         } else {
                           _selectedLabelNames.remove(label.name);
                         }
+                        _labelFilterFuture = _selectedLabelNames.isEmpty
+                            ? null
+                            : LabelService.instance
+                                .getDocumentIdsWithAllLabels(
+                                  _selectedLabelNames.toList(),
+                                );
                       });
                     },
                     avatar: label.color != null
@@ -1160,10 +1170,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         return _buildDocumentList(filteredDocs);
                       }
                       return FutureBuilder<List<int>>(
-                        future: LabelService.instance
-                            .getDocumentIdsWithAllLabels(
-                              _selectedLabelNames.toList(),
-                            ),
+                        future: _labelFilterFuture,
                         builder: (context, snapshot) {
                           if (!snapshot.hasData) {
                             return const Center(

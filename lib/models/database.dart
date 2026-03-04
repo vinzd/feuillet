@@ -129,6 +129,8 @@ class Labels extends Table {
 class DocumentLabels extends Table {
   IntColumn get documentId =>
       integer().references(Documents, #id, onDelete: KeyAction.cascade)();
+  // NOTE: Drift does not support ON UPDATE CASCADE. Label renames MUST go
+  // through AppDatabase.renameLabel() which manually updates this table.
   TextColumn get labelName =>
       text().references(Labels, #name, onDelete: KeyAction.cascade)();
 
