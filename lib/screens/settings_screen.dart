@@ -9,6 +9,7 @@ import '../services/file_access_service.dart';
 import '../services/file_watcher_service.dart';
 import '../services/document_service.dart';
 import '../services/version_service.dart';
+import '../widgets/layer_dialogs.dart';
 
 /// Settings screen for app configuration
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -69,22 +70,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _resetToDefault() async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await LayerDialogs.showConfirmationDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.resetToDefaultTitle),
-        content: Text(context.l10n.resetToDefaultMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(context.l10n.reset),
-          ),
-        ],
-      ),
+      title: context.l10n.resetToDefaultTitle,
+      message: context.l10n.resetToDefaultMessage,
+      confirmText: context.l10n.reset,
     );
 
     if (confirmed != true) return;

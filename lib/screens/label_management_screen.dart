@@ -5,6 +5,7 @@ import '../l10n/l10n_extension.dart';
 import '../models/database.dart';
 import '../providers/label_providers.dart';
 import '../services/label_service.dart';
+import '../widgets/layer_dialogs.dart';
 
 class LabelManagementScreen extends ConsumerWidget {
   const LabelManagementScreen({super.key});
@@ -124,47 +125,25 @@ class LabelManagementScreen extends ConsumerWidget {
   }
 
   Future<void> _renameLabel(BuildContext context, Label label) async {
-    final controller = TextEditingController(text: label.name);
-    final newName = await showDialog<String>(
+    final newName = await LayerDialogs.showTextInputDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.renameLabelTitle),
-        content: TextField(controller: controller, autofocus: true),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: Text(context.l10n.rename),
-          ),
-        ],
-      ),
+      title: context.l10n.renameLabelTitle,
+      labelText: context.l10n.renameLabelTitle,
+      initialValue: label.name,
+      confirmText: context.l10n.rename,
     );
-    controller.dispose();
     if (newName != null && newName.isNotEmpty && newName != label.name) {
       await LabelService.instance.renameLabel(label.name, newName);
     }
   }
 
   Future<void> _deleteLabel(BuildContext context, Label label) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await LayerDialogs.showConfirmationDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.deleteLabelTitle),
-        content: Text(context.l10n.deleteLabelConfirmation(label.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(context.l10n.delete),
-          ),
-        ],
-      ),
+      title: context.l10n.deleteLabelTitle,
+      message: context.l10n.deleteLabelConfirmation(label.name),
+      confirmText: context.l10n.delete,
+      isDangerous: true,
     );
     if (confirmed == true) {
       await LabelService.instance.deleteLabel(label.name);
