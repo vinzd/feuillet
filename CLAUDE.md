@@ -43,7 +43,7 @@ dart run build_runner build --delete-conflicting-outputs
 dart compile js -O4 web/drift_worker.dart -o web/drift_worker.js
 
 # Run the app
-flutter run -d macos    # or android, ios, chrome
+flutter run -d macos    # or android, chrome
 ```
 
 ### Web Platform Support
@@ -103,7 +103,6 @@ flutter analyze
 dart format lib/ test/
 flutter build apk --release
 flutter build macos --release
-flutter build ios --release
 ```
 
 ## Architecture
@@ -318,7 +317,6 @@ Annotations are **JSON-serialized** in the database. To add new annotation types
 
 - **macOS**: `~/Library/Application Support/com.feuillet.app/feuillet/`
 - **Android**: `/data/data/com.feuillet.feuillet/app_flutter/feuillet/` (default)
-- **iOS**: App Documents directory
 
 The PDF directory is **user-configurable** (stored in `AppSettings` table via `AppSettingKeys.pdfDirectoryPath`).
 
