@@ -63,7 +63,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
   bool _annotationMode = false;
   bool _showFloatingLayerPanel = false;
   Offset? _layerPanelPosition;
-  final _annotationService = AnnotationService();
+  final _annotationService = AnnotationService.instance;
   List<AnnotationLayer> _layers = [];
   int? _selectedLayerId;
   AnnotationType _currentTool = AnnotationType.pen;

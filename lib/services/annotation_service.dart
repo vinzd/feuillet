@@ -53,6 +53,9 @@ class DrawingStroke {
 
 /// Service to manage annotations
 class AnnotationService {
+  static final AnnotationService instance = AnnotationService._();
+  AnnotationService._();
+
   final AppDatabase _database = DatabaseService.instance.database;
 
   /// Get all layers for a document

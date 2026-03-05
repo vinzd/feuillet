@@ -1228,7 +1228,7 @@ class _BulkExportDialog extends StatefulWidget {
 
 class _BulkExportDialogState extends State<_BulkExportDialog> {
   final _exportService = DocumentExportService.instance;
-  final _annotationService = AnnotationService();
+  final _annotationService = AnnotationService.instance;
 
   bool _isExporting = false;
   int _currentDocIndex = 0;

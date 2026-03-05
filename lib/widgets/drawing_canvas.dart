@@ -106,7 +106,7 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
     if (_currentSessionStrokes.isEmpty) return;
 
     final stroke = _currentSessionStrokes.last;
-    final annotationService = AnnotationService();
+    final annotationService = AnnotationService.instance;
 
     try {
       await annotationService.saveAnnotation(
