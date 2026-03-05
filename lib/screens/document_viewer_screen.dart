@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdfx/pdfx.dart';
 
+import '../l10n/l10n_extension.dart';
 import '../models/database.dart';
 import '../models/view_mode.dart';
 import '../services/annotation_service.dart';
@@ -490,8 +491,8 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     if (_pdfController == null && _imageBytes == null) {
       return Scaffold(
         appBar: AppBar(title: Text(widget.document.name)),
-        body: const Center(
-          child: Text('Failed to load document. Please try again.'),
+        body: Center(
+          child: Text(context.l10n.failedToLoadDocument),
         ),
       );
     }
@@ -540,7 +541,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                     if (!widget.document.isImage)
                       PopupMenuButton<PdfViewMode>(
                         icon: Icon(_viewMode.icon),
-                        tooltip: 'View mode',
+                        tooltip: context.l10n.viewMode,
                         onSelected: _onViewModeChanged,
                         itemBuilder: (context) => PdfViewMode.values
                             .map(
@@ -574,12 +575,12 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                         () =>
                             _showFloatingLayerPanel = !_showFloatingLayerPanel,
                       ),
-                      tooltip: 'Annotations',
+                      tooltip: context.l10n.annotations,
                     ),
                     IconButton(
                       icon: const Icon(Icons.tune),
                       onPressed: () => _showControlsPanel(),
-                      tooltip: 'Display settings',
+                      tooltip: context.l10n.displaySettings,
                     ),
                     if (_pdfDocument != null || _imageBytes != null)
                       IconButton(
@@ -596,8 +597,8 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                           }
                         },
                         tooltip: widget.document.isImage
-                            ? 'Export image'
-                            : 'Export PDF',
+                            ? context.l10n.exportImage
+                            : context.l10n.exportPdf,
                       ),
                   ],
                 ),
@@ -973,7 +974,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     // Show progress
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Exporting image...')));
+    ).showSnackBar(SnackBar(content: Text(context.l10n.exportingImage)));
 
     try {
       final exportBytes = await DocumentExportService.instance
@@ -990,8 +991,8 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
 
       if (kIsWeb) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Web export not yet supported for images'),
+          SnackBar(
+            content: Text(context.l10n.webExportNotSupported),
           ),
         );
       } else {
@@ -1001,7 +1002,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+        ).showSnackBar(SnackBar(content: Text(context.l10n.exportFailed(e.toString()))));
       }
     }
   }
@@ -1032,22 +1033,22 @@ class _ImageExportLayerDialogState extends State<_ImageExportLayerDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Export Image'),
+      title: Text(context.l10n.exportImage),
       content: SizedBox(
         width: 300,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Select annotation layers to include:',
-              style: TextStyle(fontWeight: FontWeight.w500),
+            Text(
+              context.l10n.selectAnnotationLayers,
+              style: const TextStyle(fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 8),
             if (widget.layers.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('No annotation layers found.'),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(context.l10n.noAnnotationLayersFound),
               )
             else
               ConstrainedBox(
@@ -1081,13 +1082,13 @@ class _ImageExportLayerDialogState extends State<_ImageExportLayerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.cancel),
         ),
         FilledButton(
           onPressed: _selectedLayerIds.isEmpty
               ? null
               : () => Navigator.of(context).pop(_selectedLayerIds.toList()),
-          child: const Text('Export'),
+          child: Text(context.l10n.export),
         ),
       ],
     );

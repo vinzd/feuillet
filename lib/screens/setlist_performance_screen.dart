@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../utils/viewer_constants.dart';
 import 'package:pdfx/pdfx.dart';
 
+import '../l10n/l10n_extension.dart';
 import '../models/database.dart';
 import '../models/view_mode.dart';
 import '../services/file_access_service.dart';
@@ -440,7 +441,7 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
                     // View mode selector
                     PopupMenuButton<PdfViewMode>(
                       icon: Icon(_viewMode.icon, color: Colors.white),
-                      tooltip: 'View mode',
+                      tooltip: context.l10n.viewMode,
                       onSelected: _onViewModeChanged,
                       itemBuilder: (context) => PdfViewMode.values
                           .map(
@@ -466,13 +467,13 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
                     IconButton(
                       icon: const Icon(Icons.tune, color: Colors.white),
                       onPressed: _showDisplaySettings,
-                      tooltip: 'Display settings',
+                      tooltip: context.l10n.displaySettings,
                     ),
                     // Document list
                     IconButton(
                       icon: const Icon(Icons.list),
                       onPressed: _showDocumentList,
-                      tooltip: 'Document list',
+                      tooltip: context.l10n.documentList,
                     ),
                   ],
                 ),
@@ -527,9 +528,9 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Documents in Set List',
-              style: TextStyle(
+            Text(
+              context.l10n.documentsInSetList,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -567,8 +568,8 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
                     ),
                     subtitle: Text(
                       widget.items[index].notes != null
-                          ? '${widget.items[index].notes} — ${doc.pageCount} pages'
-                          : '${doc.pageCount} pages',
+                          ? '${widget.items[index].notes} — ${context.l10n.pagesCount(doc.pageCount)}'
+                          : context.l10n.pagesCount(doc.pageCount),
                       style: const TextStyle(color: Colors.white70),
                     ),
                     onTap: () {
