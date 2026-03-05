@@ -11,7 +11,7 @@ A forScore clone built with Flutter - a powerful PDF sheet music reader with ann
 
 **[Launch Web Demo](https://vinzd.github.io/feuillet/)** - Test Feuillet directly in your browser
 
-> **Note:** The web version has limitations - PDFs are stored in browser storage (not file system), and Syncthing integration is not available. For full functionality, use the native macOS, iOS, or Android apps.
+> **Note:** The web version has limitations - PDFs are stored in browser storage (not file system), and Syncthing integration is not available. For full functionality, use the native macOS or Android apps.
 
 ## Features
 
@@ -65,7 +65,7 @@ A forScore clone built with Flutter - a powerful PDF sheet music reader with ann
 ## Architecture
 
 ### Technology Stack
-- **Framework**: Flutter 3.x (Android, macOS, iOS support)
+- **Framework**: Flutter 3.x (Android, macOS, Web support)
 - **Database**: Drift (SQLite with type-safe queries)
 - **PDF Rendering**: pdfx
 - **State Management**: Riverpod
@@ -102,7 +102,7 @@ lib/
 - Flutter SDK 3.x or higher
 - Dart SDK
 - For Android: Android Studio and SDK
-- For macOS/iOS: Xcode
+- For macOS: Xcode
 - (Optional) Syncthing for cross-device sync
 
 ### Quick Start (Using Makefile)
@@ -152,9 +152,6 @@ make build-web      # Build for web
    # For macOS
    flutter run -d macos
 
-   # For iOS
-   flutter run -d ios
-
    # For Web (development iteration only)
    flutter run -d chrome
    ```
@@ -164,9 +161,13 @@ make build-web      # Build for web
 | Platform | Status | Notes |
 |----------|--------|-------|
 | macOS | ✅ Full support | Primary platform |
-| iOS | ✅ Full support | Native file system |
 | Android | ✅ Full support | Native file system |
 | Web | ⚠️ Limited | For development iteration only |
+| iOS | ❌ Not built | No test device available |
+| Windows | ❌ Not built | No test device available |
+| Linux | ❌ Not built | No test device available |
+
+> **iOS, Windows & Linux:** These platforms are not currently supported because the maintainer doesn't have access to these devices. Thanks to Flutter's cross-platform nature, adding support should be straightforward — contributions are welcome!
 
 **Web limitations:**
 - PDFs stored as bytes in IndexedDB (not file system)
@@ -179,14 +180,12 @@ make build-web      # Build for web
 ### 1. Install Syncthing
 - **macOS**: `brew install syncthing`
 - **Android**: Install from [Google Play](https://play.google.com/store/apps/details?id=com.nutomic.syncthingandroid)
-- **iOS**: Use [Möbius Sync](https://apps.apple.com/app/mobius-sync/id1539203216)
 
 ### 2. Locate Feuillet Data Directory
 
 The app stores data in:
 - **macOS**: `~/Library/Application Support/com.feuillet.app/feuillet/`
 - **Android**: `/data/data/com.feuillet.feuillet/app_flutter/feuillet/`
-- **iOS**: App's Documents directory
 
 You can find the exact path in the app by checking debug logs or settings.
 
@@ -309,7 +308,6 @@ flutter test --coverage
 # Building for Release
 flutter build apk --release      # Android
 flutter build macos --release    # macOS
-flutter build ios --release      # iOS
 flutter build web --release      # Web
 
 # Regenerating Database Code
@@ -328,7 +326,7 @@ The project uses GitHub Actions for continuous integration and deployment:
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | **CI** | Push, PR to `main`/`develop` | Run tests, analysis, and build web |
-| **Build All Platforms** | Manual, version tags | Build Android, macOS, iOS, Web |
+| **Build All Platforms** | Manual, version tags | Build Android, macOS, Web |
 | **Release** | Version tags (`v*.*.*`) | Create GitHub releases with artifacts |
 | **Deploy to Pages** | Push to `main` | Deploy web version to GitHub Pages |
 

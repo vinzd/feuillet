@@ -38,13 +38,11 @@ jobs:
             ### Downloads
             - **Android**: `app-release.apk`
             - **macOS**: `Feuillet-macOS.zip`
-            - **iOS**: `Feuillet-iOS.zip` (requires signing)
             - **Web**: `Feuillet-Web.zip`
 
             ### Installation
             - **Android**: Download and install the APK
             - **macOS**: Download, unzip, and drag to Applications
-            - **iOS**: Requires Xcode to sign before installing
             - **Web**: Unzip and serve with any web server
 
             ### Changes
@@ -70,13 +68,6 @@ jobs:
             build-cmd: flutter build macos --release
             artifact-path: Feuillet-macOS.zip
             artifact-name: Feuillet-macOS.zip
-            content-type: application/zip
-
-          - os: macos-latest
-            platform: ios
-            build-cmd: flutter build ios --release --no-codesign
-            artifact-path: Feuillet-iOS.zip
-            artifact-name: Feuillet-iOS.zip
             content-type: application/zip
 
           - os: ubuntu-latest
@@ -124,12 +115,6 @@ jobs:
         run: |
           cd build/macos/Build/Products/Release
           zip -r "$GITHUB_WORKSPACE/Feuillet-macOS.zip" feuillet.app
-
-      - name: Prepare iOS artifact
-        if: matrix.platform == 'ios'
-        run: |
-          cd build/ios/iphoneos
-          zip -r "$GITHUB_WORKSPACE/Feuillet-iOS.zip" Runner.app
 
       - name: Prepare web artifact
         if: matrix.platform == 'web'
