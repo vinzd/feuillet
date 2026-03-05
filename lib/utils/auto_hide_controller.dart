@@ -2,12 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 /// Controller for auto-hiding UI controls after a period of inactivity.
 ///
 /// Manages a timer that automatically hides controls after [duration]
 /// seconds of inactivity. Call [resetTimer] to restart the timer
 /// when the user interacts with the controls.
+///
+/// When controls are hidden (fullscreen mode), the device wake lock is
+/// enabled to prevent the screen from sleeping during performances.
 class AutoHideController extends ChangeNotifier {
   AutoHideController({
     this.duration = const Duration(seconds: 3),
@@ -33,6 +37,7 @@ class AutoHideController extends ChangeNotifier {
     if (_isMobile) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     }
+    _setWakeLock(false);
     notifyListeners();
     resetTimer();
   }
@@ -44,6 +49,7 @@ class AutoHideController extends ChangeNotifier {
     if (_isMobile) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     }
+    _setWakeLock(true);
     notifyListeners();
   }
 
@@ -66,6 +72,7 @@ class AutoHideController extends ChangeNotifier {
         if (_isMobile) {
           SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
         }
+        _setWakeLock(true);
         notifyListeners();
       });
     }
@@ -85,6 +92,13 @@ class AutoHideController extends ChangeNotifier {
     if (_isMobile) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     }
+    _setWakeLock(false);
     super.dispose();
+  }
+
+  void _setWakeLock(bool enabled) {
+    final future = enabled ? WakelockPlus.enable() : WakelockPlus.disable();
+    // Wake lock is best-effort; ignore errors on unsupported platforms.
+    future.ignore();
   }
 }

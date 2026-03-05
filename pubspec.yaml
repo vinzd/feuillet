@@ -74,6 +74,9 @@ dependencies:
   pdf: ^3.11.0
   share_plus: ^12.0.1
 
+  # Wake lock
+  wakelock_plus: ^1.3.2
+
   # Permissions
   permission_handler: ^12.0.0
   macos_secure_bookmarks: ^0.2.1
