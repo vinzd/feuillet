@@ -559,7 +559,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     await setListService.touchSetList(setListId);
 
     if (mounted) {
-      context.showSnackbar(_formatAddToSetListMessage(addedCount, skippedCount));
+      context.showSnackbar(
+        _formatAddToSetListMessage(addedCount, skippedCount),
+      );
       _exitSelectionMode();
     }
   }
@@ -1189,7 +1191,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                           final labelFiltered = documents
                               .where((d) => allowedIds.contains(d.id))
                               .toList();
-                          final filteredDocs = _getFilteredDocuments(labelFiltered);
+                          final filteredDocs = _getFilteredDocuments(
+                            labelFiltered,
+                          );
                           if (filteredDocs.isEmpty) {
                             return _buildEmptyState(false);
                           }

@@ -159,5 +159,4 @@ class AnnotationService {
 
     return result;
   }
-
 }

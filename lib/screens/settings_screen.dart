@@ -88,7 +88,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        context.showSnackbar(context.l10n.errorResettingDirectory(e.toString()));
+        context.showSnackbar(
+          context.l10n.errorResettingDirectory(e.toString()),
+        );
       }
     }
   }
