@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/l10n_extension.dart';
 import '../models/view_mode.dart';
 import '../utils/viewer_constants.dart';
 import 'zoom_slider.dart';
@@ -72,11 +73,11 @@ class PerformanceBottomControls extends StatelessWidget {
   /// Called when user interacts with controls (for auto-hide timer reset)
   final VoidCallback? onInteraction;
 
-  String get _pageText {
+  String _pageText(BuildContext context) {
     final hasRightPage = viewMode != PdfViewMode.single && rightPage != null;
     return hasRightPage
-        ? 'Pages $currentPage-$rightPage of $totalPages'
-        : 'Page $currentPage of $totalPages';
+        ? context.l10n.pagesRange(currentPage, rightPage!, totalPages)
+        : context.l10n.pageSingle(currentPage, totalPages);
   }
 
   @override
@@ -93,7 +94,7 @@ class PerformanceBottomControls extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.skip_previous, color: Colors.white),
                 onPressed: currentDocIndex > 0 ? onPrevDoc : null,
-                tooltip: 'Previous document',
+                tooltip: context.l10n.previousDocument,
                 iconSize: 28,
               ),
               Expanded(
@@ -114,7 +115,7 @@ class PerformanceBottomControls extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Document ${currentDocIndex + 1} of $totalDocs',
+                      context.l10n.documentNOfTotalBottom(currentDocIndex + 1, totalDocs),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 12,
@@ -126,7 +127,7 @@ class PerformanceBottomControls extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.skip_next, color: Colors.white),
                 onPressed: currentDocIndex < totalDocs - 1 ? onNextDoc : null,
-                tooltip: 'Next document',
+                tooltip: context.l10n.nextDocument,
                 iconSize: 28,
               ),
             ],
@@ -144,13 +145,13 @@ class PerformanceBottomControls extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.chevron_left, color: Colors.white),
                 onPressed: onPrevPage,
-                tooltip: 'Previous page',
+                tooltip: context.l10n.previousPage,
                 iconSize: 32,
               ),
               Container(
                 constraints: const BoxConstraints(minWidth: 150),
                 child: Text(
-                  _pageText,
+                  _pageText(context),
                   style: const TextStyle(color: Colors.white, fontSize: 14),
                   textAlign: TextAlign.center,
                 ),
@@ -158,7 +159,7 @@ class PerformanceBottomControls extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.chevron_right, color: Colors.white),
                 onPressed: onNextPage,
-                tooltip: 'Next page',
+                tooltip: context.l10n.nextPage,
                 iconSize: 32,
               ),
             ],

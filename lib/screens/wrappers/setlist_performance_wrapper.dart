@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/l10n_extension.dart';
 import '../../models/database.dart';
 import '../../router/app_router.dart';
 import '../../services/setlist_service.dart';
@@ -35,10 +36,10 @@ class SetListPerformanceWrapper extends ConsumerWidget {
       data: (data) {
         if (data.setList == null) {
           return ErrorPlaceholderScreen(
-            title: 'Set List Not Found',
-            message: 'This set list could not be found.',
+            title: context.l10n.setListNotFoundTitle,
+            message: context.l10n.setListNotFoundMessage,
             icon: Icons.error_outline,
-            buttonLabel: 'Back to Set Lists',
+            buttonLabel: context.l10n.backToSetLists,
             navigateTo: AppRoutes.setlists,
           );
         }
@@ -46,9 +47,9 @@ class SetListPerformanceWrapper extends ConsumerWidget {
         if (data.documents.isEmpty) {
           return ErrorPlaceholderScreen(
             title: data.setList!.name,
-            message: 'This set list has no documents.',
+            message: context.l10n.setListHasNoDocuments,
             icon: Icons.music_note_outlined,
-            buttonLabel: 'Edit Set List',
+            buttonLabel: context.l10n.editSetList,
             navigateTo: AppRoutes.setlistDetailPath(setListId),
           );
         }
@@ -61,11 +62,11 @@ class SetListPerformanceWrapper extends ConsumerWidget {
       },
       loading: () => const LoadingScreen(),
       error: (error, stack) => ErrorPlaceholderScreen(
-        title: 'Error',
-        message: 'Error loading set list: $error',
+        title: context.l10n.error,
+        message: context.l10n.errorLoadingSetList(error.toString()),
         icon: Icons.error_outline,
         iconColor: Colors.red,
-        buttonLabel: 'Back to Set Lists',
+        buttonLabel: context.l10n.backToSetLists,
         navigateTo: AppRoutes.setlists,
       ),
     );

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
+import '../l10n/l10n_extension.dart';
 import '../services/pdf_page_cache_service.dart';
 
 /// A PDF viewer widget with background page pre-rendering
@@ -103,11 +104,11 @@ class _CachedPdfViewState extends State<CachedPdfView> {
     }
 
     if (_error != null) {
-      return Center(child: Text('Error: $_error'));
+      return Center(child: Text(context.l10n.errorPrefix(_error.toString())));
     }
 
     if (_document == null) {
-      return const Center(child: Text('Failed to load document'));
+      return Center(child: Text(context.l10n.failedToLoadDocumentGeneric));
     }
 
     return PageView.builder(
@@ -227,14 +228,14 @@ class _CachedPdfPageState extends State<_CachedPdfPage> {
     if (_error != null) {
       return Container(
         decoration: widget.backgroundDecoration,
-        child: Center(child: Text('Error: $_error')),
+        child: Center(child: Text(context.l10n.errorPrefix(_error!))),
       );
     }
 
     if (_pageImage == null) {
       return Container(
         decoration: widget.backgroundDecoration,
-        child: const Center(child: Text('Failed to render page')),
+        child: Center(child: Text(context.l10n.failedToRenderPage)),
       );
     }
 

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
 
+import '../l10n/l10n_extension.dart';
 import '../models/database.dart';
 import '../services/annotation_service.dart';
 import '../services/document_export_service.dart';
@@ -72,7 +73,7 @@ class _ExportPdfDialogState extends State<ExportPdfDialog> {
       });
     } catch (e) {
       setState(() {
-        _error = 'Failed to load layers: $e';
+        _error = e.toString();
         _isLoading = false;
       });
     }
@@ -81,7 +82,7 @@ class _ExportPdfDialogState extends State<ExportPdfDialog> {
   Future<void> _export() async {
     if (_selectedLayerIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one layer')),
+        SnackBar(content: Text(context.l10n.pleaseSelectAtLeastOneLayer)),
       );
       return;
     }
@@ -121,7 +122,7 @@ class _ExportPdfDialogState extends State<ExportPdfDialog> {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('PDF downloaded')));
+          ).showSnackBar(SnackBar(content: Text(context.l10n.pdfDownloaded)));
         }
       } else {
         // Native: use share sheet
@@ -133,7 +134,7 @@ class _ExportPdfDialogState extends State<ExportPdfDialog> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'Export failed: $e';
+          _error = e.toString();
           _isExporting = false;
         });
       }
@@ -143,12 +144,12 @@ class _ExportPdfDialogState extends State<ExportPdfDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Export PDF'),
+      title: Text(context.l10n.exportPdfTitle),
       content: SizedBox(width: 300, child: _buildContent()),
       actions: [
         TextButton(
           onPressed: _isExporting ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.cancel),
         ),
         FilledButton(
           onPressed: _isExporting || _isLoading || _selectedLayerIds.isEmpty
@@ -160,7 +161,7 @@ class _ExportPdfDialogState extends State<ExportPdfDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Export'),
+              : Text(context.l10n.export),
         ),
       ],
     );
@@ -180,7 +181,7 @@ class _ExportPdfDialogState extends State<ExportPdfDialog> {
       return Padding(
         padding: const EdgeInsets.all(16),
         child: Text(
-          _error!,
+          context.l10n.exportFailed(_error!),
           style: TextStyle(color: Theme.of(context).colorScheme.error),
         ),
       );
@@ -194,16 +195,16 @@ class _ExportPdfDialogState extends State<ExportPdfDialog> {
           children: [
             const CircularProgressIndicator(),
             const SizedBox(height: 16),
-            Text('Exporting page $_exportProgress of $_exportTotal...'),
+            Text(context.l10n.exportingPageProgress(_exportProgress, _exportTotal)),
           ],
         ),
       );
     }
 
     if (_layers.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: Text('No annotation layers found.'),
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(context.l10n.noAnnotationLayersFound),
       );
     }
 
@@ -211,9 +212,9 @@ class _ExportPdfDialogState extends State<ExportPdfDialog> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Select layers to include:',
-          style: TextStyle(fontWeight: FontWeight.w500),
+        Text(
+          context.l10n.selectLayersToInclude,
+          style: const TextStyle(fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
         ConstrainedBox(
@@ -230,7 +231,7 @@ class _ExportPdfDialogState extends State<ExportPdfDialog> {
                 subtitle: layer.isVisible
                     ? null
                     : Text(
-                        'Hidden',
+                        context.l10n.hidden,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.outline,
                           fontSize: 12,
@@ -254,7 +255,7 @@ class _ExportPdfDialogState extends State<ExportPdfDialog> {
         ),
         const SizedBox(height: 8),
         Text(
-          '${_selectedLayerIds.length} layer(s) selected',
+          context.l10n.layersSelected(_selectedLayerIds.length),
           style: TextStyle(
             color: Theme.of(context).colorScheme.outline,
             fontSize: 12,
