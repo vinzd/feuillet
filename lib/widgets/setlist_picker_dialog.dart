@@ -23,7 +23,7 @@ class SetListPickerDialog extends StatefulWidget {
 const int _createNewSentinel = -1;
 
 class _SetListPickerDialogState extends State<SetListPickerDialog> {
-  final _setListService = SetListService();
+  final _setListService = SetListService.instance;
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
 

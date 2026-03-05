@@ -20,7 +20,7 @@ class SetListDetailScreen extends StatefulWidget {
 }
 
 class _SetListDetailScreenState extends State<SetListDetailScreen> {
-  final _setListService = SetListService();
+  final _setListService = SetListService.instance;
   final _database = DatabaseService.instance.database;
 
   SetList? _setList;

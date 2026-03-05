@@ -22,7 +22,7 @@ class SetListsScreen extends ConsumerStatefulWidget {
 }
 
 class _SetListsScreenState extends ConsumerState<SetListsScreen> {
-  final _setListService = SetListService();
+  final _setListService = SetListService.instance;
   final Map<int, List<_SetListDocInfo>> _expandedItems = {};
   final Set<int> _loadingIds = {};
   final Set<int> _expandedIds = {};
