@@ -8,6 +8,7 @@ import '../router/app_router.dart';
 import '../services/database_service.dart';
 import '../services/setlist_service.dart';
 import '../utils/fuzzy_search.dart';
+import '../utils/snackbar_extension.dart';
 
 /// Screen for viewing and editing a set list
 class SetListDetailScreen extends StatefulWidget {
@@ -120,9 +121,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
 
     if (availableDocs.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.allDocumentsAlreadyInSetList)),
-        );
+        context.showSnackbar(context.l10n.allDocumentsAlreadyInSetList);
       }
       return;
     }
@@ -171,9 +170,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
 
   Future<void> _startPerformance() async {
     if (_documents.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.addDocumentsToStartPerformance)),
-      );
+      context.showSnackbar(context.l10n.addDocumentsToStartPerformance);
       return;
     }
 

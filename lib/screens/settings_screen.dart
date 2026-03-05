@@ -9,6 +9,7 @@ import '../services/file_access_service.dart';
 import '../services/file_watcher_service.dart';
 import '../services/document_service.dart';
 import '../services/version_service.dart';
+import '../utils/snackbar_extension.dart';
 import '../widgets/layer_dialogs.dart';
 
 /// Settings screen for app configuration
@@ -53,18 +54,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await _loadCurrentSettings();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.pdfDirectoryUpdated(result))),
-        );
+        context.showSnackbar(context.l10n.pdfDirectoryUpdated(result));
       }
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.errorUpdatingDirectory(e.toString())),
-          ),
-        );
+        context.showSnackbar(context.l10n.errorUpdatingDirectory(e.toString()));
       }
     }
   }
@@ -88,18 +83,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await _loadCurrentSettings();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.resetToDefaultPdfDirectory)),
-        );
+        context.showSnackbar(context.l10n.resetToDefaultPdfDirectory);
       }
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.errorResettingDirectory(e.toString())),
-          ),
-        );
+        context.showSnackbar(context.l10n.errorResettingDirectory(e.toString()));
       }
     }
   }

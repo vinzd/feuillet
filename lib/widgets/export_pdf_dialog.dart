@@ -6,6 +6,7 @@ import '../l10n/l10n_extension.dart';
 import '../models/database.dart';
 import '../services/annotation_service.dart';
 import '../services/document_export_service.dart';
+import '../utils/snackbar_extension.dart';
 
 // Conditional import for web download
 import 'export_pdf_dialog_web.dart'
@@ -81,9 +82,7 @@ class _ExportPdfDialogState extends State<ExportPdfDialog> {
 
   Future<void> _export() async {
     if (_selectedLayerIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.pleaseSelectAtLeastOneLayer)),
-      );
+      context.showSnackbar(context.l10n.pleaseSelectAtLeastOneLayer);
       return;
     }
 
@@ -120,9 +119,7 @@ class _ExportPdfDialogState extends State<ExportPdfDialog> {
         platform.downloadPdf(pdfBytes, fileName);
         if (mounted) {
           Navigator.of(context).pop();
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(context.l10n.pdfDownloaded)));
+          context.showSnackbar(context.l10n.pdfDownloaded);
         }
       } else {
         // Native: use share sheet

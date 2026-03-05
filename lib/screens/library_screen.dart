@@ -18,6 +18,7 @@ import '../services/setlist_service.dart';
 import '../services/version_service.dart';
 import '../providers/label_providers.dart';
 import '../utils/fuzzy_search.dart';
+import '../utils/snackbar_extension.dart';
 import '../widgets/document_card.dart';
 import '../widgets/setlist_picker_dialog.dart';
 import '../widgets/export_pdf_dialog_web.dart'
@@ -540,10 +541,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     await setListService.touchSetList(setListId);
 
     if (mounted) {
-      final message = _formatAddToSetListMessage(addedCount, skippedCount);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      context.showSnackbar(_formatAddToSetListMessage(addedCount, skippedCount));
       _exitSelectionMode();
     }
   }
@@ -562,9 +560,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     }
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.deletedDocuments(count))),
-      );
+      context.showSnackbar(context.l10n.deletedDocuments(count));
       _exitSelectionMode();
     }
   }
