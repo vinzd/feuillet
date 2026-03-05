@@ -14,9 +14,7 @@ import 'annotation_service.dart';
 
 /// Service for exporting documents with annotations burned in
 class DocumentExportService {
-  static DocumentExportService? _instance;
-  static DocumentExportService get instance =>
-      _instance ??= DocumentExportService._();
+  static final DocumentExportService instance = DocumentExportService._();
   DocumentExportService._();
 
   final _annotationService = AnnotationService();
