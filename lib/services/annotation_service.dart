@@ -93,16 +93,6 @@ class AnnotationService {
     await _database.updateAnnotationLayer(updated);
   }
 
-  /// Reorder layers
-  Future<void> reorderLayers(int documentId, List<int> layerIds) async {
-    for (int i = 0; i < layerIds.length; i++) {
-      final layers = await getLayers(documentId);
-      final layer = layers.firstWhere((l) => l.id == layerIds[i]);
-      final updated = layer.copyWith(orderIndex: i);
-      await _database.updateAnnotationLayer(updated);
-    }
-  }
-
   /// Get annotations for a specific layer and page
   Future<List<DrawingStroke>> getAnnotations(
     int layerId,
@@ -167,11 +157,4 @@ class AnnotationService {
     return result;
   }
 
-  /// Clear all annotations on a page for a specific layer
-  Future<void> clearPageAnnotations(int layerId, int pageNumber) async {
-    final annotations = await _database.getAnnotations(layerId, pageNumber);
-    for (final annotation in annotations) {
-      await _database.deleteAnnotation(annotation.id);
-    }
-  }
 }
