@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../l10n/l10n_extension.dart';
 import '../models/database.dart';
 import '../router/app_router.dart';
 import '../services/annotation_service.dart';
@@ -82,7 +83,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   void _onImportProgress(int current, int total, String fileName) {
     if (mounted) {
-      setState(() => _importProgress = 'Importing $current of $total...');
+      setState(() => _importProgress = context.l10n.importingProgress(current, total));
     }
   }
 
@@ -136,7 +137,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     if (result.allSucceeded) {
       messenger.showSnackBar(
         SnackBar(
-          content: Text(_formatSuccessMessage(result.totalCount)),
+          content: Text(context.l10n.importedPdfs(result.totalCount)),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -145,8 +146,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
     final isAllFailures = result.successCount == 0;
     final message = isAllFailures
-        ? _formatFailureMessage(result.failureCount)
-        : 'Imported ${result.successCount} of ${result.totalCount} PDFs';
+        ? context.l10n.failedToImportPdfs(result.failureCount)
+        : context.l10n.importedCountOfTotal(result.successCount, result.totalCount);
 
     messenger.showSnackBar(
       SnackBar(
@@ -155,7 +156,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             ? Theme.of(context).colorScheme.error
             : null,
         action: SnackBarAction(
-          label: 'Details',
+          label: context.l10n.details,
           textColor: isAllFailures
               ? Theme.of(context).colorScheme.onError
               : null,
@@ -165,33 +166,21 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     );
   }
 
-  String _pluralize(int count, String singular, {String? plural}) {
-    return count == 1 ? singular : (plural ?? '${singular}s');
-  }
-
-  String _formatSuccessMessage(int count) {
-    return 'Imported $count ${_pluralize(count, 'PDF')}';
-  }
-
-  String _formatFailureMessage(int count) {
-    return 'Failed to import $count ${_pluralize(count, 'PDF')}';
-  }
-
   String _formatAddToSetListMessage(int addedCount, int skippedCount) {
     if (skippedCount > 0 && addedCount > 0) {
-      return 'Added $addedCount, skipped $skippedCount (already in set list)';
+      return context.l10n.addedAndSkipped(addedCount, skippedCount);
     }
     if (skippedCount > 0) {
-      return 'All selected documents already in set list';
+      return context.l10n.allSelectedAlreadyInSetList;
     }
-    return 'Added $addedCount ${_pluralize(addedCount, 'document')} to set list';
+    return context.l10n.addedDocumentsToSetList(addedCount);
   }
 
   void _showImportFailuresDialog(List<DocumentImportResult> failures) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Import Failures'),
+        title: Text(context.l10n.importFailures),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(
@@ -202,7 +191,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               return ListTile(
                 leading: const Icon(Icons.error_outline, color: Colors.red),
                 title: Text(failure.fileName),
-                subtitle: Text(failure.error ?? 'Unknown error'),
+                subtitle: Text(failure.error ?? context.l10n.unknownError),
               );
             },
           ),
@@ -210,7 +199,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text(context.l10n.ok),
           ),
         ],
       ),
@@ -336,7 +325,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             }
           },
         ),
-        Text('${_selectedDocumentIds.length} selected'),
+        Text(context.l10n.nSelected(_selectedDocumentIds.length)),
       ],
     );
   }
@@ -570,7 +559,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Deleted $count ${_pluralize(count, 'document')}'),
+          content: Text(context.l10n.deletedDocuments(count)),
         ),
       );
       _exitSelectionMode();
@@ -606,13 +595,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Delete Documents'),
+          title: Text(context.l10n.deleteDocuments),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Are you sure you want to delete $count ${_pluralize(count, 'document')}?',
+                context.l10n.deleteDocumentsConfirmation(count),
               ),
               const SizedBox(height: 16),
               CheckboxListTile(
@@ -620,7 +609,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 onChanged: (value) {
                   setDialogState(() => deleteFiles = value ?? false);
                 },
-                title: const Text('Also delete PDF files from disk'),
+                title: Text(context.l10n.alsoDeleteFromDisk),
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
               ),
@@ -629,12 +618,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, deleteFiles),
               style: FilledButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Delete'),
+              child: Text(context.l10n.delete),
             ),
           ],
         ),
@@ -687,7 +676,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               child: OutlinedButton.icon(
                 onPressed: hasSelection ? _addSelectedToSetList : null,
                 icon: const Icon(Icons.playlist_add),
-                label: const Text('Add to Set List'),
+                label: Text(context.l10n.addToSetList),
               ),
             ),
             const SizedBox(width: 8),
@@ -703,7 +692,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               child: OutlinedButton.icon(
                 onPressed: hasSelection ? _exportSelected : null,
                 icon: const Icon(Icons.ios_share),
-                label: const Text('Export'),
+                label: Text(context.l10n.export),
               ),
             ),
             const SizedBox(width: 8),
@@ -711,7 +700,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               child: FilledButton.icon(
                 onPressed: hasSelection ? _deleteSelected : null,
                 icon: const Icon(Icons.delete),
-                label: const Text('Delete'),
+                label: Text(context.l10n.delete),
                 style: FilledButton.styleFrom(
                   backgroundColor: hasSelection ? Colors.red : null,
                 ),
@@ -735,7 +724,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            isLibraryEmpty ? 'No PDFs in library' : 'No PDFs match your search',
+            isLibraryEmpty ? context.l10n.noPdfsInLibrary : context.l10n.noPdfsMatchSearch,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
@@ -743,7 +732,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             ElevatedButton.icon(
               onPressed: _importDocuments,
               icon: const Icon(Icons.add),
-              label: const Text('Import PDFs'),
+              label: Text(context.l10n.importPdfs),
             ),
           if (isLibraryEmpty) ...[
             const SizedBox(height: 8),
@@ -910,7 +899,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: _exitSelectionMode,
-          tooltip: 'Cancel selection',
+          tooltip: context.l10n.cancelSelection,
         ),
         title:
             documentsAsync.whenOrNull(
@@ -919,7 +908,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 return _buildSelectionTitle(filteredDocs);
               },
             ) ??
-            Text('${_selectedDocumentIds.length} selected'),
+            Text(context.l10n.nSelected(_selectedDocumentIds.length)),
       );
     }
 
@@ -947,11 +936,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           onPressed: () {
             setState(() => _isGridView = !_isGridView);
           },
-          tooltip: _isGridView ? 'List view' : 'Grid view',
+          tooltip: _isGridView ? context.l10n.listView : context.l10n.gridView,
         ),
         PopupMenuButton<LibrarySortField>(
           icon: const Icon(Icons.sort),
-          tooltip: 'Sort order',
+          tooltip: context.l10n.sortOrder,
           onSelected: (field) {
             setState(() {
               if (_sortField == field) {
@@ -1029,14 +1018,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         IconButton(
           icon: const Icon(Icons.refresh),
           onPressed: _syncLibrary,
-          tooltip: 'Sync library',
+          tooltip: context.l10n.syncLibrary,
         ),
         IconButton(
           icon: const Icon(Icons.settings),
           onPressed: () {
             context.push(AppRoutes.settings);
           },
-          tooltip: 'Settings',
+          tooltip: context.l10n.settings,
         ),
       ],
     );
@@ -1129,7 +1118,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: TextField(
                     decoration: InputDecoration(
-                      hintText: 'Search PDFs...',
+                      hintText: context.l10n.searchPdfsHint,
                       prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -1207,7 +1196,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           ? null
           : FloatingActionButton.extended(
               onPressed: _isLoading ? null : _importDocuments,
-              tooltip: 'Import PDFs',
+              tooltip: context.l10n.importPdfs,
               icon: _isLoading
                   ? const SizedBox(
                       width: 24,
@@ -1215,7 +1204,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.add),
-              label: Text(_importProgress ?? 'Import'),
+              label: Text(_importProgress ?? context.l10n.importPdfs),
             ),
     );
   }
@@ -1328,13 +1317,13 @@ class _BulkExportDialogState extends State<_BulkExportDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(_isExporting ? 'Exporting...' : 'Export Complete'),
+      title: Text(_isExporting ? context.l10n.exporting : context.l10n.exportComplete),
       content: SizedBox(width: 300, child: _buildContent()),
       actions: [
         if (!_isExporting)
           FilledButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Done'),
+            child: Text(context.l10n.done),
           ),
       ],
     );
@@ -1358,14 +1347,14 @@ class _BulkExportDialogState extends State<_BulkExportDialog> {
           const CircularProgressIndicator(),
           const SizedBox(height: 16),
           Text(
-            'Document ${_currentDocIndex + 1} of ${widget.documents.length}',
+            context.l10n.documentNOfTotal(_currentDocIndex + 1, widget.documents.length),
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 8),
           Text(_currentDocName, maxLines: 1, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 4),
           Text(
-            'Page $_currentPage of $_totalPages',
+            context.l10n.pageNOfTotal(_currentPage, _totalPages),
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -1374,10 +1363,9 @@ class _BulkExportDialogState extends State<_BulkExportDialog> {
 
     // Export complete
     final hasFailures = _failCount > 0;
-    final documentLabel = _successCount == 1 ? 'document' : 'documents';
     final resultMessage = hasFailures
-        ? 'Exported $_successCount, failed $_failCount'
-        : 'Exported $_successCount $documentLabel';
+        ? context.l10n.exportedSuccessFailCount(_successCount, _failCount)
+        : context.l10n.exportedDocuments(_successCount);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
