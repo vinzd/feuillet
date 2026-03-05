@@ -270,5 +270,6 @@
   "sortByName": "Name",
   "sortByDateAdded": "Date added",
   "sortByFileSize": "File size",
-  "sortByPageCount": "Page count"
+  "sortByPageCount": "Page count",
+  "orDragAndDropHint": "or drag and drop PDF files here"
 }
