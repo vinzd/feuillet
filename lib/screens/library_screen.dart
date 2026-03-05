@@ -516,7 +516,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final setListId = await SetListPickerDialog.show(context);
     if (setListId == null || !mounted) return;
 
-    final setListService = SetListService();
+    final setListService = SetListService.instance;
 
     // Get existing documents in the target set list to avoid duplicates
     final existingDocs = await setListService.getSetListDocuments(setListId);

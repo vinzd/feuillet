@@ -13,7 +13,7 @@ final setListWithDocumentsProvider =
       ({SetList? setList, List<Document> documents, List<SetListItem> items}),
       int
     >((ref, id) async {
-      final setListService = SetListService();
+      final setListService = SetListService.instance;
       final setList = await setListService.getSetList(id);
       final documents = await setListService.getSetListDocuments(id);
       final items = await setListService.getSetListItems(id);
