@@ -115,7 +115,10 @@ class PerformanceBottomControls extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      context.l10n.documentNOfTotalBottom(currentDocIndex + 1, totalDocs),
+                      context.l10n.documentNOfTotalBottom(
+                        currentDocIndex + 1,
+                        totalDocs,
+                      ),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 12,

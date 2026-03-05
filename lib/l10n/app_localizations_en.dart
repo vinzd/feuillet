@@ -558,4 +558,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get failedToLoadDocumentGeneric => 'Failed to load document';
+
+  @override
+  String errorLoadingLibrary(String error) {
+    return 'Error loading library: $error';
+  }
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get sortByName => 'Name';
+
+  @override
+  String get sortByDateAdded => 'Date added';
+
+  @override
+  String get sortByFileSize => 'File size';
+
+  @override
+  String get sortByPageCount => 'Page count';
 }

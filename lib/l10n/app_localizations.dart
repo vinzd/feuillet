@@ -991,6 +991,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to load document'**
   String get failedToLoadDocumentGeneric;
+
+  /// No description provided for @errorLoadingLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading library: {error}'**
+  String errorLoadingLibrary(String error);
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @sortByName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get sortByName;
+
+  /// No description provided for @sortByDateAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Date added'**
+  String get sortByDateAdded;
+
+  /// No description provided for @sortByFileSize.
+  ///
+  /// In en, this message translates to:
+  /// **'File size'**
+  String get sortByFileSize;
+
+  /// No description provided for @sortByPageCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Page count'**
+  String get sortByPageCount;
 }
 
 class _AppLocalizationsDelegate

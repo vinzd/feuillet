@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:feuillet/models/view_mode.dart';
 import 'package:feuillet/widgets/performance_bottom_controls.dart';
+import 'package:feuillet/l10n/app_localizations.dart';
 
 void main() {
   group('PerformanceBottomControls', () {
     testWidgets('displays document name', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: PerformanceBottomControls(
               currentDocIndex: 0,
@@ -25,7 +28,9 @@ void main() {
 
     testWidgets('displays document position', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: PerformanceBottomControls(
               currentDocIndex: 2,
@@ -43,7 +48,9 @@ void main() {
 
     testWidgets('displays single page number in single mode', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: PerformanceBottomControls(
               currentDocIndex: 0,
@@ -62,7 +69,9 @@ void main() {
 
     testWidgets('displays page range in two-page mode', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: PerformanceBottomControls(
               currentDocIndex: 0,
@@ -84,7 +93,9 @@ void main() {
       'displays single page when rightPage is null in two-page mode',
       (tester) async {
         await tester.pumpWidget(
-          const MaterialApp(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: PerformanceBottomControls(
                 currentDocIndex: 0,
@@ -107,7 +118,9 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: PerformanceBottomControls(
               currentDocIndex: 0,
@@ -133,7 +146,9 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: PerformanceBottomControls(
               currentDocIndex: 4,
@@ -161,6 +176,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: PerformanceBottomControls(
               currentDocIndex: 2,
@@ -187,6 +204,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: PerformanceBottomControls(
               currentDocIndex: 2,
@@ -212,6 +231,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: PerformanceBottomControls(
               currentDocIndex: 0,
@@ -238,7 +259,9 @@ void main() {
 
     testWidgets('contains progress bar', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: PerformanceBottomControls(
               currentDocIndex: 2,
@@ -263,6 +286,8 @@ void main() {
     ) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: PerformanceBottomControls(
               currentDocIndex: 0,
@@ -285,7 +310,9 @@ void main() {
 
     testWidgets('hides zoom slider when onZoomChanged is null', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: PerformanceBottomControls(
               currentDocIndex: 0,
@@ -309,6 +336,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: PerformanceBottomControls(
               currentDocIndex: 0,

@@ -491,9 +491,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     if (_pdfController == null && _imageBytes == null) {
       return Scaffold(
         appBar: AppBar(title: Text(widget.document.name)),
-        body: Center(
-          child: Text(context.l10n.failedToLoadDocument),
-        ),
+        body: Center(child: Text(context.l10n.failedToLoadDocument)),
       );
     }
 
@@ -991,18 +989,16 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
 
       if (kIsWeb) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.webExportNotSupported),
-          ),
+          SnackBar(content: Text(context.l10n.webExportNotSupported)),
         );
       } else {
         await DocumentExportService.instance.shareImage(exportBytes, fileName);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.exportFailed(e.toString()))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.exportFailed(e.toString()))),
+        );
       }
     }
   }

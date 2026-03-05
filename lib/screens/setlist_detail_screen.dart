@@ -119,9 +119,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
     if (availableDocs.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.allDocumentsAlreadyInSetList),
-          ),
+          SnackBar(content: Text(context.l10n.allDocumentsAlreadyInSetList)),
         );
       }
       return;
@@ -172,9 +170,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
   Future<void> _startPerformance() async {
     if (_documents.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.addDocumentsToStartPerformance),
-        ),
+        SnackBar(content: Text(context.l10n.addDocumentsToStartPerformance)),
       );
       return;
     }

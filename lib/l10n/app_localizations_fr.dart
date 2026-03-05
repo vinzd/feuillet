@@ -563,4 +563,24 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get failedToLoadDocumentGeneric => 'Échec du chargement du document';
+
+  @override
+  String errorLoadingLibrary(String error) {
+    return 'Erreur de chargement de la bibliothèque : $error';
+  }
+
+  @override
+  String get retry => 'Réessayer';
+
+  @override
+  String get sortByName => 'Nom';
+
+  @override
+  String get sortByDateAdded => 'Date d\'ajout';
+
+  @override
+  String get sortByFileSize => 'Taille du fichier';
+
+  @override
+  String get sortByPageCount => 'Nombre de pages';
 }

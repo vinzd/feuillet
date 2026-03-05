@@ -167,5 +167,12 @@
 
   "errorPrefix": "Erreur : {error}",
   "failedToRenderPage": "Échec du rendu de la page",
-  "failedToLoadDocumentGeneric": "Échec du chargement du document"
+  "failedToLoadDocumentGeneric": "Échec du chargement du document",
+
+  "errorLoadingLibrary": "Erreur de chargement de la bibliothèque : {error}",
+  "retry": "Réessayer",
+  "sortByName": "Nom",
+  "sortByDateAdded": "Date d'ajout",
+  "sortByFileSize": "Taille du fichier",
+  "sortByPageCount": "Nombre de pages"
 }

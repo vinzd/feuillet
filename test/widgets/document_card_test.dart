@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:feuillet/models/database.dart';
 import 'package:feuillet/widgets/document_card.dart';
+import 'package:feuillet/l10n/app_localizations.dart';
 
 void main() {
   group('DocumentCard Widget', () {
@@ -29,6 +30,8 @@ void main() {
     testWidgets('displays document name', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentCard(document: testDocument, onTap: () {}),
           ),
@@ -43,6 +46,8 @@ void main() {
     testWidgets('displays page count', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentCard(document: testDocument, onTap: () {}),
           ),
@@ -59,6 +64,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentCard(
               document: testDocument,
@@ -89,6 +96,8 @@ void main() {
       for (final doc in documents) {
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: DocumentCard(document: doc, onTap: () {}),
             ),
@@ -106,6 +115,8 @@ void main() {
     ) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentCard(document: testDocument, onTap: () {}),
           ),
@@ -124,6 +135,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentCard(
               document: testDocument,
@@ -148,6 +161,8 @@ void main() {
     ) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentCard(
               document: testDocument,
@@ -171,6 +186,8 @@ void main() {
     ) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentCard(
               document: testDocument,
@@ -195,6 +212,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentCard(
               document: testDocument,

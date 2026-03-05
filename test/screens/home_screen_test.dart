@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:feuillet/screens/home_screen.dart';
+import 'package:feuillet/l10n/app_localizations.dart';
 
 void main() {
   group('HomeScreen', () {
@@ -12,7 +13,13 @@ void main() {
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: HomeScreen())),
+        ProviderScope(
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: HomeScreen(),
+          ),
+        ),
       );
 
       // Wait for initial render
@@ -28,7 +35,13 @@ void main() {
 
     testWidgets('has two navigation destinations', (WidgetTester tester) async {
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: HomeScreen())),
+        ProviderScope(
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: HomeScreen(),
+          ),
+        ),
       );
 
       // Wait for initial render
@@ -40,7 +53,13 @@ void main() {
 
     testWidgets('shows navigation icons', (WidgetTester tester) async {
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: HomeScreen())),
+        ProviderScope(
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: HomeScreen(),
+          ),
+        ),
       );
 
       // Wait for initial render

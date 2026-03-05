@@ -195,7 +195,9 @@ class _ExportPdfDialogState extends State<ExportPdfDialog> {
           children: [
             const CircularProgressIndicator(),
             const SizedBox(height: 16),
-            Text(context.l10n.exportingPageProgress(_exportProgress, _exportTotal)),
+            Text(
+              context.l10n.exportingPageProgress(_exportProgress, _exportTotal),
+            ),
           ],
         ),
       );

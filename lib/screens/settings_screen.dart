@@ -59,9 +59,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.errorUpdatingDirectory(e.toString()))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.l10n.errorUpdatingDirectory(e.toString())),
+          ),
+        );
       }
     }
   }
@@ -104,7 +106,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.errorResettingDirectory(e.toString()))),
+          SnackBar(
+            content: Text(context.l10n.errorResettingDirectory(e.toString())),
+          ),
         );
       }
     }

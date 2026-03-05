@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:feuillet/screens/wrappers/setlist_performance_wrapper.dart';
+import 'package:feuillet/l10n/app_localizations.dart';
 
 void main() {
   group('setListWithDocumentsProvider', () {
@@ -33,8 +34,12 @@ void main() {
     // initialization and file system access which isn't available in tests.
     testWidgets('shows loading indicator initially', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(home: SetListPerformanceWrapper(setListId: 1)),
+        ProviderScope(
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: SetListPerformanceWrapper(setListId: 1),
+          ),
         ),
       );
 
@@ -44,8 +49,12 @@ void main() {
 
     testWidgets('shows error for non-existent set list', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(home: SetListPerformanceWrapper(setListId: 99999)),
+        ProviderScope(
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: SetListPerformanceWrapper(setListId: 99999),
+          ),
         ),
       );
 
@@ -61,8 +70,12 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(home: SetListPerformanceWrapper(setListId: 1)),
+        ProviderScope(
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: SetListPerformanceWrapper(setListId: 1),
+          ),
         ),
       );
 
