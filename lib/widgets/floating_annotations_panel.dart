@@ -56,7 +56,7 @@ const _annotationColors = [
 ];
 
 class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
-  final _annotationService = AnnotationService();
+  final _annotationService = AnnotationService.instance;
   List<AnnotationLayer> _layers = [];
   bool _isLoading = true;
 
