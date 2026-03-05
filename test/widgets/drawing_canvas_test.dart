@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:feuillet/services/annotation_service.dart';
 import 'package:feuillet/widgets/drawing_canvas.dart';
+import 'package:feuillet/l10n/app_localizations.dart';
 
 void main() {
   group('DrawingCanvas Widget', () {
@@ -16,6 +17,8 @@ void main() {
       Key? key,
     }) {
       return MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: DrawingCanvas(
             key: key,

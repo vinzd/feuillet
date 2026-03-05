@@ -199,9 +199,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
     if (documents.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.addDocumentsToStartPerformance),
-          ),
+          SnackBar(content: Text(context.l10n.addDocumentsToStartPerformance)),
         );
       }
       return;

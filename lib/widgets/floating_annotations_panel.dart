@@ -317,7 +317,10 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
               const SizedBox(width: 8),
               Text(
                 context.l10n.layers,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               const Spacer(),
               SizedBox(
@@ -349,7 +352,10 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                Text(context.l10n.noLayers, style: const TextStyle(fontSize: 12)),
+                Text(
+                  context.l10n.noLayers,
+                  style: const TextStyle(fontSize: 12),
+                ),
                 const SizedBox(height: 8),
                 TextButton.icon(
                   onPressed: _createNewLayer,

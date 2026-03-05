@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:feuillet/utils/display_settings.dart';
 import 'package:feuillet/utils/zoom_pan_gesture_handler.dart';
+import 'package:feuillet/l10n/app_localizations.dart';
 
 void main() {
   group('ZoomPanState', () {
@@ -89,7 +90,13 @@ void main() {
 
     group('handleScaleStart', () {
       testWidgets('sets baseZoom to current zoom level', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.zoomPanState.displaySettings = testState
@@ -103,7 +110,13 @@ void main() {
       });
 
       testWidgets('sets basePanOffset to current pan offset', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.zoomPanState.panOffset = const Offset(30, 40);
@@ -116,7 +129,13 @@ void main() {
 
     group('handleScaleUpdate', () {
       testWidgets('updates zoom level when scale changes', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.handleScaleStart(ScaleStartDetails());
@@ -133,7 +152,13 @@ void main() {
       });
 
       testWidgets('clamps zoom to minimum', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.handleScaleStart(ScaleStartDetails());
@@ -153,7 +178,13 @@ void main() {
       });
 
       testWidgets('clamps zoom to maximum', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.handleScaleStart(ScaleStartDetails());
@@ -173,7 +204,13 @@ void main() {
       });
 
       testWidgets('does not update zoom when scale is 1.0', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.zoomPanState.displaySettings = testState
@@ -196,7 +233,13 @@ void main() {
       });
 
       testWidgets('updates pan offset when zoomed in', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.zoomPanState.displaySettings = testState
@@ -218,7 +261,13 @@ void main() {
       });
 
       testWidgets('does not update pan when at default zoom', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         // Zoom is 1.0 by default
@@ -240,7 +289,13 @@ void main() {
       testWidgets('does nothing when isZoomPanDisabled is true', (
         tester,
       ) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.setZoomPanDisabled(true);
@@ -260,7 +315,13 @@ void main() {
       });
 
       testWidgets('does nothing when baseZoom is null', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         // Don't call handleScaleStart, so baseZoom is null
@@ -282,7 +343,13 @@ void main() {
       testWidgets('calls onZoomPanTap when no zoom or pan occurred', (
         tester,
       ) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.handleScaleStart(ScaleStartDetails());
@@ -294,7 +361,13 @@ void main() {
       });
 
       testWidgets('calls onZoomChanged when zoom occurred', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.handleScaleStart(ScaleStartDetails());
@@ -315,7 +388,13 @@ void main() {
       testWidgets('does not call onZoomChanged for pan-only gesture', (
         tester,
       ) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         // First zoom in so pan is allowed
@@ -340,7 +419,13 @@ void main() {
       });
 
       testWidgets('resets pan when zoom returns to 1.0', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         // Set up a zoomed and panned state
@@ -358,7 +443,13 @@ void main() {
       });
 
       testWidgets('preserves pan when zoom is above 1.0', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         // Set up a zoomed and panned state
@@ -376,7 +467,13 @@ void main() {
       });
 
       testWidgets('clears baseZoom after gesture ends', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.handleScaleStart(ScaleStartDetails());
@@ -387,7 +484,13 @@ void main() {
       });
 
       testWidgets('clears basePanOffset after gesture ends', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.handleScaleStart(ScaleStartDetails());
@@ -400,7 +503,13 @@ void main() {
 
     group('handlePointerSignal', () {
       testWidgets('ignores non-PointerScaleEvent', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         // Create a scroll event instead of scale event
@@ -418,7 +527,13 @@ void main() {
       testWidgets('amplifies scale delta for trackpad gestures', (
         tester,
       ) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         // Simulate a small trackpad pinch (scale 1.02)
@@ -440,7 +555,13 @@ void main() {
       testWidgets('clamps zoom to minimum on trackpad pinch in', (
         tester,
       ) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         // Start at minimum zoom
@@ -463,7 +584,13 @@ void main() {
       testWidgets('clamps zoom to maximum on trackpad pinch out', (
         tester,
       ) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         // Start at maximum zoom
@@ -484,7 +611,13 @@ void main() {
       });
 
       testWidgets('calls onZoomChanged after trackpad zoom', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         final scaleEvent = PointerScaleEvent(position: Offset.zero, scale: 1.1);
@@ -499,7 +632,13 @@ void main() {
       testWidgets('wraps child with Listener and GestureDetector', (
         tester,
       ) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
 
         // Find the Listener
         expect(find.byType(Listener), findsWidgets);
@@ -513,7 +652,13 @@ void main() {
       testWidgets('applies Transform.translate with pan offset', (
         tester,
       ) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.zoomPanState.panOffset = const Offset(50, 100);
@@ -525,7 +670,13 @@ void main() {
       });
 
       testWidgets('applies Transform.scale with zoom level', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.zoomPanState.displaySettings = testState
@@ -542,14 +693,26 @@ void main() {
 
     group('isZoomPanDisabled', () {
       testWidgets('returns false by default', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         expect(testState.isZoomPanDisabled, isFalse);
       });
 
       testWidgets('can be overridden to return true', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.setZoomPanDisabled(true);
@@ -566,7 +729,13 @@ void main() {
       testWidgets('detects left swipe when panning past right boundary', (
         tester,
       ) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         // Zoom to 2x — maxPanX = 400
@@ -597,7 +766,13 @@ void main() {
       testWidgets('detects right swipe when panning past left boundary', (
         tester,
       ) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         // Zoom to 2x — maxPanX = 400
@@ -628,7 +803,13 @@ void main() {
       testWidgets('does not swipe when overscroll is below threshold', (
         tester,
       ) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         // Zoom to 2x — maxPanX = 400
@@ -659,7 +840,13 @@ void main() {
       testWidgets('accumulates pan across multiple update events', (
         tester,
       ) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         // Zoom to 2x so pan is allowed — maxPanX = 400, maxPanY = 300
@@ -691,7 +878,13 @@ void main() {
       testWidgets(
         'triggers left swipe from accumulated overscroll across multiple events',
         (tester) async {
-          await tester.pumpWidget(MaterialApp(home: testWidget));
+          await tester.pumpWidget(
+            MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: testWidget,
+            ),
+          );
           testState = tester.state(find.byType(_TestWidget));
 
           // Zoom to 2x — maxPanX = 400
@@ -727,7 +920,13 @@ void main() {
       testWidgets(
         'triggers right swipe from accumulated overscroll across multiple events',
         (tester) async {
-          await tester.pumpWidget(MaterialApp(home: testWidget));
+          await tester.pumpWidget(
+            MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: testWidget,
+            ),
+          );
           testState = tester.state(find.byType(_TestWidget));
 
           // Zoom to 2x — maxPanX = 400
@@ -761,7 +960,13 @@ void main() {
       );
 
       testWidgets('clamps pan offset to content bounds', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         // Zoom to 2x — maxPanX = 400
@@ -793,7 +998,13 @@ void main() {
       testWidgets(
         'detects left swipe (next page) from negative horizontal displacement',
         (tester) async {
-          await tester.pumpWidget(MaterialApp(home: testWidget));
+          await tester.pumpWidget(
+            MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: testWidget,
+            ),
+          );
           testState = tester.state(find.byType(_TestWidget));
 
           // Simulate a left swipe: start at right, end at left
@@ -819,7 +1030,13 @@ void main() {
       testWidgets(
         'detects right swipe (previous page) from positive horizontal displacement',
         (tester) async {
-          await tester.pumpWidget(MaterialApp(home: testWidget));
+          await tester.pumpWidget(
+            MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: testWidget,
+            ),
+          );
           testState = tester.state(find.byType(_TestWidget));
 
           testState.handleScaleStart(
@@ -844,7 +1061,13 @@ void main() {
       testWidgets(
         'does not detect swipe when displacement is below threshold',
         (tester) async {
-          await tester.pumpWidget(MaterialApp(home: testWidget));
+          await tester.pumpWidget(
+            MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: testWidget,
+            ),
+          );
           testState = tester.state(find.byType(_TestWidget));
 
           testState.handleScaleStart(
@@ -867,7 +1090,13 @@ void main() {
       );
 
       testWidgets('does not detect swipe during pinch zoom', (tester) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.handleScaleStart(
@@ -890,7 +1119,13 @@ void main() {
       testWidgets('does not detect swipe when isZoomPanDisabled', (
         tester,
       ) async {
-        await tester.pumpWidget(MaterialApp(home: testWidget));
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: testWidget,
+          ),
+        );
         testState = tester.state(find.byType(_TestWidget));
 
         testState.setZoomPanDisabled(true);

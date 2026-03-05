@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:feuillet/models/database.dart';
 import 'package:feuillet/screens/library_screen.dart';
+import 'package:feuillet/l10n/app_localizations.dart';
 
 void main() {
   group('DocumentListTile Widget', () {
@@ -29,6 +30,8 @@ void main() {
     testWidgets('displays document name', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentListTile(document: testDocument, onTap: () {}),
           ),
@@ -43,6 +46,8 @@ void main() {
     testWidgets('displays page count in subtitle', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentListTile(document: testDocument, onTap: () {}),
           ),
@@ -57,6 +62,8 @@ void main() {
     testWidgets('displays file size in subtitle', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentListTile(document: testDocument, onTap: () {}),
           ),
@@ -74,6 +81,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentListTile(
               document: testDocument,
@@ -99,6 +108,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentListTile(
               document: testDocument,
@@ -123,6 +134,8 @@ void main() {
     ) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentListTile(
               document: testDocument,
@@ -144,6 +157,8 @@ void main() {
     ) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentListTile(
               document: testDocument,
@@ -164,6 +179,8 @@ void main() {
     testWidgets('shows border when selected', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentListTile(
               document: testDocument,
@@ -186,6 +203,8 @@ void main() {
       // Normal mode - has chevron
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentListTile(
               document: testDocument,
@@ -202,6 +221,8 @@ void main() {
       // Selection mode - no chevron
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: DocumentListTile(
               document: testDocument,
