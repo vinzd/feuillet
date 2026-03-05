@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n_extension.dart';
 import '../utils/display_settings.dart';
 
 /// Panel for brightness and contrast adjustments
@@ -42,9 +43,9 @@ class _DisplaySettingsPanelState extends State<DisplaySettingsPanel> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Display Settings',
-            style: TextStyle(
+          Text(
+            context.l10n.displaySettingsTitle,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -53,7 +54,7 @@ class _DisplaySettingsPanelState extends State<DisplaySettingsPanel> {
           const SizedBox(height: 24),
 
           // Brightness
-          const Text('Brightness', style: TextStyle(color: Colors.white70)),
+          Text(context.l10n.brightness, style: const TextStyle(color: Colors.white70)),
           Slider(
             value: _brightness,
             min: DisplaySettings.minBrightness,
@@ -67,7 +68,7 @@ class _DisplaySettingsPanelState extends State<DisplaySettingsPanel> {
           const SizedBox(height: 16),
 
           // Contrast
-          const Text('Contrast', style: TextStyle(color: Colors.white70)),
+          Text(context.l10n.contrast, style: const TextStyle(color: Colors.white70)),
           Slider(
             value: _contrast,
             min: DisplaySettings.minContrast,
@@ -91,7 +92,7 @@ class _DisplaySettingsPanelState extends State<DisplaySettingsPanel> {
                 widget.onReset();
               },
               icon: const Icon(Icons.refresh),
-              label: const Text('Reset to defaults'),
+              label: Text(context.l10n.resetToDefaults),
             ),
           ),
         ],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n_extension.dart';
+
 /// Helper class for layer-related dialogs
 class LayerDialogs {
   /// Show a text input dialog
@@ -8,6 +10,7 @@ class LayerDialogs {
     required String title,
     required String labelText,
     String? initialValue,
+    String? confirmText,
   }) {
     final controller = TextEditingController(text: initialValue);
 
@@ -26,11 +29,11 @@ class LayerDialogs {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: Text(title == 'New Layer' ? 'Create' : 'Rename'),
+            child: Text(confirmText ?? context.l10n.confirm),
           ),
         ],
       ),
@@ -42,7 +45,7 @@ class LayerDialogs {
     required BuildContext context,
     required String title,
     required String message,
-    String confirmText = 'Confirm',
+    String? confirmText,
     bool isDangerous = false,
   }) {
     return showDialog<bool>(
@@ -53,14 +56,14 @@ class LayerDialogs {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: isDangerous
                 ? FilledButton.styleFrom(backgroundColor: Colors.red)
                 : null,
-            child: Text(confirmText),
+            child: Text(confirmText ?? context.l10n.confirm),
           ),
         ],
       ),

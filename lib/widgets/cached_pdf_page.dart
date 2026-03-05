@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
+import '../l10n/l10n_extension.dart';
 import '../services/pdf_page_cache_service.dart';
 
 /// A single PDF page with caching support.
@@ -123,11 +124,11 @@ class _CachedPdfPageState extends State<CachedPdfPage> {
     }
 
     if (_error != null) {
-      return Text('Error: $_error');
+      return Text(context.l10n.errorPrefix(_error!));
     }
 
     if (_pageImage == null) {
-      return const Text('Failed to render page');
+      return Text(context.l10n.failedToRenderPage);
     }
 
     if (widget.annotationOverlay == null) {

@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../l10n/l10n_extension.dart';
 import '../../models/database.dart';
 import '../../router/app_router.dart';
 import '../../services/database_service.dart';
@@ -52,10 +53,10 @@ class _DocumentViewerWrapperState extends ConsumerState<DocumentViewerWrapper> {
       data: (document) {
         if (document == null) {
           return ErrorPlaceholderScreen(
-            title: 'Document Not Found',
-            message: 'This document could not be found.',
+            title: context.l10n.documentNotFound,
+            message: context.l10n.documentNotFoundMessage,
             icon: Icons.error_outline,
-            buttonLabel: 'Back to Library',
+            buttonLabel: context.l10n.backToLibrary,
             navigateTo: AppRoutes.library,
           );
         }
@@ -63,11 +64,11 @@ class _DocumentViewerWrapperState extends ConsumerState<DocumentViewerWrapper> {
       },
       loading: () => const LoadingScreen(),
       error: (error, stack) => ErrorPlaceholderScreen(
-        title: 'Error',
-        message: 'Error loading document: $error',
+        title: context.l10n.error,
+        message: context.l10n.errorLoadingDocument(error.toString()),
         icon: Icons.error_outline,
         iconColor: Colors.red,
-        buttonLabel: 'Back to Library',
+        buttonLabel: context.l10n.backToLibrary,
         navigateTo: AppRoutes.library,
       ),
     );
