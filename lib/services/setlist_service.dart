@@ -7,6 +7,9 @@ import 'sync_service.dart';
 
 /// Service to manage set lists
 class SetListService {
+  static final SetListService instance = SetListService._();
+  SetListService._();
+
   final AppDatabase _database = DatabaseService.instance.database;
 
   void _scheduleSyncWrite(int setListId) {
