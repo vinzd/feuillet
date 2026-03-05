@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:feuillet/l10n/app_localizations.dart';
 
 /// Tests for PDF viewer keyboard navigation logic
 /// Note: Full widget tests are difficult due to pdfx dependency.
@@ -180,6 +181,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Focus(
             autofocus: true,
             onKeyEvent: (node, event) {
@@ -209,6 +212,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Focus(
             focusNode: focusNode,
             autofocus: true,
@@ -230,6 +235,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Focus(
             autofocus: true,
             onKeyEvent: (node, event) {
@@ -268,6 +275,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Focus(
             autofocus: true,
             onKeyEvent: (node, event) {
@@ -304,6 +313,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Focus(
             autofocus: true,
             onKeyEvent: (node, event) {
@@ -339,6 +350,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Focus(
             autofocus: true,
             onKeyEvent: (node, event) {

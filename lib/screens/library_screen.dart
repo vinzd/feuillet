@@ -83,7 +83,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
   void _onImportProgress(int current, int total, String fileName) {
     if (mounted) {
-      setState(() => _importProgress = context.l10n.importingProgress(current, total));
+      setState(
+        () => _importProgress = context.l10n.importingProgress(current, total),
+      );
     }
   }
 
@@ -147,7 +149,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final isAllFailures = result.successCount == 0;
     final message = isAllFailures
         ? context.l10n.failedToImportPdfs(result.failureCount)
-        : context.l10n.importedCountOfTotal(result.successCount, result.totalCount);
+        : context.l10n.importedCountOfTotal(
+            result.successCount,
+            result.totalCount,
+          );
 
     messenger.showSnackBar(
       SnackBar(
@@ -558,9 +563,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.deletedDocuments(count)),
-        ),
+        SnackBar(content: Text(context.l10n.deletedDocuments(count))),
       );
       _exitSelectionMode();
     }
@@ -600,9 +603,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                context.l10n.deleteDocumentsConfirmation(count),
-              ),
+              Text(context.l10n.deleteDocumentsConfirmation(count)),
               const SizedBox(height: 16),
               CheckboxListTile(
                 value: deleteFiles,
@@ -724,7 +725,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            isLibraryEmpty ? context.l10n.noPdfsInLibrary : context.l10n.noPdfsMatchSearch,
+            isLibraryEmpty
+                ? context.l10n.noPdfsInLibrary
+                : context.l10n.noPdfsMatchSearch,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
@@ -882,8 +885,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         children: [
           const Icon(Icons.error_outline, size: 48, color: Colors.red),
           const SizedBox(height: 16),
-          Text('Error loading library: $error'),
-          ElevatedButton(onPressed: _syncLibrary, child: const Text('Retry')),
+          Text(context.l10n.errorLoadingLibrary(error.toString())),
+          ElevatedButton(
+            onPressed: _syncLibrary,
+            child: Text(context.l10n.retry),
+          ),
         ],
       ),
     );
@@ -957,7 +963,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               value: LibrarySortField.name,
               child: Row(
                 children: [
-                  const Expanded(child: Text('Name')),
+                  Expanded(child: Text(context.l10n.sortByName)),
                   if (_sortField == LibrarySortField.name)
                     Icon(
                       _sortAscending
@@ -972,7 +978,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               value: LibrarySortField.dateAdded,
               child: Row(
                 children: [
-                  const Expanded(child: Text('Date added')),
+                  Expanded(child: Text(context.l10n.sortByDateAdded)),
                   if (_sortField == LibrarySortField.dateAdded)
                     Icon(
                       _sortAscending
@@ -987,7 +993,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               value: LibrarySortField.fileSize,
               child: Row(
                 children: [
-                  const Expanded(child: Text('File size')),
+                  Expanded(child: Text(context.l10n.sortByFileSize)),
                   if (_sortField == LibrarySortField.fileSize)
                     Icon(
                       _sortAscending
@@ -1002,7 +1008,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               value: LibrarySortField.pageCount,
               child: Row(
                 children: [
-                  const Expanded(child: Text('Page count')),
+                  Expanded(child: Text(context.l10n.sortByPageCount)),
                   if (_sortField == LibrarySortField.pageCount)
                     Icon(
                       _sortAscending
@@ -1317,7 +1323,9 @@ class _BulkExportDialogState extends State<_BulkExportDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(_isExporting ? context.l10n.exporting : context.l10n.exportComplete),
+      title: Text(
+        _isExporting ? context.l10n.exporting : context.l10n.exportComplete,
+      ),
       content: SizedBox(width: 300, child: _buildContent()),
       actions: [
         if (!_isExporting)
@@ -1347,7 +1355,10 @@ class _BulkExportDialogState extends State<_BulkExportDialog> {
           const CircularProgressIndicator(),
           const SizedBox(height: 16),
           Text(
-            context.l10n.documentNOfTotal(_currentDocIndex + 1, widget.documents.length),
+            context.l10n.documentNOfTotal(
+              _currentDocIndex + 1,
+              widget.documents.length,
+            ),
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 8),

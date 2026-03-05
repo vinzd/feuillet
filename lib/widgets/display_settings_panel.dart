@@ -54,7 +54,10 @@ class _DisplaySettingsPanelState extends State<DisplaySettingsPanel> {
           const SizedBox(height: 24),
 
           // Brightness
-          Text(context.l10n.brightness, style: const TextStyle(color: Colors.white70)),
+          Text(
+            context.l10n.brightness,
+            style: const TextStyle(color: Colors.white70),
+          ),
           Slider(
             value: _brightness,
             min: DisplaySettings.minBrightness,
@@ -68,7 +71,10 @@ class _DisplaySettingsPanelState extends State<DisplaySettingsPanel> {
           const SizedBox(height: 16),
 
           // Contrast
-          Text(context.l10n.contrast, style: const TextStyle(color: Colors.white70)),
+          Text(
+            context.l10n.contrast,
+            style: const TextStyle(color: Colors.white70),
+          ),
           Slider(
             value: _contrast,
             min: DisplaySettings.minContrast,

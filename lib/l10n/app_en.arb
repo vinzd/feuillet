@@ -260,5 +260,15 @@
     "placeholders": { "error": {"type": "String"} }
   },
   "failedToRenderPage": "Failed to render page",
-  "failedToLoadDocumentGeneric": "Failed to load document"
+  "failedToLoadDocumentGeneric": "Failed to load document",
+
+  "errorLoadingLibrary": "Error loading library: {error}",
+  "@errorLoadingLibrary": {
+    "placeholders": { "error": {"type": "String"} }
+  },
+  "retry": "Retry",
+  "sortByName": "Name",
+  "sortByDateAdded": "Date added",
+  "sortByFileSize": "File size",
+  "sortByPageCount": "Page count"
 }
