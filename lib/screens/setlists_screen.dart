@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../l10n/l10n_extension.dart';
 import '../models/database.dart';
 import '../router/app_router.dart';
 import '../services/database_service.dart';
@@ -33,24 +34,24 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
     final result = await showDialog<Map<String, String>>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('New Set List'),
+        title: Text(context.l10n.newSetList),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.l10n.name,
+                border: const OutlineInputBorder(),
               ),
               autofocus: true,
             ),
             const SizedBox(height: 16),
             TextField(
               controller: descController,
-              decoration: const InputDecoration(
-                labelText: 'Description (optional)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: context.l10n.descriptionOptional,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 3,
             ),
@@ -59,7 +60,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
@@ -70,7 +71,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
                 });
               }
             },
-            child: const Text('Create'),
+            child: Text(context.l10n.create),
           ),
         ],
       ),
@@ -92,17 +93,17 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Set List'),
-        content: Text('Are you sure you want to delete "${setList.name}"?'),
+        title: Text(context.l10n.deleteSetList),
+        content: Text(context.l10n.deleteSetListConfirmation(setList.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(context.l10n.delete),
           ),
         ],
       ),
@@ -119,12 +120,12 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
     final newName = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Rename Set List'),
+        title: Text(context.l10n.renameSetList),
         content: TextField(
           controller: nameController,
-          decoration: const InputDecoration(
-            labelText: 'Name',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: context.l10n.name,
+            border: const OutlineInputBorder(),
           ),
           autofocus: true,
           onSubmitted: (value) {
@@ -136,7 +137,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
@@ -145,7 +146,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
                 Navigator.pop(context, value);
               }
             },
-            child: const Text('Rename'),
+            child: Text(context.l10n.rename),
           ),
         ],
       ),
@@ -165,7 +166,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
     if (mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Set list duplicated')));
+      ).showSnackBar(SnackBar(content: Text(context.l10n.setListDuplicated)));
     }
   }
 
@@ -198,8 +199,8 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
     if (documents.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Add documents to start performance mode'),
+          SnackBar(
+            content: Text(context.l10n.addDocumentsToStartPerformance),
           ),
         );
       }
@@ -216,7 +217,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
     final setListsAsync = ref.watch(setListsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Set Lists')),
+      appBar: AppBar(title: Text(context.l10n.setLists)),
       body: setListsAsync.when(
         data: (setLists) {
           if (setLists.isEmpty) {
@@ -231,14 +232,14 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No set lists yet',
+                    context.l10n.noSetListsYet,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton.icon(
                     onPressed: _createSetList,
                     icon: const Icon(Icons.add),
-                    label: const Text('Create Set List'),
+                    label: Text(context.l10n.createSetList),
                   ),
                 ],
               ),
@@ -282,7 +283,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
                       IconButton(
                         icon: const Icon(Icons.play_arrow),
                         onPressed: () => _startPerformance(setList),
-                        tooltip: 'Start performance',
+                        tooltip: context.l10n.startPerformance,
                       ),
                       PopupMenuButton<String>(
                         onSelected: (value) {
@@ -299,35 +300,35 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
                           }
                         },
                         itemBuilder: (context) => [
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'rename',
                             child: Row(
                               children: [
-                                Icon(Icons.edit),
-                                SizedBox(width: 8),
-                                Text('Rename'),
+                                const Icon(Icons.edit),
+                                const SizedBox(width: 8),
+                                Text(context.l10n.rename),
                               ],
                             ),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'duplicate',
                             child: Row(
                               children: [
-                                Icon(Icons.copy),
-                                SizedBox(width: 8),
-                                Text('Duplicate'),
+                                const Icon(Icons.copy),
+                                const SizedBox(width: 8),
+                                Text(context.l10n.duplicate),
                               ],
                             ),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(Icons.delete, color: Colors.red),
-                                SizedBox(width: 8),
+                                const Icon(Icons.delete, color: Colors.red),
+                                const SizedBox(width: 8),
                                 Text(
-                                  'Delete',
-                                  style: TextStyle(color: Colors.red),
+                                  context.l10n.delete,
+                                  style: const TextStyle(color: Colors.red),
                                 ),
                               ],
                             ),
@@ -359,11 +360,11 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
                         ),
                       )
                     else if (items != null && items.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.all(16),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
                         child: Text(
-                          'No documents',
-                          style: TextStyle(fontStyle: FontStyle.italic),
+                          context.l10n.noDocuments,
+                          style: const TextStyle(fontStyle: FontStyle.italic),
                         ),
                       )
                     else if (items != null)
@@ -403,14 +404,14 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
             children: [
               const Icon(Icons.error_outline, size: 48, color: Colors.red),
               const SizedBox(height: 16),
-              Text('Error loading set lists: $error'),
+              Text(context.l10n.errorLoadingSetLists(error.toString())),
             ],
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _createSetList,
-        tooltip: 'New Set List',
+        tooltip: context.l10n.newSetList,
         child: const Icon(Icons.add),
       ),
     );
