@@ -1,0 +1,264 @@
+{
+  "@@locale": "en",
+
+  "library": "Library",
+  "setLists": "Set Lists",
+
+  "cancelSelection": "Cancel selection",
+  "listView": "List view",
+  "gridView": "Grid view",
+  "sortOrder": "Sort order",
+  "syncLibrary": "Sync library",
+  "settings": "Settings",
+  "importPdfs": "Import PDFs",
+  "searchPdfsHint": "Search PDFs...",
+  "nSelected": "{count} selected",
+  "@nSelected": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "addToSetList": "Add to Set List",
+  "export": "Export",
+  "delete": "Delete",
+  "noPdfsInLibrary": "No PDFs in library",
+  "noPdfsMatchSearch": "No PDFs match your search",
+
+  "importingProgress": "Importing {current} of {total}...",
+  "@importingProgress": {
+    "placeholders": { "current": {"type": "int"}, "total": {"type": "int"} }
+  },
+  "importedCountOfTotal": "Imported {successCount} of {totalCount} PDFs",
+  "@importedCountOfTotal": {
+    "placeholders": { "successCount": {"type": "int"}, "totalCount": {"type": "int"} }
+  },
+  "importedPdfs": "{count, plural, =1{Imported 1 PDF} other{Imported {count} PDFs}}",
+  "@importedPdfs": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "failedToImportPdfs": "{count, plural, =1{Failed to import 1 PDF} other{Failed to import {count} PDFs}}",
+  "@failedToImportPdfs": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "addedAndSkipped": "Added {addedCount}, skipped {skippedCount} (already in set list)",
+  "@addedAndSkipped": {
+    "placeholders": { "addedCount": {"type": "int"}, "skippedCount": {"type": "int"} }
+  },
+  "allSelectedAlreadyInSetList": "All selected documents already in set list",
+  "addedDocumentsToSetList": "{count, plural, =1{Added 1 document to set list} other{Added {count} documents to set list}}",
+  "@addedDocumentsToSetList": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "details": "Details",
+  "importFailures": "Import Failures",
+  "unknownError": "Unknown error",
+  "ok": "OK",
+
+  "deleteDocuments": "Delete Documents",
+  "deleteDocumentsConfirmation": "{count, plural, =1{Are you sure you want to delete 1 document?} other{Are you sure you want to delete {count} documents?}}",
+  "@deleteDocumentsConfirmation": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "alsoDeleteFromDisk": "Also delete PDF files from disk",
+  "cancel": "Cancel",
+  "deletedDocuments": "{count, plural, =1{Deleted 1 document} other{Deleted {count} documents}}",
+  "@deletedDocuments": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+
+  "exporting": "Exporting...",
+  "exportComplete": "Export Complete",
+  "documentNOfTotal": "Document {index} of {total}",
+  "@documentNOfTotal": {
+    "placeholders": { "index": {"type": "int"}, "total": {"type": "int"} }
+  },
+  "pageNOfTotal": "Page {current} of {total}",
+  "@pageNOfTotal": {
+    "placeholders": { "current": {"type": "int"}, "total": {"type": "int"} }
+  },
+  "exportedSuccessFailCount": "Exported {successCount}, failed {failCount}",
+  "@exportedSuccessFailCount": {
+    "placeholders": { "successCount": {"type": "int"}, "failCount": {"type": "int"} }
+  },
+  "exportedDocuments": "{count, plural, =1{Exported 1 document} other{Exported {count} documents}}",
+  "@exportedDocuments": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "done": "Done",
+
+  "viewMode": "View mode",
+  "annotations": "Annotations",
+  "displaySettings": "Display settings",
+  "exportImage": "Export image",
+  "exportPdf": "Export PDF",
+  "failedToLoadDocument": "Failed to load document. Please try again.",
+  "exportingImage": "Exporting image...",
+  "webExportNotSupported": "Web export not yet supported for images",
+  "exportFailed": "Export failed: {error}",
+  "@exportFailed": {
+    "placeholders": { "error": {"type": "String"} }
+  },
+
+  "selectAnnotationLayers": "Select annotation layers to include:",
+  "noAnnotationLayersFound": "No annotation layers found.",
+
+  "settingsTitle": "Settings",
+  "librarySection": "Library",
+  "pdfDirectory": "PDF Directory",
+  "resetToDefault": "Reset to default",
+  "changeDirectory": "Change directory",
+  "customDirectory": "Custom directory",
+  "resetToDefaultTitle": "Reset to Default",
+  "resetToDefaultMessage": "This will reset the PDF directory to the default location. Your existing PDFs will remain in their current location.",
+  "reset": "Reset",
+  "pdfDirectoryUpdated": "PDF directory updated to: {path}",
+  "@pdfDirectoryUpdated": {
+    "placeholders": { "path": {"type": "String"} }
+  },
+  "errorUpdatingDirectory": "Error updating directory: {error}",
+  "@errorUpdatingDirectory": {
+    "placeholders": { "error": {"type": "String"} }
+  },
+  "resetToDefaultPdfDirectory": "Reset to default PDF directory",
+  "errorResettingDirectory": "Error resetting directory: {error}",
+  "@errorResettingDirectory": {
+    "placeholders": { "error": {"type": "String"} }
+  },
+  "customDirectoryNotAvailableOnWeb": "Custom PDF directory is not available on web.",
+  "aboutSection": "About",
+  "version": "Version",
+  "loading": "Loading...",
+  "unknown": "Unknown",
+
+  "newSetList": "New Set List",
+  "name": "Name",
+  "descriptionOptional": "Description (optional)",
+  "create": "Create",
+  "deleteSetList": "Delete Set List",
+  "deleteSetListConfirmation": "Are you sure you want to delete \"{name}\"?",
+  "@deleteSetListConfirmation": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "renameSetList": "Rename Set List",
+  "rename": "Rename",
+  "duplicate": "Duplicate",
+  "setListDuplicated": "Set list duplicated",
+  "errorLoadingSetLists": "Error loading set lists: {error}",
+  "@errorLoadingSetLists": {
+    "placeholders": { "error": {"type": "String"} }
+  },
+  "addDocumentsToStartPerformance": "Add documents to start performance mode",
+  "startPerformance": "Start performance",
+  "noSetListsYet": "No set lists yet",
+  "createSetList": "Create Set List",
+  "noDocuments": "No documents",
+
+  "setList": "Set List",
+  "setListNotFound": "Set list not found",
+  "noDocumentsInSetList": "No documents in this set list",
+  "addDocuments": "Add Documents",
+  "allDocumentsAlreadyInSetList": "All documents are already in this set list",
+  "searchDocumentsHint": "Search documents...",
+  "nPages": "{count} pages",
+  "@nPages": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "addCount": "Add ({count})",
+  "@addCount": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "view": "View",
+  "remove": "Remove",
+  "enterLabelHint": "Enter label...",
+  "addLabel": "Add label",
+
+  "documentsInSetList": "Documents in Set List",
+  "pagesCount": "{count} pages",
+  "@pagesCount": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "documentList": "Document list",
+
+  "documentNotFound": "Document Not Found",
+  "documentNotFoundMessage": "This document could not be found.",
+  "backToLibrary": "Back to Library",
+  "error": "Error",
+  "errorLoadingDocument": "Error loading document: {error}",
+  "@errorLoadingDocument": {
+    "placeholders": { "error": {"type": "String"} }
+  },
+
+  "setListNotFoundTitle": "Set List Not Found",
+  "setListNotFoundMessage": "This set list could not be found.",
+  "backToSetLists": "Back to Set Lists",
+  "setListHasNoDocuments": "This set list has no documents.",
+  "editSetList": "Edit Set List",
+  "errorLoadingSetList": "Error loading set list: {error}",
+  "@errorLoadingSetList": {
+    "placeholders": { "error": {"type": "String"} }
+  },
+
+  "brightness": "Brightness",
+  "contrast": "Contrast",
+  "resetToDefaults": "Reset to defaults",
+  "displaySettingsTitle": "Display Settings",
+
+  "exportPdfTitle": "Export PDF",
+  "selectLayersToInclude": "Select layers to include:",
+  "exportingPageProgress": "Exporting page {current} of {total}...",
+  "@exportingPageProgress": {
+    "placeholders": { "current": {"type": "int"}, "total": {"type": "int"} }
+  },
+  "pleaseSelectAtLeastOneLayer": "Please select at least one layer",
+  "pdfDownloaded": "PDF downloaded",
+  "hidden": "Hidden",
+  "layersSelected": "{count} layer(s) selected",
+  "@layersSelected": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+
+  "close": "Close",
+  "pen": "Pen",
+  "highlighter": "Highlighter",
+  "eraser": "Eraser",
+  "newLayer": "New layer",
+  "layers": "Layers",
+  "noLayers": "No layers",
+  "hideLayer": "Hide layer",
+  "showLayer": "Show layer",
+  "cannotHideActiveLayer": "Cannot hide active layer",
+  "deleteLayer": "Delete Layer",
+  "deleteLayerConfirmation": "Are you sure you want to delete \"{name}\"? This will delete all annotations on this layer.",
+  "@deleteLayerConfirmation": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "renameLayer": "Rename Layer",
+  "layerName": "Layer name",
+  "confirm": "Confirm",
+
+  "createNewSetList": "Create new set list",
+  "noSetListsYetCreateAbove": "No set lists yet. Create one above.",
+  "add": "Add",
+
+  "previousDocument": "Previous document",
+  "nextDocument": "Next document",
+  "previousPage": "Previous page",
+  "nextPage": "Next page",
+  "pagesRange": "Pages {start}-{end} of {total}",
+  "@pagesRange": {
+    "placeholders": { "start": {"type": "int"}, "end": {"type": "int"}, "total": {"type": "int"} }
+  },
+  "pageSingle": "Page {current} of {total}",
+  "@pageSingle": {
+    "placeholders": { "current": {"type": "int"}, "total": {"type": "int"} }
+  },
+  "documentNOfTotalBottom": "Document {index} of {total}",
+  "@documentNOfTotalBottom": {
+    "placeholders": { "index": {"type": "int"}, "total": {"type": "int"} }
+  },
+
+  "errorPrefix": "Error: {error}",
+  "@errorPrefix": {
+    "placeholders": { "error": {"type": "String"} }
+  },
+  "failedToRenderPage": "Failed to render page",
+  "failedToLoadDocumentGeneric": "Failed to load document"
+}
