@@ -685,7 +685,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               child: OutlinedButton.icon(
                 onPressed: hasSelection ? _labelSelected : null,
                 icon: const Icon(Icons.label),
-                label: const Text('Label'),
+                label: Text(context.l10n.label),
               ),
             ),
             const SizedBox(width: 8),
@@ -1053,7 +1053,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     _selectedLabelNames.clear();
                     _labelFilterFuture = null;
                   }),
-                  tooltip: 'Clear filters',
+                  tooltip: context.l10n.clearFilters,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
                     minWidth: 32,
@@ -1588,7 +1588,7 @@ class _LabelPickerDialogState extends State<_LabelPickerDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Add Labels'),
+      title: Text(context.l10n.addLabels),
       content: SizedBox(
         width: 300,
         child: Column(
@@ -1627,8 +1627,8 @@ class _LabelPickerDialogState extends State<_LabelPickerDialog> {
             const SizedBox(height: 8),
             TextField(
               controller: _newLabelController,
-              decoration: const InputDecoration(
-                labelText: 'New label name',
+              decoration: InputDecoration(
+                labelText: context.l10n.newLabelName,
                 isDense: true,
               ),
               onSubmitted: (value) {
@@ -1645,7 +1645,7 @@ class _LabelPickerDialogState extends State<_LabelPickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.cancel),
         ),
         FilledButton(
           onPressed: () {
@@ -1654,7 +1654,7 @@ class _LabelPickerDialogState extends State<_LabelPickerDialog> {
             if (pending.isNotEmpty) _selected.add(pending);
             Navigator.of(context).pop(_selected);
           },
-          child: const Text('Apply'),
+          child: Text(context.l10n.apply),
         ),
       ],
     );

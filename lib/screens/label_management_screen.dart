@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/l10n_extension.dart';
 import '../models/database.dart';
 import '../providers/label_providers.dart';
 import '../services/label_service.dart';
@@ -13,11 +14,11 @@ class LabelManagementScreen extends ConsumerWidget {
     final labelsAsync = ref.watch(allLabelsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Manage Labels')),
+      appBar: AppBar(title: Text(context.l10n.manageLabels)),
       body: labelsAsync.when(
         data: (labels) {
           if (labels.isEmpty) {
-            return const Center(child: Text('No labels yet'));
+            return Center(child: Text(context.l10n.noLabelsYet));
           }
           return ListView.builder(
             itemCount: labels.length,
@@ -37,17 +38,17 @@ class LabelManagementScreen extends ConsumerWidget {
                     IconButton(
                       icon: const Icon(Icons.palette),
                       onPressed: () => _pickColor(context, label),
-                      tooltip: 'Change color',
+                      tooltip: context.l10n.changeLabelColor,
                     ),
                     IconButton(
                       icon: const Icon(Icons.edit),
                       onPressed: () => _renameLabel(context, label),
-                      tooltip: 'Rename',
+                      tooltip: context.l10n.rename,
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete),
                       onPressed: () => _deleteLabel(context, label),
-                      tooltip: 'Delete',
+                      tooltip: context.l10n.delete,
                     ),
                   ],
                 ),
@@ -56,7 +57,7 @@ class LabelManagementScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text(context.l10n.errorPrefix(e.toString()))),
       ),
     );
   }
@@ -79,7 +80,7 @@ class LabelManagementScreen extends ConsumerWidget {
     final picked = await showDialog<Color>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Pick a color'),
+        title: Text(context.l10n.pickAColor),
         content: Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -126,16 +127,16 @@ class LabelManagementScreen extends ConsumerWidget {
     final newName = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Rename Label'),
+        title: Text(context.l10n.renameLabelTitle),
         content: TextField(controller: controller, autofocus: true),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Rename'),
+            child: Text(context.l10n.rename),
           ),
         ],
       ),
@@ -150,18 +151,18 @@ class LabelManagementScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Label'),
+        title: Text(context.l10n.deleteLabelTitle),
         content: Text(
-          'Delete "${label.name}"? This removes it from all documents.',
+          context.l10n.deleteLabelConfirmation(label.name),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(context.l10n.delete),
           ),
         ],
       ),

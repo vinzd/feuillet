@@ -175,5 +175,21 @@
   "sortByDateAdded": "Date d'ajout",
   "sortByFileSize": "Taille du fichier",
   "sortByPageCount": "Nombre de pages",
-  "orDragAndDropHint": "ou glissez-déposez des fichiers PDF ici"
+  "orDragAndDropHint": "ou glissez-déposez des fichiers PDF ici",
+
+  "manageLabels": "Gérer les étiquettes",
+  "manageLabelsSubtitle": "Renommer, recolorer ou supprimer des étiquettes",
+  "noLabelsYet": "Aucune étiquette pour le moment",
+  "changeLabelColor": "Changer la couleur",
+  "pickAColor": "Choisir une couleur",
+  "renameLabelTitle": "Renommer l'étiquette",
+  "deleteLabelTitle": "Supprimer l'étiquette",
+  "deleteLabelConfirmation": "Supprimer « {name} » ? L'étiquette sera retirée de tous les documents.",
+  "label": "Étiquette",
+  "labels": "Étiquettes",
+  "clearFilters": "Effacer les filtres",
+  "addLabels": "Ajouter des étiquettes",
+  "newLabelName": "Nom de la nouvelle étiquette",
+  "apply": "Appliquer",
+  "createNewLabel": "Créer une nouvelle étiquette"
 }

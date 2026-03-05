@@ -1027,6 +1027,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Page count'**
   String get sortByPageCount;
+
+  /// No description provided for @orDragAndDropHint.
+  ///
+  /// In en, this message translates to:
+  /// **'or drag and drop PDF files here'**
+  String get orDragAndDropHint;
+
+  /// No description provided for @manageLabels.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Labels'**
+  String get manageLabels;
+
+  /// No description provided for @manageLabelsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename, recolor, or delete labels'**
+  String get manageLabelsSubtitle;
+
+  /// No description provided for @noLabelsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No labels yet'**
+  String get noLabelsYet;
+
+  /// No description provided for @changeLabelColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Change color'**
+  String get changeLabelColor;
+
+  /// No description provided for @pickAColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a color'**
+  String get pickAColor;
+
+  /// No description provided for @renameLabelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Label'**
+  String get renameLabelTitle;
+
+  /// No description provided for @deleteLabelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Label'**
+  String get deleteLabelTitle;
+
+  /// No description provided for @deleteLabelConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"? This removes it from all documents.'**
+  String deleteLabelConfirmation(String name);
+
+  /// No description provided for @label.
+  ///
+  /// In en, this message translates to:
+  /// **'Label'**
+  String get label;
+
+  /// No description provided for @labels.
+  ///
+  /// In en, this message translates to:
+  /// **'Labels'**
+  String get labels;
+
+  /// No description provided for @clearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get clearFilters;
+
+  /// No description provided for @addLabels.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Labels'**
+  String get addLabels;
+
+  /// No description provided for @newLabelName.
+  ///
+  /// In en, this message translates to:
+  /// **'New label name'**
+  String get newLabelName;
+
+  /// No description provided for @apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get apply;
+
+  /// No description provided for @createNewLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Create new label'**
+  String get createNewLabel;
 }
 
 class _AppLocalizationsDelegate
