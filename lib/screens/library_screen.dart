@@ -1070,7 +1070,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: labels.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 6),
+                separatorBuilder: (_, _) => const SizedBox(width: 6),
                 itemBuilder: (context, index) {
                   final label = labels[index];
                   final isSelected = _selectedLabelNames.contains(label.name);
@@ -1152,7 +1152,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         return _buildLabelFilterBar(labels);
                       },
                       loading: () => const SizedBox.shrink(),
-                      error: (_, __) => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
                     );
                   },
                 ),
