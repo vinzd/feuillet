@@ -578,4 +578,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sortByPageCount => 'Page count';
+
+  @override
+  String get orDragAndDropHint => 'or drag and drop PDF files here';
+
+  @override
+  String get manageLabels => 'Manage Labels';
+
+  @override
+  String get manageLabelsSubtitle => 'Rename, recolor, or delete labels';
+
+  @override
+  String get noLabelsYet => 'No labels yet';
+
+  @override
+  String get changeLabelColor => 'Change color';
+
+  @override
+  String get pickAColor => 'Pick a color';
+
+  @override
+  String get renameLabelTitle => 'Rename Label';
+
+  @override
+  String get deleteLabelTitle => 'Delete Label';
+
+  @override
+  String deleteLabelConfirmation(String name) {
+    return 'Delete \"$name\"? This removes it from all documents.';
+  }
+
+  @override
+  String get label => 'Label';
+
+  @override
+  String get labels => 'Labels';
+
+  @override
+  String get clearFilters => 'Clear filters';
+
+  @override
+  String get addLabels => 'Add Labels';
+
+  @override
+  String get newLabelName => 'New label name';
+
+  @override
+  String get apply => 'Apply';
+
+  @override
+  String get createNewLabel => 'Create new label';
 }
