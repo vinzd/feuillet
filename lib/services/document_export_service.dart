@@ -17,7 +17,7 @@ class DocumentExportService {
   static final DocumentExportService instance = DocumentExportService._();
   DocumentExportService._();
 
-  final _annotationService = AnnotationService();
+  final _annotationService = AnnotationService.instance;
 
   /// Scale factor used when rendering annotations (from PdfPageCacheService)
   static const double annotationScale = 2.0;

@@ -53,7 +53,7 @@ class PerformanceDocumentView extends StatefulWidget {
 }
 
 class PerformanceDocumentViewState extends State<PerformanceDocumentView> {
-  final _annotationService = AnnotationService();
+  final _annotationService = AnnotationService.instance;
 
   int _currentPage = 1;
   PageController? _pageController;

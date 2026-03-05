@@ -42,7 +42,7 @@ class ExportPdfDialog extends StatefulWidget {
 }
 
 class _ExportPdfDialogState extends State<ExportPdfDialog> {
-  final _annotationService = AnnotationService();
+  final _annotationService = AnnotationService.instance;
   final _exportService = DocumentExportService.instance;
 
   List<AnnotationLayer> _layers = [];

@@ -77,7 +77,7 @@ void main() {
     late AnnotationService service;
 
     setUp(() {
-      service = AnnotationService();
+      service = AnnotationService.instance;
     });
 
     test('service can be instantiated', () {
