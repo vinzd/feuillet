@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import '../l10n/l10n_extension.dart';
 import '../models/database.dart';
 import '../router/app_router.dart';
 import '../services/database_service.dart';
@@ -118,8 +119,8 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
     if (availableDocs.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('All documents are already in this set list'),
+          SnackBar(
+            content: Text(context.l10n.allDocumentsAlreadyInSetList),
           ),
         );
       }
@@ -171,8 +172,8 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
   Future<void> _startPerformance() async {
     if (_documents.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Add documents to start performance mode'),
+        SnackBar(
+          content: Text(context.l10n.addDocumentsToStartPerformance),
         ),
       );
       return;
@@ -185,15 +186,15 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Set List')),
+        appBar: AppBar(title: Text(context.l10n.setList)),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_setList == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Set List')),
-        body: const Center(child: Text('Set list not found')),
+        appBar: AppBar(title: Text(context.l10n.setList)),
+        body: Center(child: Text(context.l10n.setListNotFound)),
       );
     }
 
@@ -231,7 +232,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
           IconButton(
             icon: const Icon(Icons.play_arrow),
             onPressed: _startPerformance,
-            tooltip: 'Start performance',
+            tooltip: context.l10n.startPerformance,
           ),
         ],
       ),
@@ -261,12 +262,12 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
                           color: Theme.of(context).disabledColor,
                         ),
                         const SizedBox(height: 16),
-                        const Text('No documents in this set list'),
+                        Text(context.l10n.noDocumentsInSetList),
                         const SizedBox(height: 8),
                         ElevatedButton.icon(
                           onPressed: _addDocuments,
                           icon: const Icon(Icons.add),
-                          label: const Text('Add Documents'),
+                          label: Text(context.l10n.addDocuments),
                         ),
                       ],
                     ),
@@ -291,10 +292,10 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
                                   style: const TextStyle(
                                     fontStyle: FontStyle.italic,
                                   ),
-                                  decoration: const InputDecoration(
-                                    hintText: 'Enter label...',
+                                  decoration: InputDecoration(
+                                    hintText: context.l10n.enterLabelHint,
                                     isDense: true,
-                                    contentPadding: EdgeInsets.symmetric(
+                                    contentPadding: const EdgeInsets.symmetric(
                                       vertical: 4,
                                     ),
                                     border: InputBorder.none,
@@ -310,7 +311,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
                                     });
                                   },
                                   child: Text(
-                                    item.notes ?? 'Add label',
+                                    item.notes ?? context.l10n.addLabel,
                                     style: TextStyle(
                                       fontStyle: FontStyle.italic,
                                       color: item.notes != null
@@ -327,7 +328,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
                                 onPressed: () {
                                   context.push(AppRoutes.documentPath(doc.id));
                                 },
-                                tooltip: 'View',
+                                tooltip: context.l10n.view,
                               ),
                               IconButton(
                                 icon: const Icon(
@@ -335,7 +336,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
                                   color: Colors.red,
                                 ),
                                 onPressed: () => _removeDocument(item.id),
-                                tooltip: 'Remove',
+                                tooltip: context.l10n.remove,
                               ),
                             ],
                           ),
@@ -348,7 +349,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addDocuments,
-        tooltip: 'Add Documents',
+        tooltip: context.l10n.addDocuments,
         child: const Icon(Icons.add),
       ),
     );
@@ -372,7 +373,7 @@ class _DocumentPickerDialogState extends State<_DocumentPickerDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Add Documents'),
+      title: Text(context.l10n.addDocuments),
       content: SizedBox(
         width: double.maxFinite,
         child: Column(
@@ -380,7 +381,7 @@ class _DocumentPickerDialogState extends State<_DocumentPickerDialog> {
           children: [
             TextField(
               decoration: InputDecoration(
-                hintText: 'Search documents...',
+                hintText: context.l10n.searchDocumentsHint,
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -409,7 +410,7 @@ class _DocumentPickerDialogState extends State<_DocumentPickerDialog> {
 
                       return CheckboxListTile(
                         title: Text(doc.name),
-                        subtitle: Text('${doc.pageCount} pages'),
+                        subtitle: Text(context.l10n.nPages(doc.pageCount)),
                         value: isSelected,
                         onChanged: (value) {
                           setState(() {
@@ -432,13 +433,13 @@ class _DocumentPickerDialogState extends State<_DocumentPickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.cancel),
         ),
         FilledButton(
           onPressed: _selectedIds.isEmpty
               ? null
               : () => Navigator.pop(context, _selectedIds.toList()),
-          child: Text('Add (${_selectedIds.length})'),
+          child: Text(context.l10n.addCount(_selectedIds.length)),
         ),
       ],
     );
