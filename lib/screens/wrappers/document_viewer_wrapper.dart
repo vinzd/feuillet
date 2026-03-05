@@ -2,20 +2,11 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/l10n_extension.dart';
-import '../../models/database.dart';
+import '../../providers/document_providers.dart';
 import '../../router/app_router.dart';
 import '../../services/database_service.dart';
 import '../../widgets/error_placeholder_screen.dart';
 import '../document_viewer_screen.dart';
-
-/// Provider to fetch a document by ID
-final documentByIdProvider = FutureProvider.family<Document?, int>((
-  ref,
-  id,
-) async {
-  final db = ref.read(databaseProvider);
-  return db.getDocument(id);
-});
 
 /// Wrapper that loads a document by ID before displaying DocumentViewerScreen.
 /// Used for URL-based navigation (e.g., /document/42).

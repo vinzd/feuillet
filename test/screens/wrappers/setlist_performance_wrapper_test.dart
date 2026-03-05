@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:feuillet/providers/setlist_providers.dart';
 import 'package:feuillet/screens/wrappers/setlist_performance_wrapper.dart';
 import 'package:feuillet/l10n/app_localizations.dart';
 
