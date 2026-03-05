@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/l10n_extension.dart';
 import '../models/database.dart';
 import '../services/setlist_service.dart';
 
@@ -81,7 +82,7 @@ class _SetListPickerDialogState extends State<SetListPickerDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Add to Set List'),
+      title: Text(context.l10n.addToSetList),
       content: SizedBox(
         width: double.maxFinite,
         child: _isLoading
@@ -100,7 +101,7 @@ class _SetListPickerDialogState extends State<SetListPickerDialog> {
                     // Create new option
                     RadioListTile<int>(
                       value: _createNewSentinel,
-                      title: const Text('Create new set list'),
+                      title: Text(context.l10n.createNewSetList),
                       secondary: const Icon(Icons.add),
                       selected: _isCreatingNew,
                     ),
@@ -116,8 +117,8 @@ class _SetListPickerDialogState extends State<SetListPickerDialog> {
                           children: [
                             TextField(
                               controller: _nameController,
-                              decoration: const InputDecoration(
-                                labelText: 'Name',
+                              decoration: InputDecoration(
+                                labelText: context.l10n.name,
                                 border: OutlineInputBorder(),
                               ),
                               autofocus: true,
@@ -126,8 +127,8 @@ class _SetListPickerDialogState extends State<SetListPickerDialog> {
                             const SizedBox(height: 8),
                             TextField(
                               controller: _descriptionController,
-                              decoration: const InputDecoration(
-                                labelText: 'Description (optional)',
+                              decoration: InputDecoration(
+                                labelText: context.l10n.descriptionOptional,
                                 border: OutlineInputBorder(),
                               ),
                               maxLines: 2,
@@ -166,11 +167,11 @@ class _SetListPickerDialogState extends State<SetListPickerDialog> {
                         ),
                       )
                     else if (!_isCreatingNew)
-                      const Padding(
-                        padding: EdgeInsets.all(16),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
                         child: Text(
-                          'No set lists yet. Create one above.',
-                          style: TextStyle(fontStyle: FontStyle.italic),
+                          context.l10n.noSetListsYetCreateAbove,
+                          style: const TextStyle(fontStyle: FontStyle.italic),
                         ),
                       ),
                   ],
@@ -180,11 +181,11 @@ class _SetListPickerDialogState extends State<SetListPickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(context.l10n.cancel),
         ),
         FilledButton(
           onPressed: _canConfirm() ? _confirm : null,
-          child: const Text('Add'),
+          child: Text(context.l10n.add),
         ),
       ],
     );

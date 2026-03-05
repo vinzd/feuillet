@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/l10n_extension.dart';
 import '../models/database.dart';
 import '../services/annotation_service.dart';
 import 'layer_dialogs.dart';
@@ -108,9 +109,10 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
   Future<void> _renameLayer(AnnotationLayer layer) async {
     final newName = await LayerDialogs.showTextInputDialog(
       context: context,
-      title: 'Rename Layer',
-      labelText: 'Layer name',
+      title: context.l10n.renameLayer,
+      labelText: context.l10n.layerName,
       initialValue: layer.name,
+      confirmText: context.l10n.rename,
     );
 
     if (newName != null && newName.isNotEmpty && newName != layer.name) {
@@ -123,10 +125,9 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
   Future<void> _deleteLayer(AnnotationLayer layer) async {
     final confirmed = await LayerDialogs.showConfirmationDialog(
       context: context,
-      title: 'Delete Layer',
-      message:
-          'Are you sure you want to delete "${layer.name}"? This will delete all annotations on this layer.',
-      confirmText: 'Delete',
+      title: context.l10n.deleteLayer,
+      message: context.l10n.deleteLayerConfirmation(layer.name),
+      confirmText: context.l10n.delete,
       isDangerous: true,
     );
 
@@ -182,9 +183,9 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
             children: [
               const Icon(Icons.drag_indicator, size: 18),
               const SizedBox(width: 4),
-              const Text(
-                'Annotations',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              Text(
+                context.l10n.annotations,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const Spacer(),
               SizedBox(
@@ -201,7 +202,7 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
                 child: IconButton(
                   icon: const Icon(Icons.close, size: 18),
                   onPressed: widget.onClose,
-                  tooltip: 'Close',
+                  tooltip: context.l10n.close,
                   padding: EdgeInsets.zero,
                 ),
               ),
@@ -224,7 +225,7 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
             children: [
               _ToolButton(
                 icon: Icons.edit,
-                tooltip: 'Pen',
+                tooltip: context.l10n.pen,
                 isSelected: widget.currentTool == AnnotationType.pen,
                 onPressed: () {
                   widget.onToolChanged(AnnotationType.pen);
@@ -236,7 +237,7 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
               ),
               _ToolButton(
                 icon: Icons.highlight,
-                tooltip: 'Highlighter',
+                tooltip: context.l10n.highlighter,
                 isSelected: widget.currentTool == AnnotationType.highlighter,
                 onPressed: () {
                   widget.onToolChanged(AnnotationType.highlighter);
@@ -248,7 +249,7 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
               ),
               _ToolButton(
                 icon: Icons.auto_fix_high,
-                tooltip: 'Eraser',
+                tooltip: context.l10n.eraser,
                 isSelected: widget.currentTool == AnnotationType.eraser,
                 onPressed: () {
                   widget.onToolChanged(AnnotationType.eraser);
@@ -314,9 +315,9 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
             children: [
               const Icon(Icons.layers, size: 16),
               const SizedBox(width: 8),
-              const Text(
-                'Layers',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+              Text(
+                context.l10n.layers,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
               ),
               const Spacer(),
               SizedBox(
@@ -325,7 +326,7 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
                 child: IconButton(
                   icon: const Icon(Icons.add, size: 16),
                   onPressed: _createNewLayer,
-                  tooltip: 'New layer',
+                  tooltip: context.l10n.newLayer,
                   padding: EdgeInsets.zero,
                 ),
               ),
@@ -348,12 +349,12 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                const Text('No layers', style: TextStyle(fontSize: 12)),
+                Text(context.l10n.noLayers, style: const TextStyle(fontSize: 12)),
                 const SizedBox(height: 8),
                 TextButton.icon(
                   onPressed: _createNewLayer,
                   icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Create'),
+                  label: Text(context.l10n.create),
                 ),
               ],
             ),
@@ -411,9 +412,9 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
                             padding: EdgeInsets.zero,
                             tooltip: canToggleVisibility
                                 ? (layer.isVisible
-                                      ? 'Hide layer'
-                                      : 'Show layer')
-                                : 'Cannot hide active layer',
+                                      ? context.l10n.hideLayer
+                                      : context.l10n.showLayer)
+                                : context.l10n.cannotHideActiveLayer,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -444,29 +445,29 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
                               _ => null,
                             },
                             itemBuilder: (context) => [
-                              const PopupMenuItem(
+                              PopupMenuItem(
                                 value: 'rename',
                                 child: Row(
                                   children: [
-                                    Icon(Icons.edit, size: 18),
-                                    SizedBox(width: 8),
-                                    Text('Rename'),
+                                    const Icon(Icons.edit, size: 18),
+                                    const SizedBox(width: 8),
+                                    Text(context.l10n.rename),
                                   ],
                                 ),
                               ),
-                              const PopupMenuItem(
+                              PopupMenuItem(
                                 value: 'delete',
                                 child: Row(
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.delete,
                                       size: 18,
                                       color: Colors.red,
                                     ),
-                                    SizedBox(width: 8),
+                                    const SizedBox(width: 8),
                                     Text(
-                                      'Delete',
-                                      style: TextStyle(color: Colors.red),
+                                      context.l10n.delete,
+                                      style: const TextStyle(color: Colors.red),
                                     ),
                                   ],
                                 ),
