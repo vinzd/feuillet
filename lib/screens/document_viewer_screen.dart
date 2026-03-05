@@ -8,7 +8,6 @@ import 'package:pdfx/pdfx.dart';
 
 import '../models/database.dart';
 import '../models/view_mode.dart';
-import '../providers/label_providers.dart';
 import '../services/annotation_service.dart';
 import '../services/database_service.dart';
 import '../services/document_export_service.dart';
@@ -529,92 +528,77 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                     : ViewerConstants.overlayHideOffsetTop,
                 left: 0,
                 right: 0,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AppBar(
-                      title: Text(widget.document.name),
-                      backgroundColor: ViewerConstants.overlayBackground,
-                      actions: [
-                        if (!widget.document.isImage)
-                          PopupMenuButton<PdfViewMode>(
-                            icon: Icon(_viewMode.icon),
-                            tooltip: 'View mode',
-                            onSelected: _onViewModeChanged,
-                            itemBuilder: (context) => PdfViewMode.values
-                                .map(
-                                  (mode) => PopupMenuItem(
-                                    value: mode,
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          mode.icon,
-                                          color: mode == _viewMode
-                                              ? Theme.of(
-                                                  context,
-                                                ).colorScheme.primary
-                                              : null,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(mode.displayName),
-                                      ],
+                child: AppBar(
+                  title: Text(widget.document.name),
+                  backgroundColor: ViewerConstants.overlayBackground,
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.label_outline),
+                      onPressed: () => _showAddLabelDialog(widget.document.id),
+                      tooltip: 'Labels',
+                    ),
+                    if (!widget.document.isImage)
+                      PopupMenuButton<PdfViewMode>(
+                        icon: Icon(_viewMode.icon),
+                        tooltip: 'View mode',
+                        onSelected: _onViewModeChanged,
+                        itemBuilder: (context) => PdfViewMode.values
+                            .map(
+                              (mode) => PopupMenuItem(
+                                value: mode,
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      mode.icon,
+                                      color: mode == _viewMode
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.primary
+                                          : null,
                                     ),
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                        IconButton(
-                          icon: Icon(
-                            _showFloatingLayerPanel
-                                ? Icons.brush
-                                : Icons.brush_outlined,
-                          ),
-                          onPressed: () => setState(
-                            () => _showFloatingLayerPanel =
-                                !_showFloatingLayerPanel,
-                          ),
-                          tooltip: 'Annotations',
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.tune),
-                          onPressed: () => _showControlsPanel(),
-                          tooltip: 'Display settings',
-                        ),
-                        if (_pdfDocument != null || _imageBytes != null)
-                          IconButton(
-                            icon: const Icon(Icons.ios_share),
-                            onPressed: () {
-                              if (widget.document.isImage) {
-                                _exportImage();
-                              } else {
-                                ExportPdfDialog.show(
-                                  context: context,
-                                  document: widget.document,
-                                  pdfDocument: _pdfDocument!,
-                                );
-                              }
-                            },
-                            tooltip: widget.document.isImage
-                                ? 'Export image'
-                                : 'Export PDF',
-                          ),
-                      ],
+                                    const SizedBox(width: 8),
+                                    Text(mode.displayName),
+                                  ],
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    IconButton(
+                      icon: Icon(
+                        _showFloatingLayerPanel
+                            ? Icons.brush
+                            : Icons.brush_outlined,
+                      ),
+                      onPressed: () => setState(
+                        () =>
+                            _showFloatingLayerPanel = !_showFloatingLayerPanel,
+                      ),
+                      tooltip: 'Annotations',
                     ),
-                    Consumer(
-                      builder: (context, ref, _) {
-                        final labelsAsync = ref.watch(
-                          documentLabelsProvider(widget.document.id),
-                        );
-                        return labelsAsync.when(
-                          data: (labels) => _buildDocumentLabelRow(
-                            labels,
-                            widget.document.id,
-                          ),
-                          loading: () => const SizedBox.shrink(),
-                          error: (_, __) => const SizedBox.shrink(),
-                        );
-                      },
+                    IconButton(
+                      icon: const Icon(Icons.tune),
+                      onPressed: () => _showControlsPanel(),
+                      tooltip: 'Display settings',
                     ),
+                    if (_pdfDocument != null || _imageBytes != null)
+                      IconButton(
+                        icon: const Icon(Icons.ios_share),
+                        onPressed: () {
+                          if (widget.document.isImage) {
+                            _exportImage();
+                          } else {
+                            ExportPdfDialog.show(
+                              context: context,
+                              document: widget.document,
+                              pdfDocument: _pdfDocument!,
+                            );
+                          }
+                        },
+                        tooltip: widget.document.isImage
+                            ? 'Export image'
+                            : 'Export PDF',
+                      ),
                   ],
                 ),
               ),
@@ -696,134 +680,140 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     );
   }
 
-  Widget _buildDocumentLabelRow(List<Label> labels, int documentId) {
-    return Container(
-      color: ViewerConstants.overlayBackground,
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-      child: SizedBox(
-        height: 32,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          children: [
-            ...labels.map(
-              (label) => Padding(
-                padding: const EdgeInsets.only(right: 6),
-                child: Chip(
-                  label: Text(label.name, style: const TextStyle(fontSize: 12)),
-                  deleteIcon: const Icon(Icons.close, size: 14),
-                  onDeleted: () async {
-                    await LabelService.instance.removeLabelFromDocument(
-                      documentId,
-                      label.name,
-                    );
-                  },
-                  avatar: label.color != null
-                      ? CircleAvatar(
-                          backgroundColor: Color(label.color!),
-                          radius: 6,
-                        )
-                      : null,
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-            ),
-            ActionChip(
-              label: const Icon(Icons.add, size: 16),
-              onPressed: () => _showAddLabelDialog(documentId),
-              visualDensity: VisualDensity.compact,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _showAddLabelDialog(int documentId) async {
     final allLabels = await LabelService.instance.getAllLabels();
     final currentLabels = await LabelService.instance.getLabelsForDocument(
       documentId,
     );
-    final currentNames = currentLabels.map((l) => l.name).toSet();
 
     if (!mounted) return;
 
     final controller = TextEditingController();
-    final result = await showDialog<String>(
+    final currentNames = currentLabels.map((l) => l.name).toSet();
+
+    await showDialog<void>(
       context: context,
       builder: (context) {
-        final availableLabels = allLabels
-            .where((l) => !currentNames.contains(l.name))
-            .toList();
-        return AlertDialog(
-          title: const Text('Add Label'),
-          content: SizedBox(
-            width: 300,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (availableLabels.isNotEmpty) ...[
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 200),
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: availableLabels.length,
-                      itemBuilder: (context, index) {
-                        final label = availableLabels[index];
-                        return ListTile(
-                          title: Text(label.name),
-                          leading: label.color != null
-                              ? CircleAvatar(
-                                  backgroundColor: Color(label.color!),
-                                  radius: 8,
-                                )
-                              : null,
-                          dense: true,
-                          onTap: () => Navigator.pop(context, label.name),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final applied = allLabels
+                .where((l) => currentNames.contains(l.name))
+                .toList();
+            final available = allLabels
+                .where((l) => !currentNames.contains(l.name))
+                .toList();
+
+            return AlertDialog(
+              title: const Text('Labels'),
+              content: SizedBox(
+                width: 300,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (applied.isNotEmpty) ...[
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: applied
+                            .map(
+                              (label) => Chip(
+                                label: Text(label.name),
+                                avatar: label.color != null
+                                    ? CircleAvatar(
+                                        backgroundColor: Color(label.color!),
+                                        radius: 8,
+                                      )
+                                    : null,
+                                deleteIcon: const Icon(Icons.close, size: 16),
+                                onDeleted: () async {
+                                  await LabelService.instance
+                                      .removeLabelFromDocument(
+                                        documentId,
+                                        label.name,
+                                      );
+                                  setDialogState(
+                                    () => currentNames.remove(label.name),
+                                  );
+                                },
+                              ),
+                            )
+                            .toList(),
+                      ),
+                      const Divider(),
+                    ],
+                    if (available.isNotEmpty) ...[
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 200),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: available.length,
+                          itemBuilder: (context, index) {
+                            final label = available[index];
+                            return ListTile(
+                              title: Text(label.name),
+                              leading: label.color != null
+                                  ? CircleAvatar(
+                                      backgroundColor: Color(label.color!),
+                                      radius: 8,
+                                    )
+                                  : null,
+                              dense: true,
+                              onTap: () async {
+                                await LabelService.instance.addLabelToDocument(
+                                  documentId,
+                                  label.name,
+                                );
+                                setDialogState(
+                                  () => currentNames.add(label.name),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                      const Divider(),
+                    ],
+                    TextField(
+                      controller: controller,
+                      decoration: const InputDecoration(
+                        labelText: 'Create new label',
+                        isDense: true,
+                      ),
+                      onSubmitted: (value) async {
+                        final name = value.trim();
+                        if (name.isEmpty) return;
+                        await LabelService.instance.createLabel(name);
+                        await LabelService.instance.addLabelToDocument(
+                          documentId,
+                          name,
                         );
+                        controller.clear();
+                        final refreshed = await LabelService.instance
+                            .getAllLabels();
+                        setDialogState(() {
+                          allLabels
+                            ..clear()
+                            ..addAll(refreshed);
+                          currentNames.add(name);
+                        });
                       },
                     ),
-                  ),
-                  const Divider(),
-                ],
-                TextField(
-                  controller: controller,
-                  decoration: const InputDecoration(
-                    labelText: 'Or create new label',
-                    isDense: true,
-                  ),
-                  onSubmitted: (value) {
-                    if (value.trim().isNotEmpty) {
-                      Navigator.pop(context, value.trim());
-                    }
-                  },
+                  ],
+                ),
+              ),
+              actions: [
+                FilledButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Done'),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final text = controller.text.trim();
-                if (text.isNotEmpty) Navigator.pop(context, text);
-              },
-              child: const Text('Add'),
-            ),
-          ],
+            );
+          },
         );
       },
     );
     controller.dispose();
-
-    if (result != null && result.isNotEmpty) {
-      await LabelService.instance.createLabel(result);
-      await LabelService.instance.addLabelToDocument(documentId, result);
-    }
   }
 
   Widget _buildImageView() {
