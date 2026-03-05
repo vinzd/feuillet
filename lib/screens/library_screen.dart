@@ -740,7 +740,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           if (isLibraryEmpty) ...[
             const SizedBox(height: 8),
             Text(
-              'or drag and drop PDF files here',
+              context.l10n.orDragAndDropHint,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
               ),

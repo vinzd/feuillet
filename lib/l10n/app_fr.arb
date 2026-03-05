@@ -174,5 +174,6 @@
   "sortByName": "Nom",
   "sortByDateAdded": "Date d'ajout",
   "sortByFileSize": "Taille du fichier",
-  "sortByPageCount": "Nombre de pages"
+  "sortByPageCount": "Nombre de pages",
+  "orDragAndDropHint": "ou glissez-déposez des fichiers PDF ici"
 }
