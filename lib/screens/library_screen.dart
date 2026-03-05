@@ -16,6 +16,7 @@ import '../services/document_service.dart';
 import '../services/label_service.dart';
 import '../services/setlist_service.dart';
 import '../services/version_service.dart';
+import '../providers/document_providers.dart';
 import '../providers/label_providers.dart';
 import '../utils/fuzzy_search.dart';
 import '../utils/snackbar_extension.dart';
@@ -24,12 +25,6 @@ import '../widgets/setlist_picker_dialog.dart';
 import '../widgets/export_pdf_dialog_web.dart'
     if (dart.library.io) '../widgets/export_pdf_dialog_native.dart'
     as platform;
-
-/// Provider for the list of documents
-final documentsProvider = StreamProvider<List<Document>>((ref) {
-  final database = ref.watch(databaseProvider);
-  return database.watchAllDocuments();
-});
 
 /// Library screen showing all PDF documents
 class LibraryScreen extends ConsumerStatefulWidget {

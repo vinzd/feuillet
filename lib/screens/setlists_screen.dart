@@ -3,17 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../l10n/l10n_extension.dart';
 import '../models/database.dart';
+import '../providers/setlist_providers.dart';
 import '../router/app_router.dart';
-import '../services/database_service.dart';
 import '../services/setlist_service.dart';
 import '../utils/snackbar_extension.dart';
 import '../widgets/layer_dialogs.dart';
-
-/// Provider for set lists
-final setListsProvider = StreamProvider<List<SetList>>((ref) {
-  final database = ref.watch(databaseProvider);
-  return database.watchAllSetLists();
-});
 
 /// Screen showing all set lists
 class SetListsScreen extends ConsumerStatefulWidget {
