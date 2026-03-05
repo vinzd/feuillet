@@ -6,6 +6,7 @@ import '../models/database.dart';
 import '../router/app_router.dart';
 import '../services/database_service.dart';
 import '../services/setlist_service.dart';
+import '../widgets/layer_dialogs.dart';
 
 /// Provider for set lists
 final setListsProvider = StreamProvider<List<SetList>>((ref) {
@@ -90,23 +91,12 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
   }
 
   Future<void> _deleteSetList(SetList setList) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await LayerDialogs.showConfirmationDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.deleteSetList),
-        content: Text(context.l10n.deleteSetListConfirmation(setList.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: Text(context.l10n.delete),
-          ),
-        ],
-      ),
+      title: context.l10n.deleteSetList,
+      message: context.l10n.deleteSetListConfirmation(setList.name),
+      confirmText: context.l10n.delete,
+      isDangerous: true,
     );
 
     if (confirmed == true) {
@@ -115,44 +105,15 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
   }
 
   Future<void> _renameSetList(SetList setList) async {
-    final nameController = TextEditingController(text: setList.name);
-
-    final newName = await showDialog<String>(
+    final newName = await LayerDialogs.showTextInputDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.renameSetList),
-        content: TextField(
-          controller: nameController,
-          decoration: InputDecoration(
-            labelText: context.l10n.name,
-            border: const OutlineInputBorder(),
-          ),
-          autofocus: true,
-          onSubmitted: (value) {
-            if (value.trim().isNotEmpty) {
-              Navigator.pop(context, value.trim());
-            }
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              final value = nameController.text.trim();
-              if (value.isNotEmpty) {
-                Navigator.pop(context, value);
-              }
-            },
-            child: Text(context.l10n.rename),
-          ),
-        ],
-      ),
+      title: context.l10n.renameSetList,
+      labelText: context.l10n.name,
+      initialValue: setList.name,
+      confirmText: context.l10n.rename,
     );
 
-    if (newName != null && newName != setList.name) {
+    if (newName != null && newName.isNotEmpty && newName != setList.name) {
       final updated = setList.copyWith(
         name: newName,
         modifiedAt: DateTime.now(),
