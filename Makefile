@@ -94,11 +94,6 @@ build-android:
 	flutter build apk --release --dart-define=GIT_HASH=$(GIT_HASH)
 	@echo "✅ Android APK: build/app/outputs/flutter-apk/app-release.apk"
 
-build-ios:
-	@echo "📱 Building for iOS (release)..."
-	flutter build ios --release --no-codesign --dart-define=GIT_HASH=$(GIT_HASH)
-	@echo "✅ iOS build complete"
-
 build-all: build-web build-macos build-android
 	@echo "✅ All platform builds complete"
 
