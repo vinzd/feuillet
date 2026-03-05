@@ -529,12 +529,78 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                     : ViewerConstants.overlayHideOffsetTop,
                 left: 0,
                 right: 0,
-                child: AppBar(
-                  title: Text(widget.document.name),
-                  backgroundColor: ViewerConstants.overlayBackground,
-                  bottom: PreferredSize(
-                    preferredSize: const Size.fromHeight(40),
-                    child: Consumer(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AppBar(
+                      title: Text(widget.document.name),
+                      backgroundColor: ViewerConstants.overlayBackground,
+                      actions: [
+                        if (!widget.document.isImage)
+                          PopupMenuButton<PdfViewMode>(
+                            icon: Icon(_viewMode.icon),
+                            tooltip: 'View mode',
+                            onSelected: _onViewModeChanged,
+                            itemBuilder: (context) => PdfViewMode.values
+                                .map(
+                                  (mode) => PopupMenuItem(
+                                    value: mode,
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          mode.icon,
+                                          color: mode == _viewMode
+                                              ? Theme.of(
+                                                  context,
+                                                ).colorScheme.primary
+                                              : null,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(mode.displayName),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        IconButton(
+                          icon: Icon(
+                            _showFloatingLayerPanel
+                                ? Icons.brush
+                                : Icons.brush_outlined,
+                          ),
+                          onPressed: () => setState(
+                            () => _showFloatingLayerPanel =
+                                !_showFloatingLayerPanel,
+                          ),
+                          tooltip: 'Annotations',
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.tune),
+                          onPressed: () => _showControlsPanel(),
+                          tooltip: 'Display settings',
+                        ),
+                        if (_pdfDocument != null || _imageBytes != null)
+                          IconButton(
+                            icon: const Icon(Icons.ios_share),
+                            onPressed: () {
+                              if (widget.document.isImage) {
+                                _exportImage();
+                              } else {
+                                ExportPdfDialog.show(
+                                  context: context,
+                                  document: widget.document,
+                                  pdfDocument: _pdfDocument!,
+                                );
+                              }
+                            },
+                            tooltip: widget.document.isImage
+                                ? 'Export image'
+                                : 'Export PDF',
+                          ),
+                      ],
+                    ),
+                    Consumer(
                       builder: (context, ref, _) {
                         final labelsAsync = ref.watch(
                           documentLabelsProvider(widget.document.id),
@@ -545,74 +611,10 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                             widget.document.id,
                           ),
                           loading: () => const SizedBox.shrink(),
-                          error: (_, _) => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
                         );
                       },
                     ),
-                  ),
-                  actions: [
-                    if (!widget.document.isImage)
-                      PopupMenuButton<PdfViewMode>(
-                        icon: Icon(_viewMode.icon),
-                        tooltip: 'View mode',
-                        onSelected: _onViewModeChanged,
-                        itemBuilder: (context) => PdfViewMode.values
-                            .map(
-                              (mode) => PopupMenuItem(
-                                value: mode,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      mode.icon,
-                                      color: mode == _viewMode
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.primary
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(mode.displayName),
-                                  ],
-                                ),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                    IconButton(
-                      icon: Icon(
-                        _showFloatingLayerPanel
-                            ? Icons.brush
-                            : Icons.brush_outlined,
-                      ),
-                      onPressed: () => setState(
-                        () =>
-                            _showFloatingLayerPanel = !_showFloatingLayerPanel,
-                      ),
-                      tooltip: 'Annotations',
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.tune),
-                      onPressed: () => _showControlsPanel(),
-                      tooltip: 'Display settings',
-                    ),
-                    if (_pdfDocument != null || _imageBytes != null)
-                      IconButton(
-                        icon: const Icon(Icons.ios_share),
-                        onPressed: () {
-                          if (widget.document.isImage) {
-                            _exportImage();
-                          } else {
-                            ExportPdfDialog.show(
-                              context: context,
-                              document: widget.document,
-                              pdfDocument: _pdfDocument!,
-                            );
-                          }
-                        },
-                        tooltip: widget.document.isImage
-                            ? 'Export image'
-                            : 'Export PDF',
-                      ),
                   ],
                 ),
               ),
@@ -695,7 +697,8 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
   }
 
   Widget _buildDocumentLabelRow(List<Label> labels, int documentId) {
-    return Padding(
+    return Container(
+      color: ViewerConstants.overlayBackground,
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       child: SizedBox(
         height: 32,

@@ -1086,10 +1086,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         }
                         _labelFilterFuture = _selectedLabelNames.isEmpty
                             ? null
-                            : LabelService.instance
-                                .getDocumentIdsWithAllLabels(
-                                  _selectedLabelNames.toList(),
-                                );
+                            : LabelService.instance.getDocumentIdsWithAllLabels(
+                                _selectedLabelNames.toList(),
+                              );
                       });
                     },
                     avatar: label.color != null
@@ -1650,7 +1649,12 @@ class _LabelPickerDialogState extends State<_LabelPickerDialog> {
           child: const Text('Cancel'),
         ),
         FilledButton(
-          onPressed: () => Navigator.of(context).pop(_selected),
+          onPressed: () {
+            // Include any text in the new label field
+            final pending = _newLabelController.text.trim();
+            if (pending.isNotEmpty) _selected.add(pending);
+            Navigator.of(context).pop(_selected);
+          },
           child: const Text('Apply'),
         ),
       ],
