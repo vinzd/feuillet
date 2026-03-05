@@ -57,7 +57,8 @@ class LabelManagementScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(context.l10n.errorPrefix(e.toString()))),
+        error: (e, _) =>
+            Center(child: Text(context.l10n.errorPrefix(e.toString()))),
       ),
     );
   }
@@ -152,9 +153,7 @@ class LabelManagementScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.l10n.deleteLabelTitle),
-        content: Text(
-          context.l10n.deleteLabelConfirmation(label.name),
-        ),
+        content: Text(context.l10n.deleteLabelConfirmation(label.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
