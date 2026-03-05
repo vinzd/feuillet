@@ -30,6 +30,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
   bool _isEditingTitle = false;
   late TextEditingController _titleController;
   late FocusNode _titleFocusNode;
+  final _keyboardFocusNode = FocusNode();
 
   int? _editingItemId;
   late TextEditingController _labelController;
@@ -49,6 +50,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
     _titleController.dispose();
     _titleFocusNode.removeListener(_onTitleFocusChange);
     _titleFocusNode.dispose();
+    _keyboardFocusNode.dispose();
     _labelController.dispose();
     super.dispose();
   }
@@ -198,7 +200,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
       appBar: AppBar(
         title: _isEditingTitle
             ? KeyboardListener(
-                focusNode: FocusNode(),
+                focusNode: _keyboardFocusNode,
                 onKeyEvent: (event) {
                   if (event is KeyDownEvent) {
                     if (event.logicalKey == LogicalKeyboardKey.escape) {
