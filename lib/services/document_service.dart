@@ -703,37 +703,6 @@ class DocumentService {
     return pageImage.bytes;
   }
 
-  /// Get a cached thumbnail if available, otherwise return null
-  Future<Uint8List?> getCachedThumbnail(int documentId) async {
-    if (kIsWeb) return null;
-
-    try {
-      final thumbPath = await _getThumbnailPath(documentId);
-      final thumbFile = File(thumbPath);
-      if (await thumbFile.exists()) {
-        return await thumbFile.readAsBytes();
-      }
-    } catch (e) {
-      debugPrint('DocumentService: Error reading cached thumbnail: $e');
-    }
-    return null;
-  }
-
-  /// Delete the cached thumbnail for a document
-  Future<void> deleteCachedThumbnail(int documentId) async {
-    if (kIsWeb) return;
-
-    try {
-      final thumbPath = await _getThumbnailPath(documentId);
-      final thumbFile = File(thumbPath);
-      if (await thumbFile.exists()) {
-        await thumbFile.delete();
-      }
-    } catch (e) {
-      debugPrint('DocumentService: Error deleting cached thumbnail: $e');
-    }
-  }
-
   /// Clean up resources
   void dispose() {
     _pdfChangesSubscription?.cancel();
