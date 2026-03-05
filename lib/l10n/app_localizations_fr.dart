@@ -583,4 +583,55 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get sortByPageCount => 'Nombre de pages';
+
+  @override
+  String get orDragAndDropHint => 'ou glissez-déposez des fichiers PDF ici';
+
+  @override
+  String get manageLabels => 'Gérer les étiquettes';
+
+  @override
+  String get manageLabelsSubtitle =>
+      'Renommer, recolorer ou supprimer des étiquettes';
+
+  @override
+  String get noLabelsYet => 'Aucune étiquette pour le moment';
+
+  @override
+  String get changeLabelColor => 'Changer la couleur';
+
+  @override
+  String get pickAColor => 'Choisir une couleur';
+
+  @override
+  String get renameLabelTitle => 'Renommer l\'étiquette';
+
+  @override
+  String get deleteLabelTitle => 'Supprimer l\'étiquette';
+
+  @override
+  String deleteLabelConfirmation(String name) {
+    return 'Supprimer « $name » ? L\'étiquette sera retirée de tous les documents.';
+  }
+
+  @override
+  String get label => 'Étiquette';
+
+  @override
+  String get labels => 'Étiquettes';
+
+  @override
+  String get clearFilters => 'Effacer les filtres';
+
+  @override
+  String get addLabels => 'Ajouter des étiquettes';
+
+  @override
+  String get newLabelName => 'Nom de la nouvelle étiquette';
+
+  @override
+  String get apply => 'Appliquer';
+
+  @override
+  String get createNewLabel => 'Créer une nouvelle étiquette';
 }

@@ -178,8 +178,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                 ListTile(
                   leading: const Icon(Icons.label),
-                  title: const Text('Manage Labels'),
-                  subtitle: const Text('Rename, recolor, or delete labels'),
+                  title: Text(context.l10n.manageLabels),
+                  subtitle: Text(context.l10n.manageLabelsSubtitle),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push(AppRoutes.labelManagement),
                 ),

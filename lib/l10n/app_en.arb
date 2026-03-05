@@ -271,5 +271,24 @@
   "sortByDateAdded": "Date added",
   "sortByFileSize": "File size",
   "sortByPageCount": "Page count",
-  "orDragAndDropHint": "or drag and drop PDF files here"
+  "orDragAndDropHint": "or drag and drop PDF files here",
+
+  "manageLabels": "Manage Labels",
+  "manageLabelsSubtitle": "Rename, recolor, or delete labels",
+  "noLabelsYet": "No labels yet",
+  "changeLabelColor": "Change color",
+  "pickAColor": "Pick a color",
+  "renameLabelTitle": "Rename Label",
+  "deleteLabelTitle": "Delete Label",
+  "deleteLabelConfirmation": "Delete \"{name}\"? This removes it from all documents.",
+  "@deleteLabelConfirmation": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "label": "Label",
+  "labels": "Labels",
+  "clearFilters": "Clear filters",
+  "addLabels": "Add Labels",
+  "newLabelName": "New label name",
+  "apply": "Apply",
+  "createNewLabel": "Create new label"
 }

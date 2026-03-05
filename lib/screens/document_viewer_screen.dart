@@ -534,7 +534,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                     IconButton(
                       icon: const Icon(Icons.label_outline),
                       onPressed: () => _showAddLabelDialog(widget.document.id),
-                      tooltip: 'Labels',
+                      tooltip: context.l10n.labels,
                     ),
                     if (!widget.document.isImage)
                       PopupMenuButton<PdfViewMode>(
@@ -703,7 +703,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                 .toList();
 
             return AlertDialog(
-              title: const Text('Labels'),
+              title: Text(context.l10n.labels),
               content: SizedBox(
                 width: 300,
                 child: Column(
@@ -775,8 +775,8 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                     ],
                     TextField(
                       controller: controller,
-                      decoration: const InputDecoration(
-                        labelText: 'Create new label',
+                      decoration: InputDecoration(
+                        labelText: context.l10n.createNewLabel,
                         isDense: true,
                       ),
                       onSubmitted: (value) async {
@@ -804,7 +804,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
               actions: [
                 FilledButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Done'),
+                  child: Text(context.l10n.done),
                 ),
               ],
             );
