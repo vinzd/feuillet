@@ -6,6 +6,7 @@ import '../models/database.dart';
 import '../router/app_router.dart';
 import '../services/database_service.dart';
 import '../services/setlist_service.dart';
+import '../utils/snackbar_extension.dart';
 import '../widgets/layer_dialogs.dart';
 
 /// Provider for set lists
@@ -125,9 +126,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
   Future<void> _duplicateSetList(SetList setList) async {
     await _setListService.duplicateSetList(setList.id);
     if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.setListDuplicated)));
+      context.showSnackbar(context.l10n.setListDuplicated);
     }
   }
 
@@ -159,9 +158,7 @@ class _SetListsScreenState extends ConsumerState<SetListsScreen> {
 
     if (documents.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.addDocumentsToStartPerformance)),
-        );
+        context.showSnackbar(context.l10n.addDocumentsToStartPerformance);
       }
       return;
     }

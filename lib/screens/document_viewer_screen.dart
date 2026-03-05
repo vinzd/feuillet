@@ -17,6 +17,7 @@ import '../services/sync_service.dart';
 import '../services/file_access_service.dart';
 import '../services/pdf_page_cache_service.dart';
 import '../utils/auto_hide_controller.dart';
+import '../utils/snackbar_extension.dart';
 import '../utils/display_settings.dart';
 import '../utils/page_spread_calculator.dart';
 import '../utils/zoom_pan_gesture_handler.dart';
@@ -970,9 +971,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     if (selectedLayerIds == null || !mounted) return;
 
     // Show progress
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(context.l10n.exportingImage)));
+    context.showSnackbar(context.l10n.exportingImage);
 
     try {
       final exportBytes = await DocumentExportService.instance
@@ -988,17 +987,13 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
       final fileName = '${baseName}_annotated.png';
 
       if (kIsWeb) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.webExportNotSupported)),
-        );
+        context.showSnackbar(context.l10n.webExportNotSupported);
       } else {
         await DocumentExportService.instance.shareImage(exportBytes, fileName);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.exportFailed(e.toString()))),
-        );
+        context.showSnackbar(context.l10n.exportFailed(e.toString()));
       }
     }
   }
