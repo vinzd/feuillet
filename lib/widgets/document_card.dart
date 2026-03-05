@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../models/database.dart';
@@ -33,12 +34,13 @@ class _DocumentCardState extends State<DocumentCard> {
   bool _hasFailed = false;
   bool _isHovered = false;
   List<Label> _labels = [];
+  StreamSubscription<List<Label>>? _labelSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadThumbnail();
-    _loadLabels();
+    _watchLabels();
   }
 
   @override
@@ -46,17 +48,23 @@ class _DocumentCardState extends State<DocumentCard> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.document.id != widget.document.id) {
       _loadThumbnail();
-      _loadLabels();
+      _labelSubscription?.cancel();
+      _watchLabels();
     }
   }
 
-  Future<void> _loadLabels() async {
-    try {
-      final labels = await LabelService.instance.getLabelsForDocument(
-        widget.document.id,
-      );
-      if (mounted) setState(() => _labels = labels);
-    } catch (_) {}
+  @override
+  void dispose() {
+    _labelSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _watchLabels() {
+    _labelSubscription = LabelService.instance
+        .watchLabelsForDocument(widget.document.id)
+        .listen((labels) {
+          if (mounted) setState(() => _labels = labels);
+        });
   }
 
   Future<void> _loadThumbnail() async {
