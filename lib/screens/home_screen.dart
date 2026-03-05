@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../l10n/l10n_extension.dart';
 import '../router/app_router.dart';
 
 /// Home screen with bottom navigation.
@@ -41,16 +42,16 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() => _currentIndex = index);
           context.go(index == 0 ? AppRoutes.library : AppRoutes.setlists);
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.library_music_outlined),
-            selectedIcon: Icon(Icons.library_music),
-            label: 'Library',
+            icon: const Icon(Icons.library_music_outlined),
+            selectedIcon: const Icon(Icons.library_music),
+            label: context.l10n.library,
           ),
           NavigationDestination(
-            icon: Icon(Icons.queue_music_outlined),
-            selectedIcon: Icon(Icons.queue_music),
-            label: 'Set Lists',
+            icon: const Icon(Icons.queue_music_outlined),
+            selectedIcon: const Icon(Icons.queue_music),
+            label: context.l10n.setLists,
           ),
         ],
       ),

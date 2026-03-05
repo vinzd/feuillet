@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../l10n/l10n_extension.dart';
 import '../router/app_router.dart';
 import '../services/app_settings_service.dart';
 import '../services/file_access_service.dart';
@@ -52,7 +53,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('PDF directory updated to: $result')),
+          SnackBar(content: Text(context.l10n.pdfDirectoryUpdated(result))),
         );
       }
     } catch (e) {
@@ -60,7 +61,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error updating directory: $e')));
+        ).showSnackBar(SnackBar(content: Text(context.l10n.errorUpdatingDirectory(e.toString()))));
       }
     }
   }
@@ -69,19 +70,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reset to Default'),
-        content: const Text(
-          'This will reset the PDF directory to the default location. '
-          'Your existing PDFs will remain in their current location.',
-        ),
+        title: Text(context.l10n.resetToDefaultTitle),
+        content: Text(context.l10n.resetToDefaultMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Reset'),
+            child: Text(context.l10n.reset),
           ),
         ],
       ),
@@ -99,14 +97,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reset to default PDF directory')),
+          SnackBar(content: Text(context.l10n.resetToDefaultPdfDirectory)),
         );
       }
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error resetting directory: $e')),
+          SnackBar(content: Text(context.l10n.errorResettingDirectory(e.toString()))),
         );
       }
     }
@@ -117,18 +115,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final versionInfo = ref.watch(versionInfoProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(context.l10n.settingsTitle)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               children: [
                 // PDF Directory Section
-                _buildSectionHeader('Library'),
+                _buildSectionHeader(context.l10n.librarySection),
                 ListTile(
                   leading: const Icon(Icons.folder),
-                  title: const Text('PDF Directory'),
+                  title: Text(context.l10n.pdfDirectory),
                   subtitle: Text(
-                    _currentPath ?? 'Loading...',
+                    _currentPath ?? context.l10n.loading,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 12,
@@ -142,13 +140,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       if (_isCustomPath && !kIsWeb)
                         IconButton(
                           icon: const Icon(Icons.restore),
-                          tooltip: 'Reset to default',
+                          tooltip: context.l10n.resetToDefault,
                           onPressed: _resetToDefault,
                         ),
                       if (!kIsWeb)
                         IconButton(
                           icon: const Icon(Icons.folder_open),
-                          tooltip: 'Change directory',
+                          tooltip: context.l10n.changeDirectory,
                           onPressed: _selectDirectory,
                         ),
                     ],
@@ -158,7 +156,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Chip(
-                      label: const Text('Custom directory'),
+                      label: Text(context.l10n.customDirectory),
                       avatar: const Icon(Icons.check, size: 18),
                       backgroundColor: Theme.of(
                         context,
@@ -166,11 +164,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ),
                 if (kIsWeb)
-                  const Padding(
-                    padding: EdgeInsets.all(16),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
                     child: Text(
-                      'Custom PDF directory is not available on web.',
-                      style: TextStyle(fontStyle: FontStyle.italic),
+                      context.l10n.customDirectoryNotAvailableOnWeb,
+                      style: const TextStyle(fontStyle: FontStyle.italic),
                     ),
                   ),
 
@@ -185,14 +183,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const Divider(),
 
                 // About Section
-                _buildSectionHeader('About'),
+                _buildSectionHeader(context.l10n.aboutSection),
                 ListTile(
                   leading: const Icon(Icons.info_outline),
-                  title: const Text('Version'),
+                  title: Text(context.l10n.version),
                   subtitle: versionInfo.when(
                     data: (info) => Text(info.displayString),
-                    loading: () => const Text('Loading...'),
-                    error: (error, stack) => const Text('Unknown'),
+                    loading: () => Text(context.l10n.loading),
+                    error: (error, stack) => Text(context.l10n.unknown),
                   ),
                 ),
               ],
