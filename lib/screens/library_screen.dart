@@ -62,6 +62,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   final Set<String> _selectedLabelNames = {};
   Future<List<int>>? _labelFilterFuture;
 
+  // Filter cache state
+  List<Document>? _cachedFilteredDocuments;
+  List<Document>? _lastDocuments;
+  String? _lastSearchQuery;
+  LibrarySortField? _lastSortField;
+  bool? _lastSortAscending;
+
   // File drop state
   bool _isDraggingFiles = false;
 
@@ -251,6 +258,22 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       }
     }
     return result;
+  }
+
+  List<Document> _getFilteredDocuments(List<Document> documents) {
+    if (identical(documents, _lastDocuments) &&
+        _searchQuery == _lastSearchQuery &&
+        _sortField == _lastSortField &&
+        _sortAscending == _lastSortAscending &&
+        _cachedFilteredDocuments != null) {
+      return _cachedFilteredDocuments!;
+    }
+    _lastDocuments = documents;
+    _lastSearchQuery = _searchQuery;
+    _lastSortField = _sortField;
+    _lastSortAscending = _sortAscending;
+    _cachedFilteredDocuments = _filterDocuments(documents);
+    return _cachedFilteredDocuments!;
   }
 
   // Selection mode methods
@@ -901,7 +924,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         title:
             documentsAsync.whenOrNull(
               data: (documents) {
-                final filteredDocs = _filterDocuments(documents);
+                final filteredDocs = _getFilteredDocuments(documents);
                 return _buildSelectionTitle(filteredDocs);
               },
             ) ??
@@ -1148,7 +1171,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   child: documentsAsync.when(
                     data: (documents) {
                       if (_selectedLabelNames.isEmpty) {
-                        final filteredDocs = _filterDocuments(documents);
+                        final filteredDocs = _getFilteredDocuments(documents);
                         if (filteredDocs.isEmpty) {
                           return _buildEmptyState(documents.isEmpty);
                         }
@@ -1166,7 +1189,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                           final labelFiltered = documents
                               .where((d) => allowedIds.contains(d.id))
                               .toList();
-                          final filteredDocs = _filterDocuments(labelFiltered);
+                          final filteredDocs = _getFilteredDocuments(labelFiltered);
                           if (filteredDocs.isEmpty) {
                             return _buildEmptyState(false);
                           }
