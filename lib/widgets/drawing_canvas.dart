@@ -47,10 +47,14 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onPanStart: widget.isEnabled ? _onPanStart : null,
-      onPanUpdate: widget.isEnabled ? _onPanUpdate : null,
-      onPanEnd: widget.isEnabled ? _onPanEnd : null,
+    // Use Listener instead of GestureDetector for raw pointer events.
+    // GestureDetector's PanGestureRecognizer requires ~18px of movement
+    // ("slop") before recognizing the gesture, losing the start of each stroke.
+    // Listener bypasses the gesture arena entirely for zero-delay response.
+    return Listener(
+      onPointerDown: widget.isEnabled ? _onPointerDown : null,
+      onPointerMove: widget.isEnabled ? _onPointerMove : null,
+      onPointerUp: widget.isEnabled ? _onPointerUp : null,
       child: CustomPaint(
         painter: DrawingPainter(
           layerAnnotations: widget.layerAnnotations,
@@ -63,10 +67,10 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
     );
   }
 
-  void _onPanStart(DragStartDetails details) {
+  void _onPointerDown(PointerDownEvent event) {
     setState(() {
       _currentStroke = DrawingStroke(
-        points: [details.localPosition],
+        points: [event.localPosition],
         color: widget.color,
         thickness: widget.thickness,
         type: widget.toolType,
@@ -74,12 +78,12 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
     });
   }
 
-  void _onPanUpdate(DragUpdateDetails details) {
+  void _onPointerMove(PointerMoveEvent event) {
     if (_currentStroke == null) return;
 
     setState(() {
       _currentStroke = DrawingStroke(
-        points: [..._currentStroke!.points, details.localPosition],
+        points: [..._currentStroke!.points, event.localPosition],
         color: _currentStroke!.color,
         thickness: _currentStroke!.thickness,
         type: _currentStroke!.type,
@@ -87,7 +91,7 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
     });
   }
 
-  void _onPanEnd(DragEndDetails details) {
+  void _onPointerUp(PointerUpEvent event) {
     if (_currentStroke == null) return;
 
     setState(() {
