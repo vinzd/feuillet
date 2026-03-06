@@ -5,28 +5,36 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Flutter](https://img.shields.io/badge/Flutter-3.38.8-02569B?logo=flutter)](https://flutter.dev)
 
-A forScore clone built with Flutter - a powerful PDF sheet music reader with annotation and set list management capabilities.
+A sheet music reader built with Flutter — supports PDF, JPG, and PNG files with multi-layer annotations, labels, set lists, and cross-device sync. Available in English and French.
 
 ## 🌐 Try It Online
 
 **[Launch Web Demo](https://vinzd.github.io/feuillet/)** - Test Feuillet directly in your browser
 
-> **Note:** The web version has limitations - PDFs are stored in browser storage (not file system), and Syncthing integration is not available. For full functionality, use the native macOS or Android apps.
+> **Note:** The web version has limitations - files are stored in browser storage (not file system), and file sync is not available. For full functionality, use the native macOS or Android apps.
 
 ## Features
 
-### 📚 PDF Library Management
-- Import and organize PDF sheet music files
+### 📚 Document Library
+- Import and organize PDF, JPG, and PNG sheet music files
 - Grid and list view options
 - Search functionality
 - Automatic thumbnail generation
 - File metadata tracking (page count, file size, last opened)
+- **Drag-and-drop** import from file manager (desktop)
 
-### 📖 Advanced PDF Viewer
+### 🏷️ Labels
+- **Automatic labeling from directory structure** — a file at `Bach/Suites/Suite1.pdf` gets labeled "Bach" and "Suites"
+- Manual label creation and assignment
+- Color-coded labels with automatic palette cycling
+- Filter library by one or more labels
+- Batch label assignment on multi-selected documents
+
+### 📖 Document Viewer
 - **Pinch-to-zoom** with smooth gesture controls
 - **Brightness and contrast adjustment** for optimal readability in any lighting condition
-- **Per-document settings persistence** - zoom, contrast, and page position saved automatically
-- Horizontal page navigation with smooth transitions
+- **Per-document settings persistence** — zoom, contrast, and page position saved automatically
+- Horizontal page navigation with smooth transitions (PDF)
 - Full-screen reading mode with auto-hiding controls
 
 ### 🎨 Multi-Layer Annotations
@@ -39,7 +47,7 @@ A forScore clone built with Flutter - a powerful PDF sheet music reader with ann
   - Show/hide layers
   - Rename and reorder layers
   - Delete layers
-- Annotations saved per page and synced across devices via Syncthing
+- Annotations saved per page and synced across devices
 - Color palette: Red, Blue, Green, Yellow, Black
 - Adjustable stroke thickness
 
@@ -55,12 +63,18 @@ A forScore clone built with Flutter - a powerful PDF sheet music reader with ann
 - Duplicate set lists
 - Add notes to individual pieces
 
-### 🔄 Syncthing Integration
-- **File system watchers** monitor for external changes
-- Automatic library refresh when PDFs are synced
-- Database synchronization across devices
-- WAL mode SQLite for better concurrent access
-- Filters Syncthing temporary files
+### 🔄 Cross-Device Sync
+- Annotations stored as **`.feuillet.json` sidecar files** alongside documents — simple, portable JSON
+- Set lists stored as **`.setlist.json` files** in a `setlists/` directory — shareable across devices
+- **File system watchers** detect external changes and refresh automatically
+- Timestamp-based conflict resolution (newest edit wins)
+- Works with **any file sync tool**: [Syncthing](https://syncthing.net/), Dropbox, Google Drive, iCloud, OneDrive, etc.
+- WAL mode SQLite for safe concurrent access
+- Filters temporary files from sync tools
+
+### 🌍 Localization
+- Available in **English** and **French**
+- Powered by Flutter's built-in localization with `.arb` files
 
 ## Architecture
 
@@ -75,23 +89,27 @@ A forScore clone built with Flutter - a powerful PDF sheet music reader with ann
 ```
 lib/
 ├── main.dart                   # App entry point
+├── l10n/                       # Localization (English, French)
 ├── models/
 │   └── database.dart           # Drift database schema
 ├── services/
 │   ├── database_service.dart   # Database lifecycle management
-│   ├── file_watcher_service.dart  # Syncthing file monitoring
-│   ├── pdf_service.dart        # PDF operations
+│   ├── file_watcher_service.dart  # File change monitoring
+│   ├── sync_service.dart       # JSON sidecar import/export
+│   ├── document_service.dart   # Document import and library scanning
 │   ├── annotation_service.dart # Annotation management
+│   ├── label_service.dart      # Label CRUD and auto-labeling
 │   └── setlist_service.dart    # Set list operations
 ├── screens/
 │   ├── home_screen.dart        # Main navigation
-│   ├── library_screen.dart     # PDF library view
-│   ├── pdf_viewer_screen.dart  # PDF viewer with annotations
+│   ├── library_screen.dart     # Document library view
+│   ├── document_viewer_screen.dart  # Viewer with annotations
 │   ├── setlists_screen.dart    # Set lists management
-│   ├── setlist_detail_screen.dart  # Set list editing
-│   └── setlist_performance_screen.dart  # Performance mode
+│   ├── setlist_detail_screen.dart   # Set list editing
+│   ├── setlist_performance_screen.dart  # Performance mode
+│   └── label_management_screen.dart # Label management
 └── widgets/
-    ├── pdf_card.dart           # PDF thumbnail card
+    ├── document_card.dart      # Document thumbnail card
     ├── drawing_canvas.dart     # Annotation drawing
     └── layer_panel.dart        # Layer management UI
 ```
@@ -103,7 +121,7 @@ lib/
 - Dart SDK
 - For Android: Android Studio and SDK
 - For macOS: Xcode
-- (Optional) Syncthing for cross-device sync
+- (Optional) A file sync tool for cross-device sync (Syncthing, Dropbox, Google Drive, etc.)
 
 ### Quick Start (Using Makefile)
 
@@ -170,72 +188,76 @@ make build-web      # Build for web
 > **iOS, Windows & Linux:** These platforms are not currently supported because the maintainer doesn't have access to these devices. Thanks to Flutter's cross-platform nature, adding support should be straightforward — contributions are welcome!
 
 **Web limitations:**
-- PDFs stored as bytes in IndexedDB (not file system)
-- No Syncthing integration (no file watching)
+- Files stored as bytes in IndexedDB (not file system)
+- No file sync integration (no file watching)
 - No directory scanning
 - Use for fast UI/layout development with hot reload
 
-## Syncthing Setup for Multi-Device Sync
+## Cross-Device Sync Setup
 
-### 1. Install Syncthing
-- **macOS**: `brew install syncthing`
-- **Android**: Install from [Google Play](https://play.google.com/store/apps/details?id=com.nutomic.syncthingandroid)
+Feuillet uses plain JSON files for sharing data between devices. Annotations are stored as `.feuillet.json` sidecar files next to each document, and set lists as `.setlist.json` files in a `setlists/` directory. This means **any file sync tool** that keeps a folder in sync across devices will work.
 
-### 2. Locate Feuillet Data Directory
+### Supported sync tools
 
-The app stores data in:
-- **macOS**: `~/Library/Application Support/com.feuillet.app/feuillet/`
-- **Android**: `/data/data/com.feuillet.feuillet/app_flutter/feuillet/`
+- [Syncthing](https://syncthing.net/) (peer-to-peer, no cloud)
+- Dropbox
+- Google Drive
+- iCloud Drive
+- OneDrive
+- Any other folder-sync tool
 
-You can find the exact path in the app by checking debug logs or settings.
+### 1. Locate the Feuillet document directory
 
-### 3. Configure Syncthing
+The default location is:
+- **macOS**: `~/Library/Application Support/com.feuillet.app/feuillet/pdfs/`
+- **Android**: `/data/data/com.feuillet.feuillet/app_flutter/feuillet/pdfs/`
 
-1. Create a new folder in Syncthing pointing to the Feuillet directory
-2. Share this folder with your other devices
-3. The folder contains:
-   - `pdfs/` - Your PDF files
-   - `feuillet_db.sqlite` - The database
-   - Database WAL files (`.sqlite-wal`, `.sqlite-shm`)
+You can change this in the app settings. The directory contains:
+```
+pdfs/
+├── Bach/
+│   ├── Suite1.pdf
+│   └── Suite1.pdf.feuillet.json   # annotations + labels
+├── setlists/
+│   └── Concert.setlist.json       # set list definition
+└── ...
+```
 
-### 4. Important Syncthing Settings
+### 2. Point your sync tool at this directory
 
-- **File versioning**: Recommended to enable "Simple File Versioning" to prevent data loss
-- **Ignore patterns**: The app automatically filters Syncthing temp files
-- **Watch for changes**: Enable for instant sync
+Configure your sync tool to keep the document directory in sync across your devices. Only the document directory needs syncing — the database is local-only and rebuilt from sidecar files on startup.
 
-### 5. How It Works
+### 3. How it works
 
-1. Feuillet monitors the PDF directory and database file
-2. When Syncthing syncs changes, the file watcher detects them
-3. The app automatically:
-   - Reloads the database
-   - Refreshes the library
-   - Updates annotations
-4. Changes made on one device appear on others within seconds
+1. Feuillet watches the document directory for file changes
+2. When your sync tool delivers new or updated files, the file watcher picks them up
+3. The app automatically imports annotations, labels, and set lists from the JSON files
+4. Changes you make locally are written back to JSON files, which your sync tool propagates
+5. Timestamp-based conflict resolution ensures the newest edit wins
 
 ### Notes
+- The app pauses file watching when in the background to save resources
+- Temporary files from sync tools (`.tmp`, `.syncthing.*`, `.~*`) are filtered out automatically
 - Close the app before large sync operations for best results
-- The app pauses file watching when in background to save resources
-- Database uses WAL mode to minimize lock conflicts during sync
 
 ## Usage Guide
 
-### Importing PDFs
+### Importing Documents
 1. Tap the **+** button in the Library screen
-2. Select a PDF file from your device
-3. The file is copied to Feuillet's managed directory
-4. Alternatively, add PDFs directly via Syncthing
+2. Select PDF, JPG, or PNG files from your device
+3. Files are copied to Feuillet's managed directory
+4. Subdirectories are scanned recursively — directory names become labels automatically
+5. On desktop, you can also **drag and drop** files directly into the library
 
-### Viewing PDFs
-1. Tap any PDF in the library to open it
+### Viewing Documents
+1. Tap any document in the library to open it
 2. Pinch to zoom in/out
 3. Tap the screen to show/hide controls
 4. Use the **Display Settings** button (tune icon) to adjust brightness and contrast
 5. Navigate pages with left/right buttons or swipe gestures
 
 ### Adding Annotations
-1. Open a PDF
+1. Open a document
 2. Tap the **pen icon** to enter annotation mode
 3. Select a tool (pen, highlighter, or eraser)
 4. Choose a color
@@ -256,20 +278,6 @@ You can find the exact path in the app by checking debug logs or settings.
 - Tap to show/hide controls
 - Tap the list icon to jump to a specific document
 - Full-screen view optimized for reading while performing
-
-## Roadmap / Future Enhancements
-
-- [ ] Text annotations
-- [ ] Audio/metronome integration
-- [ ] PDF cropping and rotation
-- [ ] Bookmark favorites
-- [ ] Advanced search (by composer, key, etc.)
-- [ ] Cloud sync option (in addition to Syncthing)
-- [ ] Backup/restore functionality
-- [ ] Custom color palettes
-- [ ] Handwriting recognition for annotations
-- [ ] MIDI controller support
-- [x] ~~Web version support~~ (Added - for development iteration)
 
 ## Development
 
@@ -381,8 +389,7 @@ MIT License - feel free to use this project for your own purposes.
 
 ## Acknowledgments
 
-- Inspired by [forScore](https://forscore.co/)
 - Built with [Flutter](https://flutter.dev/)
 - PDF rendering powered by [pdfx](https://pub.dev/packages/pdfx)
 - Database management by [Drift](https://drift.simonbinder.eu/)
-- Cross-device sync via [Syncthing](https://syncthing.net/)
+- Cross-device sync via file-based JSON sidecars (works with [Syncthing](https://syncthing.net/), Dropbox, and others)
