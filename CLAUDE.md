@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Feuillet is a forScore clone built with Flutter - a sheet music reader supporting PDF, JPG, and PNG files with multi-layer annotation support and set list management. The app is designed for **local-only operation** with Syncthing for cross-device synchronization.
+Feuillet is a sheet music reader built with Flutter, supporting PDF, JPG, and PNG files with multi-layer annotations, labels, set lists, and cross-device sync. Available in English and French. The app is designed for **local-first operation** with file-based sync (works with Syncthing, Dropbox, Google Drive, or any folder-sync tool).
 
 ## Essential Commands
 
@@ -52,7 +52,7 @@ The app supports web for **fast development iteration only**. Web has limited fu
 - ✅ PDF and image import and display (stores files as bytes in IndexedDB)
 - ✅ Annotations, layers, set lists
 - ✅ Full database persistence
-- ❌ File system watching (Syncthing integration)
+- ❌ File system watching (file sync integration)
 - ❌ Directory scanning
 
 **Required web files:**
@@ -111,7 +111,7 @@ flutter build macos --release
 
 1. **Local-First Architecture**: Everything runs locally using SQLite. The architecture allows future migration to server-client model but currently operates entirely offline.
 
-2. **Syncthing Integration**: The app uses file system watchers to detect external changes from Syncthing, enabling peer-to-peer device synchronization without a server.
+2. **File-Based Sync**: The app uses file system watchers to detect external changes from any folder-sync tool (Syncthing, Dropbox, Google Drive, etc.), enabling cross-device synchronization. Annotations are stored as `.feuillet.json` sidecar files, set lists as `.setlist.json` files.
 
 3. **Lifecycle-Aware File Watching**: File watchers are paused when the app goes to background (`AppLifecycleState.paused`) and resumed on foreground (`AppLifecycleState.resumed`) to conserve resources.
 
@@ -119,7 +119,7 @@ flutter build macos --release
 
 ### Database Schema (Drift)
 
-The database uses **WAL mode** (Write-Ahead Logging) for Syncthing compatibility, configured in `database.dart`:
+The database uses **WAL mode** (Write-Ahead Logging) for safe concurrent access, configured in `database.dart`:
 ```dart
 await customStatement('PRAGMA journal_mode=WAL;');
 ```
@@ -133,6 +133,8 @@ await customStatement('PRAGMA journal_mode=WAL;');
 - `Annotations` - Drawing data stored as JSON (points, color, thickness) per page
 - `SetLists` - Collections for performances
 - `SetListItems` - Documents in set lists with ordering and notes
+- `Labels` - Label names with optional ARGB32 color
+- `DocumentLabels` - Many-to-many join between documents and labels (composite PK)
 - `AppSettings` - Key-value store for app-wide configuration (e.g., custom PDF directory path). Use `getAppSetting`/`setAppSetting`/`deleteAppSetting` from `AppDatabase` rather than `SharedPreferences`
 
 **Key Relationships:**
@@ -157,7 +159,9 @@ class ServiceName {
 - `DocumentService` - Document import (file picker + drag-and-drop for PDF/JPG/PNG), library scanning, file management, thumbnail generation. All file I/O goes through `FileAccessService`. Use `DocumentTypes` class (in `database.dart`) for file extension constants and type detection
 - `AnnotationService` - Drawing stroke CRUD, JSON serialization
 - `SetListService` - Set list CRUD, document ordering
-- `FileWatcherService` - Monitors document directory and database for Syncthing changes. Watches for `.pdf`, `.jpg`, `.jpeg`, `.png` files
+- `LabelService` - Label CRUD, auto-color assignment from a 12-color palette, and `ensureLabelsFromPath()` which creates labels from directory segments
+- `SyncService` / `SyncManager` - JSON sidecar import/export for annotations (`.feuillet.json`) and set lists (`.setlist.json`), with debounced writes, suppression to prevent feedback loops, and startup reconciliation
+- `FileWatcherService` - Monitors document directory and database for external changes. Watches for `.pdf`, `.jpg`, `.jpeg`, `.png`, `.feuillet.json`, `.setlist.json` files
 - `FileAccessService` - Cross-platform file I/O using `dart:io`. All code that reads/writes files must go through this service. `listDocumentFiles()` returns PDF and image files
 - `PdfPageCacheService` - Pre-renders PDF pages to JPEG and caches in memory. Uses a priority queue: `renderAndCachePage()` for immediate needs, `preRenderPages()` for background warming. Do not render pages directly via `pdfx` outside this service. **PDF-only** — images bypass this service
 - `DocumentExportService` - Exports documents with annotations burned in. PDFs exported as annotated PDFs, images exported as flattened PNGs
@@ -220,23 +224,30 @@ The drag-and-drop feature uses the `desktop_drop` package with `DropTarget` widg
 
 **Page navigation (PDF only):** The viewer uses `PageView.builder` with `NeverScrollableScrollPhysics` in single-page mode. All gestures (pinch-zoom, pan, swipe) are owned by `ZoomPanGestureMixin`. Override `onSwipeLeft()`/`onSwipeRight()` for page navigation. Swipes are suppressed when `isZoomPanDisabled` returns true (e.g., annotation mode). Two swipe thresholds: 50px displacement at 1x zoom, 80px overscroll when zoomed in.
 
-### File Watching & Syncthing Integration
+### File Watching & Sync
 
 `FileWatcherService` monitors:
-- PDF directory (user-configurable, stored in `AppSettings` table)
+- Document directory (user-configurable, stored in `AppSettings` table)
 - Database file (`feuillet_db.sqlite` + WAL files)
 
-**PDF directory is now configurable:** The path is managed by `AppSettingsService` and can be changed in settings. After changing the directory, call `FileWatcherService.instance.updatePdfDirectoryPath()` to restart the watcher on the new path.
+**Document directory is configurable:** The path is managed by `AppSettingsService` and can be changed in settings. After changing the directory, call `FileWatcherService.instance.updatePdfDirectoryPath()` to restart the watcher on the new path.
 
-**Filters Syncthing temporary files:**
-- `.syncthing.*`
-- `~syncthing~*`
-- `*.tmp`
-- `.~*`
+**Filters temporary files from sync tools:**
+- `.syncthing.*`, `~syncthing~*`
+- `*.tmp`, `.~*`
 
 When changes detected:
 - Document changes trigger library rescan via `DocumentService.scanAndSyncLibrary()`
+- Sidecar/set list changes trigger import via `SyncManager`
 - Database changes handled via WAL mode (no explicit reload needed)
+
+### Localization
+
+The app uses Flutter's built-in localization with `.arb` files in `lib/l10n/`:
+- `app_en.arb` — English
+- `app_fr.arb` — French
+
+Access strings via `context.l10n.someKey` (extension in `lib/l10n/l10n_extension.dart`).
 
 ## Critical Implementation Details
 
@@ -348,4 +359,4 @@ The codebase is structured to support future migration to client-server:
 - Service layer abstracts data operations
 - Repository pattern can be added between services and database
 - Local database can become cache layer
-- Syncthing can be supplemented/replaced with cloud sync
+- JSON sidecar files provide a sync-tool-agnostic data exchange format
