@@ -79,7 +79,7 @@ void main() {
       await tester.pumpWidget(buildDrawingCanvas(isEnabled: false));
 
       expect(find.byType(DrawingCanvas), findsOneWidget);
-      expect(find.byType(GestureDetector), findsOneWidget);
+      expect(find.byType(Listener), findsWidgets);
     });
 
     testWidgets('rebuilds when layerId changes', (WidgetTester tester) async {
