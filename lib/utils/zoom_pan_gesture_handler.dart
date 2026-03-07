@@ -189,7 +189,7 @@ mixin ZoomPanGestureMixin<T extends StatefulWidget> on State<T> {
     }
 
     // Detect tap: gesture ended without zoom or pan
-    if (!didZoom && !didPan) {
+    if (!isZoomPanDisabled && !didZoom && !didPan) {
       onZoomPanTap();
     } else if (didZoom) {
       onZoomChanged();
