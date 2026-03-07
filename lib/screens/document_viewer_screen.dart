@@ -634,8 +634,10 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                       _loadPageAnnotations();
                       _scheduleSidecarWrite();
                     },
-                    onClose: () =>
-                        setState(() => _showFloatingLayerPanel = false),
+                    onClose: () => setState(() {
+                      _showFloatingLayerPanel = false;
+                      _annotationMode = false;
+                    }),
                     onDrag: (delta) => _updateLayerPanelPosition(delta),
                   ),
                 ),
