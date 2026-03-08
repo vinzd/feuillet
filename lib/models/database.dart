@@ -337,6 +337,12 @@ class AppDatabase extends _$AppDatabase {
     return (delete(setListItems)..where((i) => i.id.equals(id))).go();
   }
 
+  Future<void> deleteSetListItemsBySetListId(int setListId) {
+    return (delete(setListItems)
+          ..where((i) => i.setListId.equals(setListId)))
+        .go();
+  }
+
   Future<void> updateSetListItemNotes(int itemId, String? notes) async {
     await (update(setListItems)..where((t) => t.id.equals(itemId))).write(
       SetListItemsCompanion(notes: Value(notes)),

@@ -7,7 +7,9 @@ import '../router/app_router.dart';
 import '../services/app_settings_service.dart';
 import '../services/file_access_service.dart';
 import '../services/file_watcher_service.dart';
+import '../services/database_service.dart';
 import '../services/document_service.dart';
+import '../services/sync_service.dart';
 import '../services/version_service.dart';
 import '../utils/snackbar_extension.dart';
 import '../widgets/layer_dialogs.dart';
@@ -51,6 +53,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await AppSettingsService.instance.setPdfDirectoryPath(result);
       await FileWatcherService.instance.updatePdfDirectoryPath();
       await DocumentService.instance.scanAndSyncLibrary();
+      // Reconcile set lists from the new directory's setlists/ folder.
+      final pdfDir =
+          await AppSettingsService.instance.getPdfDirectoryPath();
+      await SyncManager.instance.reconcileOnStartup(
+        db: DatabaseService.instance.database,
+        pdfDirectoryPath: pdfDir,
+      );
       await _loadCurrentSettings();
 
       if (mounted) {
