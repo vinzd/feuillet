@@ -362,7 +362,7 @@ void main() {
       expect(items[0].orderIndex, 0);
     });
 
-    test('replaces existing set list with same name', () async {
+    test('updates existing set list in-place preserving ID', () async {
       // Insert an existing set list with the same name.
       final oldId = await db.insertSetList(
         SetListsCompanion(
@@ -382,17 +382,15 @@ void main() {
         items: [SetListFileItem(documentPath: 'Bach.pdf', orderIndex: 0)],
       );
 
-      final newId = await importSetListFile(db, setListFile, pdfDir);
-      expect(newId, isNotNull);
+      final returnedId = await importSetListFile(db, setListFile, pdfDir);
 
-      // Old set list should be gone.
-      final oldSetList = await db.getSetList(oldId);
-      expect(oldSetList, isNull);
+      // ID should be preserved.
+      expect(returnedId, oldId);
 
-      // New set list should exist.
-      final newSetList = await db.getSetList(newId!);
-      expect(newSetList, isNotNull);
-      expect(newSetList!.description, 'New description');
+      // Set list should be updated in-place.
+      final setList = await db.getSetList(oldId);
+      expect(setList, isNotNull);
+      expect(setList!.description, 'New description');
     });
 
     test('handles set list with null description', () async {
