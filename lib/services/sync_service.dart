@@ -414,23 +414,34 @@ class SetListFile {
 /// item's relative `documentPath` and matching against `filePath` in the
 /// database. Items whose documents are not found are silently skipped.
 ///
-/// Returns the new set list ID, or `null` on failure.
+/// If a set list with the same name already exists, it is updated in-place
+/// (preserving its ID) rather than deleted and recreated.
+///
+/// Returns the set list ID, or `null` on failure.
 Future<int?> importSetListFile(
   AppDatabase db,
   SetListFile setListFile,
   String pdfDirectoryPath,
 ) async {
   try {
-    // 1. Delete existing set lists with the same name (replace semantics).
+    // 1. Find existing set list with the same name, or create a new one.
     final existing = await db.getAllSetLists();
+    int? setListId;
     for (final sl in existing) {
       if (sl.name == setListFile.name) {
-        await db.deleteSetList(sl.id);
+        // Update in-place to preserve the ID.
+        await db.updateSetList(sl.copyWith(
+          description: Value(setListFile.description),
+          modifiedAt: setListFile.modifiedAt,
+        ));
+        // Remove old items; we'll re-insert from the file.
+        await db.deleteSetListItemsBySetListId(sl.id);
+        setListId = sl.id;
+        break;
       }
     }
 
-    // 2. Create the new set list.
-    final setListId = await db.insertSetList(
+    setListId ??= await db.insertSetList(
       SetListsCompanion(
         name: Value(setListFile.name),
         description: Value(setListFile.description),
@@ -438,7 +449,7 @@ Future<int?> importSetListFile(
       ),
     );
 
-    // 3. Resolve each item's document and insert set list items.
+    // 2. Resolve each item's document and insert set list items.
     final allDocuments = await db.getAllDocuments();
     final docsByPath = {for (final d in allDocuments) d.filePath: d};
     for (final item in setListFile.items) {
