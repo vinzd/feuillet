@@ -54,8 +54,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await FileWatcherService.instance.updatePdfDirectoryPath();
       await DocumentService.instance.scanAndSyncLibrary();
       // Reconcile set lists from the new directory's setlists/ folder.
-      final pdfDir =
-          await AppSettingsService.instance.getPdfDirectoryPath();
+      final pdfDir = await AppSettingsService.instance.getPdfDirectoryPath();
       await SyncManager.instance.reconcileOnStartup(
         db: DatabaseService.instance.database,
         pdfDirectoryPath: pdfDir,

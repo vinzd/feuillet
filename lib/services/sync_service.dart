@@ -430,10 +430,12 @@ Future<int?> importSetListFile(
     for (final sl in existing) {
       if (sl.name == setListFile.name) {
         // Update in-place to preserve the ID.
-        await db.updateSetList(sl.copyWith(
-          description: Value(setListFile.description),
-          modifiedAt: setListFile.modifiedAt,
-        ));
+        await db.updateSetList(
+          sl.copyWith(
+            description: Value(setListFile.description),
+            modifiedAt: setListFile.modifiedAt,
+          ),
+        );
         // Remove old items; we'll re-insert from the file.
         await db.deleteSetListItemsBySetListId(sl.id);
         setListId = sl.id;
