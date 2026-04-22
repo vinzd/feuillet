@@ -38,8 +38,8 @@ dependencies:
   cupertino_icons: ^1.0.9
 
   # Database
-  drift: ^2.31.0
-  drift_flutter: ^0.2.0
+  drift: ^2.32.1
+  drift_flutter: ^0.3.0
 
   # PDF rendering
   pdfx: ^2.7.0
@@ -91,7 +91,7 @@ dev_dependencies:
     sdk: flutter
 
   # In-memory database for testing
-  sqlite3: ^2.9.0
+  sqlite3: ^3.3.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -101,7 +101,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
   # Code generation
-  drift_dev: ^2.31.0
+  drift_dev: ^2.32.1
   build_runner: ^2.13.1
 
 # For information on the generic Dart part of this file, see the
