@@ -60,7 +60,7 @@ dependencies:
   flutter_riverpod: ^3.3.1
 
   # Routing
-  go_router: ^17.2.0
+  go_router: ^17.2.2
 
   # Web URL strategy
   flutter_web_plugins:
