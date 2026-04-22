@@ -46,7 +46,7 @@ dependencies:
 
   # File system
   path_provider: ^2.1.4
-  file_picker: ^10.3.10
+  file_picker: ^11.0.2
   path: ^1.9.0
 
   # File watching for Syncthing support
