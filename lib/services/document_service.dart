@@ -207,7 +207,7 @@ class DocumentService {
     void Function(int current, int total, String fileName)? onProgress,
   }) async {
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: DocumentTypes.allExtensions,
         allowMultiple: true,

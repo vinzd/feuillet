@@ -35,7 +35,7 @@ class FileAccessService {
 
   /// Pick a directory using FilePicker.
   Future<String?> pickDirectory() async {
-    return FilePicker.platform.getDirectoryPath(
+    return FilePicker.getDirectoryPath(
       dialogTitle: 'Select PDF Directory',
       lockParentWindow: true,
     );
