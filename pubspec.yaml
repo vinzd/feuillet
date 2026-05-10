@@ -46,21 +46,21 @@ dependencies:
 
   # File system
   path_provider: ^2.1.4
-  file_picker: ^10.3.10
+  file_picker: ^11.0.2
   path: ^1.9.0
 
   # File watching for Syncthing support
   watcher: ^1.1.0
 
   # Drag and drop support for desktop
-  desktop_drop: ^0.7.0
+  desktop_drop: ^0.7.1
   cross_file: ^0.3.3+6
 
   # State management
   flutter_riverpod: ^3.3.1
 
   # Routing
-  go_router: ^17.2.0
+  go_router: ^17.2.2
 
   # Web URL strategy
   flutter_web_plugins:
