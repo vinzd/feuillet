@@ -162,6 +162,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     messenger.showSnackBar(
       SnackBar(
         content: Text(message),
+        duration: const Duration(seconds: 6),
         backgroundColor: isAllFailures
             ? Theme.of(context).colorScheme.error
             : null,
