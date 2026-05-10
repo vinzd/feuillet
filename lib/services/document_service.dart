@@ -15,6 +15,7 @@ import 'database_service.dart';
 import 'file_access_service.dart';
 import 'file_watcher_service.dart';
 import 'label_service.dart';
+import 'sync_service.dart';
 
 /// Result of importing a single document file
 class DocumentImportResult {
@@ -595,6 +596,69 @@ class DocumentService {
     } catch (e, stackTrace) {
       debugPrint('DocumentService: Error scanning library: $e');
       debugPrint(stackTrace.toString());
+    }
+  }
+
+  /// Rename a document: renames the file on disk, its sidecar, updates set list
+  /// JSON files, and updates the database record.
+  ///
+  /// [newName] is the display name without extension.
+  /// Returns the new file path, or `null` on failure.
+  Future<String?> renameDocument(int documentId, String newName) async {
+    try {
+      final doc = await _database.getDocument(documentId);
+      if (doc == null) return null;
+      if (doc.filePath.startsWith('web://')) return null;
+
+      final fileAccess = FileAccessService.instance;
+      final oldPath = doc.filePath;
+      final dir = p.dirname(oldPath);
+      final ext = p.extension(oldPath);
+      final newPath = p.join(dir, '$newName$ext');
+
+      if (oldPath == newPath) return oldPath;
+      if (await fileAccess.fileExists(newPath)) return null;
+
+      final syncManager = SyncManager.instance;
+
+      // 1. Rename the sidecar file if it exists.
+      final oldSidecar = sidecarFileName(oldPath);
+      final newSidecar = sidecarFileName(newPath);
+      if (await fileAccess.fileExists(oldSidecar)) {
+        await fileAccess.renameFile(oldSidecar, newSidecar);
+        syncManager.suppressPath(oldSidecar);
+        syncManager.suppressPath(newSidecar);
+      }
+
+      // 2. Rename the document file.
+      await fileAccess.renameFile(oldPath, newPath);
+      syncManager.suppressPath(oldPath);
+      syncManager.suppressPath(newPath);
+
+      // 3. Update the database.
+      await _database.updateDocument(
+        doc.copyWith(name: newName, filePath: newPath),
+      );
+
+      // 4. Rewrite all set list JSON files that reference this document.
+      final pdfDir = await FileWatcherService.instance.getPdfDirectoryPath();
+      final allSetLists = await _database.getAllSetLists();
+      for (final setList in allSetLists) {
+        final items = await _database.getSetListItems(setList.id);
+        if (items.any((item) => item.documentId == documentId)) {
+          syncManager.scheduleSetListWrite(
+            db: _database,
+            setListId: setList.id,
+            pdfDirectoryPath: pdfDir,
+          );
+        }
+      }
+
+      debugPrint('DocumentService: Renamed "${doc.name}" to "$newName"');
+      return newPath;
+    } catch (e) {
+      debugPrint('DocumentService: Error renaming document: $e');
+      return null;
     }
   }
 

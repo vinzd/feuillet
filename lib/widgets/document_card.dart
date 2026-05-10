@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import '../l10n/l10n_extension.dart';
 import '../models/database.dart';
 import '../services/document_service.dart';
 import '../services/label_service.dart';
@@ -11,6 +12,7 @@ class DocumentCard extends StatefulWidget {
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final VoidCallback? onCheckboxTap;
+  final VoidCallback? onRename;
   final bool isSelectionMode;
   final bool isSelected;
 
@@ -20,6 +22,7 @@ class DocumentCard extends StatefulWidget {
     required this.onTap,
     this.onLongPress,
     this.onCheckboxTap,
+    this.onRename,
     this.isSelectionMode = false,
     this.isSelected = false,
   });
@@ -92,6 +95,32 @@ class _DocumentCardState extends State<DocumentCard> {
         });
       }
     }
+  }
+
+  void _showContextMenu(BuildContext context, Offset position) {
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy,
+        position.dx,
+        position.dy,
+      ),
+      items: [
+        PopupMenuItem(
+          value: 'rename',
+          child: Row(
+            children: [
+              const Icon(Icons.edit, size: 20),
+              const SizedBox(width: 8),
+              Text(context.l10n.renameDocument),
+            ],
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'rename') widget.onRename?.call();
+    });
   }
 
   Widget _buildThumbnailArea(BuildContext context) {
@@ -227,28 +256,33 @@ class _DocumentCardState extends State<DocumentCard> {
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        shape: widget.isSelected
-            ? RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: colorScheme.primary, width: 3),
-              )
+      child: GestureDetector(
+        onSecondaryTapUp: widget.onRename != null
+            ? (details) => _showContextMenu(context, details.globalPosition)
             : null,
-        child: InkWell(
-          onTap: widget.onTap,
-          onLongPress: widget.onLongPress,
-          child: Stack(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(child: _buildThumbnailArea(context)),
-                  _buildInfoSection(context),
-                ],
-              ),
-              if (showCheckbox) _buildSelectionCheckbox(colorScheme),
-            ],
+        child: Card(
+          clipBehavior: Clip.antiAlias,
+          shape: widget.isSelected
+              ? RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: colorScheme.primary, width: 3),
+                )
+              : null,
+          child: InkWell(
+            onTap: widget.onTap,
+            onLongPress: widget.onLongPress,
+            child: Stack(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: _buildThumbnailArea(context)),
+                    _buildInfoSection(context),
+                  ],
+                ),
+                if (showCheckbox) _buildSelectionCheckbox(colorScheme),
+              ],
+            ),
           ),
         ),
       ),

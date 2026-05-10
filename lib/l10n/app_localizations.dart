@@ -1100,6 +1100,36 @@ abstract class AppLocalizations {
   /// **'Clear filters'**
   String get clearFilters;
 
+  /// No description provided for @renameDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get renameDocument;
+
+  /// No description provided for @renameDocumentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Document'**
+  String get renameDocumentTitle;
+
+  /// No description provided for @documentRenamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Document renamed'**
+  String get documentRenamed;
+
+  /// No description provided for @renameFailedAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'A file with that name already exists'**
+  String get renameFailedAlreadyExists;
+
+  /// No description provided for @renameFailedGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to rename document'**
+  String get renameFailedGeneric;
+
   /// No description provided for @addLabels.
   ///
   /// In en, this message translates to:

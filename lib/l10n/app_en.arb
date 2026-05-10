@@ -287,6 +287,12 @@
   "label": "Label",
   "labels": "Labels",
   "clearFilters": "Clear filters",
+  "renameDocument": "Rename",
+  "renameDocumentTitle": "Rename Document",
+  "documentRenamed": "Document renamed",
+  "renameFailedAlreadyExists": "A file with that name already exists",
+  "renameFailedGeneric": "Failed to rename document",
+
   "addLabels": "Add Labels",
   "newLabelName": "New label name",
   "apply": "Apply",
