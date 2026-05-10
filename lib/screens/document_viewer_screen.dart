@@ -33,7 +33,8 @@ import '../widgets/floating_annotations_panel.dart';
 import '../widgets/pdf_bottom_controls.dart';
 import '../widgets/two_page_pdf_view.dart';
 
-/// Document Viewer screen with zoom, pan, and contrast controls
+enum _OverflowAction { rename, labels, displaySettings, export }
+
 class DocumentViewerScreen extends ConsumerStatefulWidget {
   final Document document;
 
@@ -537,80 +538,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                 child: AppBar(
                   title: Text(_document.name),
                   backgroundColor: ViewerConstants.overlayBackground,
-                  actions: [
-                    IconButton(
-                      icon: const Icon(Icons.drive_file_rename_outline),
-                      onPressed: _renameDocument,
-                      tooltip: context.l10n.renameDocument,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.label_outline),
-                      onPressed: () => _showAddLabelDialog(_document.id),
-                      tooltip: context.l10n.labels,
-                    ),
-                    if (!_document.isImage)
-                      PopupMenuButton<PdfViewMode>(
-                        icon: Icon(_viewMode.icon),
-                        tooltip: context.l10n.viewMode,
-                        onSelected: _onViewModeChanged,
-                        itemBuilder: (context) => PdfViewMode.values
-                            .map(
-                              (mode) => PopupMenuItem(
-                                value: mode,
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      mode.icon,
-                                      color: mode == _viewMode
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.primary
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(mode.displayName),
-                                  ],
-                                ),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                    IconButton(
-                      icon: Icon(
-                        _showFloatingLayerPanel
-                            ? Icons.brush
-                            : Icons.brush_outlined,
-                      ),
-                      onPressed: () => setState(
-                        () =>
-                            _showFloatingLayerPanel = !_showFloatingLayerPanel,
-                      ),
-                      tooltip: context.l10n.annotations,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.tune),
-                      onPressed: () => _showControlsPanel(),
-                      tooltip: context.l10n.displaySettings,
-                    ),
-                    if (_pdfDocument != null || _imageBytes != null)
-                      IconButton(
-                        icon: const Icon(Icons.ios_share),
-                        onPressed: () {
-                          if (_document.isImage) {
-                            _exportImage();
-                          } else {
-                            ExportPdfDialog.show(
-                              context: context,
-                              document: _document,
-                              pdfDocument: _pdfDocument!,
-                            );
-                          }
-                        },
-                        tooltip: _document.isImage
-                            ? context.l10n.exportImage
-                            : context.l10n.exportPdf,
-                      ),
-                  ],
+                  actions: _buildAppBarActions(context),
                 ),
               ),
 
@@ -691,6 +619,149 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
         ),
       ),
     );
+  }
+
+  List<Widget> _buildAppBarActions(BuildContext context) {
+    final isNarrow = MediaQuery.of(context).size.width < 600;
+
+    final annotationsButton = IconButton(
+      icon: Icon(_showFloatingLayerPanel ? Icons.brush : Icons.brush_outlined),
+      onPressed: () =>
+          setState(() => _showFloatingLayerPanel = !_showFloatingLayerPanel),
+      tooltip: context.l10n.annotations,
+    );
+
+    final viewModeButton = !_document.isImage
+        ? PopupMenuButton<PdfViewMode>(
+            icon: Icon(_viewMode.icon),
+            tooltip: context.l10n.viewMode,
+            onSelected: _onViewModeChanged,
+            itemBuilder: (context) => PdfViewMode.values
+                .map(
+                  (mode) => PopupMenuItem(
+                    value: mode,
+                    child: Row(
+                      children: [
+                        Icon(
+                          mode.icon,
+                          color: mode == _viewMode
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(mode.displayName),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
+          )
+        : null;
+
+    if (!isNarrow) {
+      return [
+        IconButton(
+          icon: const Icon(Icons.drive_file_rename_outline),
+          onPressed: _renameDocument,
+          tooltip: context.l10n.renameDocument,
+        ),
+        IconButton(
+          icon: const Icon(Icons.label_outline),
+          onPressed: () => _showAddLabelDialog(_document.id),
+          tooltip: context.l10n.labels,
+        ),
+        if (viewModeButton != null) viewModeButton,
+        annotationsButton,
+        IconButton(
+          icon: const Icon(Icons.tune),
+          onPressed: () => _showControlsPanel(),
+          tooltip: context.l10n.displaySettings,
+        ),
+        if (_pdfDocument != null || _imageBytes != null)
+          IconButton(
+            icon: const Icon(Icons.ios_share),
+            onPressed: _handleExport,
+            tooltip: _document.isImage
+                ? context.l10n.exportImage
+                : context.l10n.exportPdf,
+          ),
+      ];
+    }
+
+    return [
+      if (viewModeButton != null) viewModeButton,
+      annotationsButton,
+      PopupMenuButton<_OverflowAction>(
+        icon: const Icon(Icons.more_vert),
+        onSelected: (action) {
+          switch (action) {
+            case _OverflowAction.rename:
+              _renameDocument();
+            case _OverflowAction.labels:
+              _showAddLabelDialog(_document.id);
+            case _OverflowAction.displaySettings:
+              _showControlsPanel();
+            case _OverflowAction.export:
+              _handleExport();
+          }
+        },
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            value: _OverflowAction.rename,
+            child: ListTile(
+              leading: const Icon(Icons.drive_file_rename_outline),
+              title: Text(context.l10n.renameDocument),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+          PopupMenuItem(
+            value: _OverflowAction.labels,
+            child: ListTile(
+              leading: const Icon(Icons.label_outline),
+              title: Text(context.l10n.labels),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+          PopupMenuItem(
+            value: _OverflowAction.displaySettings,
+            child: ListTile(
+              leading: const Icon(Icons.tune),
+              title: Text(context.l10n.displaySettings),
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+          if (_pdfDocument != null || _imageBytes != null)
+            PopupMenuItem(
+              value: _OverflowAction.export,
+              child: ListTile(
+                leading: const Icon(Icons.ios_share),
+                title: Text(
+                  _document.isImage
+                      ? context.l10n.exportImage
+                      : context.l10n.exportPdf,
+                ),
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+        ],
+      ),
+    ];
+  }
+
+  void _handleExport() {
+    if (_document.isImage) {
+      _exportImage();
+    } else {
+      ExportPdfDialog.show(
+        context: context,
+        document: _document,
+        pdfDocument: _pdfDocument!,
+      );
+    }
   }
 
   Future<void> _renameDocument() async {
