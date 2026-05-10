@@ -83,6 +83,9 @@ dependencies:
   permission_handler: ^12.0.0
   macos_secure_bookmarks: ^0.2.1
 
+  # Web platform interop (used by export_pdf_dialog_web.dart)
+  web: ^1.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -120,6 +123,15 @@ flutter:
   # assets:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
+  #
+  # Flutter 3.41+ supports a `platforms:` field on each asset entry to
+  # restrict which platforms an asset is bundled into, e.g.:
+  #   assets:
+  #     - path: images/web_only.png
+  #       platforms: [web]
+  # The web worker files (web/sqlite3.wasm, web/drift_worker.js) are NOT
+  # Flutter assets — they're served as static files alongside index.html
+  # and copied by the Makefile/CI, so `platforms:` does not apply to them.
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
