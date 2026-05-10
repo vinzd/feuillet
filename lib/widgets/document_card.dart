@@ -196,17 +196,39 @@ class _DocumentCardState extends State<DocumentCard> {
 
   Widget _buildInfoSection(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final showRenameButton =
+        _isHovered && !widget.isSelectionMode && widget.onRename != null;
 
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.document.name,
-            style: textTheme.titleSmall,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  widget.document.name,
+                  style: textTheme.titleSmall,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (showRenameButton)
+                SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: IconButton(
+                    iconSize: 16,
+                    padding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.edit_outlined),
+                    onPressed: widget.onRename,
+                    tooltip: context.l10n.renameDocument,
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 4),
           Row(
