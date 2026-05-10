@@ -91,6 +91,12 @@ class FileAccessService {
     return FileMetadata(size: stat.size, lastModified: stat.modified);
   }
 
+  /// Rename (move) a file. Returns the new path.
+  Future<String> renameFile(String oldPath, String newPath) async {
+    await File(oldPath).rename(newPath);
+    return newPath;
+  }
+
   /// Delete a file.
   Future<void> deleteFile(String filePath) async {
     final file = File(filePath);

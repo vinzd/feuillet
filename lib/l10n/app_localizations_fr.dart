@@ -624,6 +624,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get clearFilters => 'Effacer les filtres';
 
   @override
+  String get renameDocument => 'Renommer';
+
+  @override
+  String get renameDocumentTitle => 'Renommer le document';
+
+  @override
+  String get documentRenamed => 'Document renommé';
+
+  @override
+  String get renameFailedAlreadyExists => 'Un fichier avec ce nom existe déjà';
+
+  @override
+  String get renameFailedGeneric => 'Échec du renommage du document';
+
+  @override
   String get addLabels => 'Ajouter des étiquettes';
 
   @override

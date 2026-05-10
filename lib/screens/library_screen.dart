@@ -648,6 +648,53 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     );
   }
 
+  Future<void> _renameDocument(Document document) async {
+    final controller = TextEditingController(text: document.name);
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.renameDocumentTitle),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(labelText: context.l10n.name),
+          onSubmitted: (value) {
+            final trimmed = value.trim();
+            if (trimmed.isNotEmpty) Navigator.pop(context, trimmed);
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              final trimmed = controller.text.trim();
+              if (trimmed.isNotEmpty) Navigator.pop(context, trimmed);
+            },
+            child: Text(context.l10n.rename),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+
+    if (newName == null || newName == document.name || !mounted) return;
+
+    final result = await DocumentService.instance.renameDocument(
+      document.id,
+      newName,
+    );
+
+    if (!mounted) return;
+    if (result != null) {
+      context.showSnackbar(context.l10n.documentRenamed);
+    } else {
+      context.showSnackbar(context.l10n.renameFailedGeneric);
+    }
+  }
+
   Future<void> _labelSelected() async {
     final allLabels = await LabelService.instance.getAllLabels();
     if (!mounted) return;
@@ -850,6 +897,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     document: doc,
                     onTap: () => _handleDocumentTap(doc),
                     onCheckboxTap: () => _handleCheckboxTap(doc),
+                    onRename: () => _renameDocument(doc),
                     isSelectionMode: _isSelectionMode || _isDragSelecting,
                     isSelected: showSelected,
                   );

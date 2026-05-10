@@ -188,6 +188,12 @@
   "label": "Étiquette",
   "labels": "Étiquettes",
   "clearFilters": "Effacer les filtres",
+  "renameDocument": "Renommer",
+  "renameDocumentTitle": "Renommer le document",
+  "documentRenamed": "Document renommé",
+  "renameFailedAlreadyExists": "Un fichier avec ce nom existe déjà",
+  "renameFailedGeneric": "Échec du renommage du document",
+
   "addLabels": "Ajouter des étiquettes",
   "newLabelName": "Nom de la nouvelle étiquette",
   "apply": "Appliquer",
