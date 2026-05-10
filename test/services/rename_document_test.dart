@@ -90,11 +90,13 @@ void main() {
       await File(scorePath).writeAsString('fake pdf');
 
       final oldSidecar = sidecarFileName(scorePath);
-      await File(oldSidecar).writeAsString(jsonEncode({
-        'version': 1,
-        'modifiedAt': '2026-01-01T00:00:00.000Z',
-        'layers': [],
-      }));
+      await File(oldSidecar).writeAsString(
+        jsonEncode({
+          'version': 1,
+          'modifiedAt': '2026-01-01T00:00:00.000Z',
+          'layers': [],
+        }),
+      );
 
       expect(await File(oldSidecar).exists(), isTrue);
 
@@ -135,19 +137,10 @@ void main() {
         version: 1,
         modifiedAt: DateTime.utc(2026, 1, 1),
         name: 'Concert',
-        items: [
-          SetListFileItem(
-            documentPath: 'Renamed.pdf',
-            orderIndex: 0,
-          ),
-        ],
+        items: [SetListFileItem(documentPath: 'Renamed.pdf', orderIndex: 0)],
       );
 
-      final setListId = await importSetListFile(
-        db,
-        setListFile,
-        tempDir.path,
-      );
+      final setListId = await importSetListFile(db, setListFile, tempDir.path);
       expect(setListId, isNotNull);
 
       final items = await db.getSetListItems(setListId!);
