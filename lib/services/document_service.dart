@@ -608,7 +608,21 @@ class DocumentService {
     try {
       final doc = await _database.getDocument(documentId);
       if (doc == null) return null;
-      if (doc.filePath.startsWith('web://')) return null;
+
+      // Web stores files as bytes in the DB; only the display name and the
+      // pseudo `web://...` path need updating, no file or sidecar I/O.
+      if (doc.filePath.startsWith('web://')) {
+        if (doc.name == newName) return doc.filePath;
+        final ext = p.extension(doc.filePath);
+        final newPath = 'web://$newName$ext';
+        await _database.updateDocument(
+          doc.copyWith(name: newName, filePath: newPath),
+        );
+        debugPrint(
+          'DocumentService: Renamed web document "${doc.name}" to "$newName"',
+        );
+        return newPath;
+      }
 
       final fileAccess = FileAccessService.instance;
       final oldPath = doc.filePath;

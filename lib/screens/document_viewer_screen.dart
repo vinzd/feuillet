@@ -9,13 +9,16 @@ import 'package:pdfx/pdfx.dart';
 import '../l10n/l10n_extension.dart';
 import '../models/database.dart';
 import '../models/view_mode.dart';
+import '../providers/document_providers.dart';
 import '../services/annotation_service.dart';
 import '../services/database_service.dart';
 import '../services/document_export_service.dart';
+import '../services/document_service.dart';
 import '../services/label_service.dart';
 import '../services/sync_service.dart';
 import '../services/file_access_service.dart';
 import '../services/pdf_page_cache_service.dart';
+import '../utils/document_rename_dialog.dart';
 import '../utils/auto_hide_controller.dart';
 import '../utils/snackbar_extension.dart';
 import '../utils/display_settings.dart';
@@ -48,6 +51,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
   DocumentSetting? _settings;
   final FocusNode _focusNode = FocusNode();
   late final AutoHideController _autoHideController;
+  late Document _document;
 
   bool _isLoading = true;
 
@@ -76,6 +80,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
   @override
   void initState() {
     super.initState();
+    _document = widget.document;
     zoomPanState = ZoomPanState(displaySettings: DisplaySettings.defaults);
     _autoHideController = AutoHideController()
       ..addListener(() {
@@ -114,7 +119,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
       final db = ref.read(databaseProvider);
 
       // Load settings first (fast operation)
-      _settings = await db.getDocumentSettings(widget.document.id);
+      _settings = await db.getDocumentSettings(_document.id);
       if (_settings != null) {
         zoomPanState.displaySettings = DisplaySettings(
           zoomLevel: _settings!.zoomLevel,
@@ -132,8 +137,9 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
       setState(() => _isLoading = false);
 
       // Now load document content in background - UI is already visible
-      final freshDocument = await db.getDocument(widget.document.id);
+      final freshDocument = await db.getDocument(_document.id);
       if (freshDocument == null) throw Exception('Document not found');
+      if (mounted) setState(() => _document = freshDocument);
 
       if (freshDocument.isImage) {
         // Load image bytes directly
@@ -178,14 +184,14 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
   }
 
   Future<void> _loadLayers() async {
-    _layers = await _annotationService.getLayers(widget.document.id);
+    _layers = await _annotationService.getLayers(_document.id);
     if (_layers.isEmpty) {
       // Create default layer
       final layerId = await _annotationService.createLayer(
-        widget.document.id,
+        _document.id,
         'Layer 1',
       );
-      _layers = await _annotationService.getLayers(widget.document.id);
+      _layers = await _annotationService.getLayers(_document.id);
       _selectedLayerId = layerId;
     } else if (_selectedLayerId == null ||
         !_layers.any((l) => l.id == _selectedLayerId)) {
@@ -199,7 +205,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
 
     // Load annotations from all visible layers for left page
     final leftAnnotations = await _annotationService.getAllPageAnnotations(
-      widget.document.id,
+      _document.id,
       spread.leftPage - 1,
     );
 
@@ -207,7 +213,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     Map<int, List<DrawingStroke>> rightAnnotations = {};
     if (spread.rightPage != null) {
       rightAnnotations = await _annotationService.getAllPageAnnotations(
-        widget.document.id,
+        _document.id,
         spread.rightPage! - 1,
       );
     }
@@ -223,8 +229,8 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     if (!kIsWeb) {
       SyncManager.instance.scheduleAnnotationWrite(
         db: DatabaseService.instance.database,
-        documentId: widget.document.id,
-        scoreFilePath: widget.document.filePath,
+        documentId: _document.id,
+        scoreFilePath: _document.filePath,
       );
     }
   }
@@ -245,7 +251,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     PdfPageCacheService.instance.preRenderPages(
       document: pdfDocument,
       currentPage: spread.leftPage,
-      totalPages: widget.document.pageCount,
+      totalPages: _document.pageCount,
     );
   }
 
@@ -254,7 +260,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     final settings = zoomPanState.displaySettings;
     await db.insertOrUpdateDocumentSettings(
       DocumentSettingsCompanion(
-        documentId: drift.Value(widget.document.id),
+        documentId: drift.Value(_document.id),
         zoomLevel: drift.Value(settings.zoomLevel),
         brightness: drift.Value(settings.brightness),
         contrast: drift.Value(settings.contrast),
@@ -318,7 +324,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
 
     // End: last page
     if (key == LogicalKeyboardKey.end) {
-      final lastPage = widget.document.pageCount;
+      final lastPage = _document.pageCount;
       if (_currentPage != lastPage) {
         if (_viewMode == PdfViewMode.single) {
           _singlePageController?.jumpToPage(
@@ -345,13 +351,13 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
       final currentSpread = PageSpreadCalculator.getSpreadForPage(
         _viewMode,
         _currentPage,
-        widget.document.pageCount,
+        _document.pageCount,
       );
       if (currentSpread > 0) {
         final prevSpread = PageSpreadCalculator.getPagesForSpread(
           _viewMode,
           currentSpread - 1,
-          widget.document.pageCount,
+          _document.pageCount,
         );
         setState(() {
           _currentPage = prevSpread.leftPage;
@@ -374,17 +380,17 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
       final currentSpread = PageSpreadCalculator.getSpreadForPage(
         _viewMode,
         _currentPage,
-        widget.document.pageCount,
+        _document.pageCount,
       );
       final totalSpreads = PageSpreadCalculator.getTotalSpreads(
         _viewMode,
-        widget.document.pageCount,
+        _document.pageCount,
       );
       if (currentSpread < totalSpreads - 1) {
         final nextSpread = PageSpreadCalculator.getPagesForSpread(
           _viewMode,
           currentSpread + 1,
-          widget.document.pageCount,
+          _document.pageCount,
         );
         setState(() {
           _currentPage = nextSpread.leftPage;
@@ -443,9 +449,9 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
       PageSpreadCalculator.getSpreadForPage(
         _viewMode,
         _currentPage,
-        widget.document.pageCount,
+        _document.pageCount,
       ),
-      widget.document.pageCount,
+      _document.pageCount,
     );
   }
 
@@ -457,7 +463,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     final currentSpread = PageSpreadCalculator.getSpreadForPage(
       _viewMode,
       _currentPage,
-      widget.document.pageCount,
+      _document.pageCount,
     );
     return currentSpread > 0;
   }
@@ -465,16 +471,16 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
   /// Check if we can navigate to the next spread
   bool _canGoToNext() {
     if (_viewMode == PdfViewMode.single) {
-      return _currentPage < widget.document.pageCount;
+      return _currentPage < _document.pageCount;
     }
     final currentSpread = PageSpreadCalculator.getSpreadForPage(
       _viewMode,
       _currentPage,
-      widget.document.pageCount,
+      _document.pageCount,
     );
     final totalSpreads = PageSpreadCalculator.getTotalSpreads(
       _viewMode,
-      widget.document.pageCount,
+      _document.pageCount,
     );
     return currentSpread < totalSpreads - 1;
   }
@@ -483,7 +489,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: Text(widget.document.name)),
+        appBar: AppBar(title: Text(_document.name)),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -491,7 +497,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     // Show error if document failed to initialize
     if (_pdfController == null && _imageBytes == null) {
       return Scaffold(
-        appBar: AppBar(title: Text(widget.document.name)),
+        appBar: AppBar(title: Text(_document.name)),
         body: Center(child: Text(context.l10n.failedToLoadDocument)),
       );
     }
@@ -511,7 +517,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                 child: ColorFiltered(
                   colorFilter: zoomPanState.displaySettings.colorFilter,
                   child: buildZoomPanTransform(
-                    child: widget.document.isImage
+                    child: _document.isImage
                         ? _buildImageView()
                         : _viewMode == PdfViewMode.single
                         ? _buildSinglePageView()
@@ -529,15 +535,20 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                 left: 0,
                 right: 0,
                 child: AppBar(
-                  title: Text(widget.document.name),
+                  title: Text(_document.name),
                   backgroundColor: ViewerConstants.overlayBackground,
                   actions: [
                     IconButton(
+                      icon: const Icon(Icons.drive_file_rename_outline),
+                      onPressed: _renameDocument,
+                      tooltip: context.l10n.renameDocument,
+                    ),
+                    IconButton(
                       icon: const Icon(Icons.label_outline),
-                      onPressed: () => _showAddLabelDialog(widget.document.id),
+                      onPressed: () => _showAddLabelDialog(_document.id),
                       tooltip: context.l10n.labels,
                     ),
-                    if (!widget.document.isImage)
+                    if (!_document.isImage)
                       PopupMenuButton<PdfViewMode>(
                         icon: Icon(_viewMode.icon),
                         tooltip: context.l10n.viewMode,
@@ -585,17 +596,17 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                       IconButton(
                         icon: const Icon(Icons.ios_share),
                         onPressed: () {
-                          if (widget.document.isImage) {
+                          if (_document.isImage) {
                             _exportImage();
                           } else {
                             ExportPdfDialog.show(
                               context: context,
-                              document: widget.document,
+                              document: _document,
                               pdfDocument: _pdfDocument!,
                             );
                           }
                         },
-                        tooltip: widget.document.isImage
+                        tooltip: _document.isImage
                             ? context.l10n.exportImage
                             : context.l10n.exportPdf,
                       ),
@@ -612,7 +623,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                   right: _layerPanelPosition != null ? null : 16,
                   left: _layerPanelPosition?.dx,
                   child: FloatingAnnotationsPanel(
-                    documentId: widget.document.id,
+                    documentId: _document.id,
                     selectedLayerId: _selectedLayerId,
                     isAnnotationMode: _annotationMode,
                     onAnnotationModeToggle: _toggleAnnotationMode,
@@ -643,7 +654,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                 ),
 
               // Bottom controls
-              if (!widget.document.isImage)
+              if (!_document.isImage)
                 AnimatedPositioned(
                   duration: ViewerConstants.overlayAnimationDuration,
                   bottom: _autoHideController.isVisible
@@ -657,7 +668,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                       return PdfBottomControls(
                         currentPage: spread.leftPage,
                         rightPage: spread.rightPage,
-                        totalPages: widget.document.pageCount,
+                        totalPages: _document.pageCount,
                         viewMode: _viewMode,
                         zoomLevel: zoomPanState.displaySettings.zoomLevel,
                         onPreviousPage: _canGoToPrevious()
@@ -680,6 +691,31 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _renameDocument() async {
+    final newName = await showRenameDocumentDialog(
+      context,
+      currentName: _document.name,
+    );
+    if (newName == null || !mounted) return;
+
+    final result = await DocumentService.instance.renameDocument(
+      _document.id,
+      newName,
+    );
+
+    if (!mounted) return;
+    if (result != null) {
+      ref.invalidate(documentByIdProvider(_document.id));
+      final db = ref.read(databaseProvider);
+      final fresh = await db.getDocument(_document.id);
+      if (!mounted) return;
+      if (fresh != null) setState(() => _document = fresh);
+      context.showSnackbar(context.l10n.documentRenamed);
+    } else {
+      context.showSnackbar(context.l10n.renameFailedGeneric);
+    }
   }
 
   Future<void> _showAddLabelDialog(int documentId) async {
@@ -960,7 +996,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     if (_imageBytes == null) return;
 
     // Get layers for selection
-    final layers = await _annotationService.getLayers(widget.document.id);
+    final layers = await _annotationService.getLayers(_document.id);
 
     if (!mounted) return;
 
@@ -978,14 +1014,14 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     try {
       final exportBytes = await DocumentExportService.instance
           .exportImageWithAnnotations(
-            document: widget.document,
+            document: _document,
             imageBytes: _imageBytes!,
             selectedLayerIds: selectedLayerIds,
           );
 
       if (!mounted) return;
 
-      final baseName = widget.document.name;
+      final baseName = _document.name;
       final fileName = '${baseName}_annotated.png';
 
       if (kIsWeb) {

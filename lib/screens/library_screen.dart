@@ -19,6 +19,7 @@ import '../services/setlist_service.dart';
 import '../services/version_service.dart';
 import '../providers/document_providers.dart';
 import '../providers/label_providers.dart';
+import '../utils/document_rename_dialog.dart';
 import '../utils/fuzzy_search.dart';
 import '../utils/snackbar_extension.dart';
 import '../widgets/document_card.dart';
@@ -661,38 +662,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   }
 
   Future<void> _renameDocument(Document document) async {
-    final controller = TextEditingController(text: document.name);
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.renameDocumentTitle),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: InputDecoration(labelText: context.l10n.name),
-          onSubmitted: (value) {
-            final trimmed = value.trim();
-            if (trimmed.isNotEmpty) Navigator.pop(context, trimmed);
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              final trimmed = controller.text.trim();
-              if (trimmed.isNotEmpty) Navigator.pop(context, trimmed);
-            },
-            child: Text(context.l10n.rename),
-          ),
-        ],
-      ),
+    final newName = await showRenameDocumentDialog(
+      context,
+      currentName: document.name,
     );
-    controller.dispose();
-
-    if (newName == null || newName == document.name || !mounted) return;
+    if (newName == null || !mounted) return;
 
     final result = await DocumentService.instance.renameDocument(
       document.id,
@@ -701,6 +675,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
     if (!mounted) return;
     if (result != null) {
+      ref.invalidate(documentByIdProvider(document.id));
       context.showSnackbar(context.l10n.documentRenamed);
     } else {
       context.showSnackbar(context.l10n.renameFailedGeneric);
