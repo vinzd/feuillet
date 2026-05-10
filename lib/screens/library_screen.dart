@@ -1,6 +1,7 @@
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -52,6 +53,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   bool _isDragSelecting = false;
   Offset? _dragStart;
   Offset? _dragCurrent;
+  Offset? _pendingDragStart;
   final Map<int, GlobalKey> _cardKeys = {};
   final Set<int> _dragSelectedIds = {};
 
@@ -446,15 +448,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     _isLongPressDragging = false;
   }
 
+  static const _dragActivationThreshold = 10.0;
+
   void _onPointerDown(PointerDownEvent event, List<Document> docs) {
-    // Only start drag selection if not starting on a card
+    if (event.kind == PointerDeviceKind.touch) return;
     if (!_isPositionOnCard(event.localPosition, docs)) {
-      setState(() {
-        _isDragSelecting = true;
-        _dragStart = event.localPosition;
-        _dragCurrent = event.localPosition;
-        _dragSelectedIds.clear();
-      });
+      _pendingDragStart = event.localPosition;
     }
   }
 
@@ -464,23 +463,35 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         _dragCurrent = event.localPosition;
         _updateDragSelection(docs);
       });
+    } else if (_pendingDragStart != null) {
+      final delta = event.localPosition - _pendingDragStart!;
+      if (delta.distance > _dragActivationThreshold) {
+        setState(() {
+          _isDragSelecting = true;
+          _dragStart = _pendingDragStart;
+          _dragCurrent = event.localPosition;
+          _dragSelectedIds.clear();
+        });
+        _pendingDragStart = null;
+      }
     }
   }
 
   void _onPointerUp(PointerUpEvent event, List<Document> docs) {
-    if (!_isDragSelecting) return;
+    final wasPending = _pendingDragStart != null;
+    _pendingDragStart = null;
 
-    final wasClick =
-        _dragStart != null &&
-        _dragCurrent != null &&
-        (_dragStart! - _dragCurrent!).distance < 5;
+    if (!_isDragSelecting) {
+      if (wasPending &&
+          _isSelectionMode &&
+          !_isPositionOnCard(event.localPosition, docs)) {
+        _exitSelectionMode();
+      }
+      return;
+    }
 
     if (_dragSelectedIds.isNotEmpty) {
       _applyDragSelection();
-    } else if (wasClick &&
-        _isSelectionMode &&
-        !_isPositionOnCard(event.localPosition, docs)) {
-      _exitSelectionMode();
     }
 
     _resetDragState();
@@ -507,6 +518,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       _isDragSelecting = false;
       _dragStart = null;
       _dragCurrent = null;
+      _pendingDragStart = null;
       _dragSelectedIds.clear();
     });
   }
