@@ -5,6 +5,11 @@ All notable changes to Feuillet will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-05-10
+
+### Fixed
+- Release workflow: migrate from archived `actions/create-release@v1` and `actions/upload-release-asset@v1` to `softprops/action-gh-release@v2` so artifacts upload correctly to immutable releases
+
 ## [0.2.0] - 2026-05-10
 
 ### Added
@@ -31,5 +36,6 @@ First stable release of Feuillet — a local-first sheet music reader.
 - Set list management for organizing performances
 - Cross-device sync via sidecar files (works with Syncthing, Dropbox, etc.)
 
+[0.2.1]: https://github.com/vinzd/feuillet/releases/tag/v0.2.1
 [0.2.0]: https://github.com/vinzd/feuillet/releases/tag/v0.2.0
 [0.1.0]: https://github.com/vinzd/feuillet/releases/tag/v0.1.0
