@@ -625,12 +625,9 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     final isNarrow = MediaQuery.of(context).size.width < 600;
 
     final annotationsButton = IconButton(
-      icon: Icon(
-        _showFloatingLayerPanel ? Icons.brush : Icons.brush_outlined,
-      ),
-      onPressed: () => setState(
-        () => _showFloatingLayerPanel = !_showFloatingLayerPanel,
-      ),
+      icon: Icon(_showFloatingLayerPanel ? Icons.brush : Icons.brush_outlined),
+      onPressed: () =>
+          setState(() => _showFloatingLayerPanel = !_showFloatingLayerPanel),
       tooltip: context.l10n.annotations,
     );
 
