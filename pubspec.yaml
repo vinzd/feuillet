@@ -46,7 +46,7 @@ dependencies:
 
   # File system
   path_provider: ^2.1.4
-  file_picker: ^11.0.2
+  file_picker: ^12.0.0-beta.2
   path: ^1.9.0
 
   # File watching for Syncthing support
@@ -54,7 +54,7 @@ dependencies:
 
   # Drag and drop support for desktop
   desktop_drop: ^0.7.1
-  cross_file: ^0.3.3+6
+  cross_file: ^0.3.5+2
 
   # State management
   flutter_riverpod: ^3.3.1
@@ -69,15 +69,15 @@ dependencies:
   # Utilities
   uuid: ^4.5.3
   intl: ^0.20.2
-  package_info_plus: ^9.0.1
+  package_info_plus: ^10.1.0
   fuzzy: ^0.5.1
 
   # PDF export
   pdf: ^3.12.0
-  share_plus: ^12.0.2
+  share_plus: ^13.1.0
 
   # Wake lock
-  wakelock_plus: ^1.5.1
+  wakelock_plus: ^1.6.0
 
   # Permissions
   permission_handler: ^12.0.0
