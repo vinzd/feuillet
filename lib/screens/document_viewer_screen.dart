@@ -225,6 +225,14 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     final leftCounts = leftAnnotations.map((k, v) => MapEntry(k, v.length));
     debugPrint('[Viewer] _loadPageAnnotations DONE in ${stopwatch.elapsedMilliseconds}ms: left=$leftCounts');
 
+    // Detect stale layer IDs (e.g. after a sidecar reimport replaced layers).
+    // _loadLayers re-fetches from DB and updates _selectedLayerId if stale.
+    final oldSelectedLayer = _selectedLayerId;
+    await _loadLayers();
+    if (_selectedLayerId != oldSelectedLayer) {
+      debugPrint('[Viewer] _loadPageAnnotations: stale layer detected $oldSelectedLayer -> $_selectedLayerId');
+    }
+
     setState(() {
       _pageAnnotations = leftAnnotations;
       _rightPageAnnotations = rightAnnotations;
