@@ -128,6 +128,15 @@
   "loading": "Loading...",
   "unknown": "Unknown",
 
+  "debugSection": "Debug",
+  "startLogging": "Start logging",
+  "stopLogging": "Stop logging",
+  "loggingActive": "Recording... ({count} entries)",
+  "@loggingActive": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "loggingDescription": "Record debug logs for troubleshooting",
+
   "newSetList": "New Set List",
   "name": "Name",
   "descriptionOptional": "Description (optional)",

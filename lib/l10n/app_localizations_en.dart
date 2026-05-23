@@ -287,6 +287,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unknown => 'Unknown';
 
   @override
+  String get debugSection => 'Debug';
+
+  @override
+  String get startLogging => 'Start logging';
+
+  @override
+  String get stopLogging => 'Stop logging';
+
+  @override
+  String loggingActive(int count) {
+    return 'Recording... ($count entries)';
+  }
+
+  @override
+  String get loggingDescription => 'Record debug logs for troubleshooting';
+
+  @override
   String get newSetList => 'New Set List';
 
   @override

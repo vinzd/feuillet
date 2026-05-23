@@ -125,7 +125,8 @@ class AnnotationService {
   }) async {
     final data = jsonEncode(stroke.toJson());
 
-    return await _database.insertAnnotation(
+    debugPrint('[AnnotationService] saveAnnotation START layerId=$layerId page=$pageNumber type=${stroke.type} points=${stroke.points.length}');
+    final id = await _database.insertAnnotation(
       AnnotationsCompanion(
         layerId: drift.Value(layerId),
         pageNumber: drift.Value(pageNumber),
@@ -133,6 +134,8 @@ class AnnotationService {
         data: drift.Value(data),
       ),
     );
+    debugPrint('[AnnotationService] saveAnnotation DONE id=$id');
+    return id;
   }
 
   /// Delete an annotation
@@ -154,9 +157,13 @@ class AnnotationService {
         if (annotations.isNotEmpty) {
           result[layer.id] = annotations;
         }
+        debugPrint('[AnnotationService] getAllPageAnnotations layer=${layer.id} (visible=${layer.isVisible}) page=$pageNumber -> ${annotations.length} strokes');
+      } else {
+        debugPrint('[AnnotationService] getAllPageAnnotations layer=${layer.id} SKIPPED (not visible)');
       }
     }
 
+    debugPrint('[AnnotationService] getAllPageAnnotations docId=$documentId page=$pageNumber TOTAL: ${result.map((k, v) => MapEntry(k, v.length))}');
     return result;
   }
 }

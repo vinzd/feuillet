@@ -506,6 +506,36 @@ abstract class AppLocalizations {
   /// **'Unknown'**
   String get unknown;
 
+  /// No description provided for @debugSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Debug'**
+  String get debugSection;
+
+  /// No description provided for @startLogging.
+  ///
+  /// In en, this message translates to:
+  /// **'Start logging'**
+  String get startLogging;
+
+  /// No description provided for @stopLogging.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop logging'**
+  String get stopLogging;
+
+  /// No description provided for @loggingActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording... ({count} entries)'**
+  String loggingActive(int count);
+
+  /// No description provided for @loggingDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Record debug logs for troubleshooting'**
+  String get loggingDescription;
+
   /// No description provided for @newSetList.
   ///
   /// In en, this message translates to:
