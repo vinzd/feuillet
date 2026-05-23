@@ -37,12 +37,16 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
   @override
   void initState() {
     super.initState();
-    debugPrint('[DrawingCanvas] initState layer=${widget.layerId} page=${widget.pageNumber} enabled=${widget.isEnabled}');
+    debugPrint(
+      '[DrawingCanvas] initState layer=${widget.layerId} page=${widget.pageNumber} enabled=${widget.isEnabled}',
+    );
   }
 
   @override
   void dispose() {
-    debugPrint('[DrawingCanvas] dispose layer=${widget.layerId} page=${widget.pageNumber} sessionStrokes=${_currentSessionStrokes.length}');
+    debugPrint(
+      '[DrawingCanvas] dispose layer=${widget.layerId} page=${widget.pageNumber} sessionStrokes=${_currentSessionStrokes.length}',
+    );
     super.dispose();
   }
 
@@ -52,17 +56,27 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
     // Clear session strokes when layer or page changes to avoid stale annotations
     if (oldWidget.layerId != widget.layerId ||
         oldWidget.pageNumber != widget.pageNumber) {
-      debugPrint('[DrawingCanvas] didUpdateWidget CLEARING session strokes (layer ${oldWidget.layerId}->${widget.layerId}, page ${oldWidget.pageNumber}->${widget.pageNumber})');
+      debugPrint(
+        '[DrawingCanvas] didUpdateWidget CLEARING session strokes (layer ${oldWidget.layerId}->${widget.layerId}, page ${oldWidget.pageNumber}->${widget.pageNumber})',
+      );
       _currentSessionStrokes.clear();
       _currentStroke = null;
     }
     if (oldWidget.isEnabled != widget.isEnabled) {
-      debugPrint('[DrawingCanvas] didUpdateWidget enabled ${oldWidget.isEnabled}->${widget.isEnabled}, sessionStrokes=${_currentSessionStrokes.length}');
+      debugPrint(
+        '[DrawingCanvas] didUpdateWidget enabled ${oldWidget.isEnabled}->${widget.isEnabled}, sessionStrokes=${_currentSessionStrokes.length}',
+      );
     }
     if (oldWidget.layerAnnotations != widget.layerAnnotations) {
-      final oldCounts = oldWidget.layerAnnotations.map((k, v) => MapEntry(k, v.length));
-      final newCounts = widget.layerAnnotations.map((k, v) => MapEntry(k, v.length));
-      debugPrint('[DrawingCanvas] didUpdateWidget layerAnnotations changed: $oldCounts -> $newCounts');
+      final oldCounts = oldWidget.layerAnnotations.map(
+        (k, v) => MapEntry(k, v.length),
+      );
+      final newCounts = widget.layerAnnotations.map(
+        (k, v) => MapEntry(k, v.length),
+      );
+      debugPrint(
+        '[DrawingCanvas] didUpdateWidget layerAnnotations changed: $oldCounts -> $newCounts',
+      );
     }
   }
 
@@ -121,7 +135,9 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
       _currentStroke = null;
     });
 
-    debugPrint('[DrawingCanvas] onPointerUp: stroke completed (${stroke.type}, ${stroke.points.length} pts), sessionStrokes now=${_currentSessionStrokes.length}');
+    debugPrint(
+      '[DrawingCanvas] onPointerUp: stroke completed (${stroke.type}, ${stroke.points.length} pts), sessionStrokes now=${_currentSessionStrokes.length}',
+    );
 
     // Save the stroke to database and THEN notify completion
     _saveAndNotify(stroke);
@@ -138,10 +154,14 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
         stroke: stroke,
       );
       stopwatch.stop();
-      debugPrint('[DrawingCanvas] save SUCCESS id=$id in ${stopwatch.elapsedMilliseconds}ms (layer=${widget.layerId}, page=${widget.pageNumber}, type=${stroke.type})');
+      debugPrint(
+        '[DrawingCanvas] save SUCCESS id=$id in ${stopwatch.elapsedMilliseconds}ms (layer=${widget.layerId}, page=${widget.pageNumber}, type=${stroke.type})',
+      );
     } catch (e) {
       stopwatch.stop();
-      debugPrint('[DrawingCanvas] save FAILED in ${stopwatch.elapsedMilliseconds}ms: $e');
+      debugPrint(
+        '[DrawingCanvas] save FAILED in ${stopwatch.elapsedMilliseconds}ms: $e',
+      );
     }
 
     // Notify completion AFTER save
@@ -173,10 +193,15 @@ class DrawingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // Log only when state changes (not every frame)
-    final layerHash = Object.hashAll(layerAnnotations.entries.map((e) => '${e.key}:${e.value.length}'));
-    if (currentSessionStrokes.length != _lastLoggedSessionCount || layerHash != _lastLoggedLayerHash) {
+    final layerHash = Object.hashAll(
+      layerAnnotations.entries.map((e) => '${e.key}:${e.value.length}'),
+    );
+    if (currentSessionStrokes.length != _lastLoggedSessionCount ||
+        layerHash != _lastLoggedLayerHash) {
       final layerCounts = layerAnnotations.map((k, v) => MapEntry(k, v.length));
-      debugPrint('[DrawingPainter] paint state changed: layers=$layerCounts activeLayer=$activeLayerId sessionStrokes=${currentSessionStrokes.length} currentStroke=${currentStroke != null}');
+      debugPrint(
+        '[DrawingPainter] paint state changed: layers=$layerCounts activeLayer=$activeLayerId sessionStrokes=${currentSessionStrokes.length} currentStroke=${currentStroke != null}',
+      );
       _lastLoggedSessionCount = currentSessionStrokes.length;
       _lastLoggedLayerHash = layerHash;
     }

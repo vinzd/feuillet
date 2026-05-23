@@ -46,10 +46,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _startLogRefreshIfNeeded() {
     _logRefreshTimer?.cancel();
     if (LogRecorderService.instance.isRecording) {
-      _logRefreshTimer = Timer.periodic(
-        const Duration(seconds: 2),
-        (_) { if (mounted) setState(() {}); },
-      );
+      _logRefreshTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+        if (mounted) setState(() {});
+      });
     }
   }
 
@@ -226,12 +225,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         isRecording ? Icons.stop_circle : Icons.bug_report,
         color: isRecording ? Colors.red : null,
       ),
-      title: Text(isRecording
-          ? context.l10n.stopLogging
-          : context.l10n.startLogging),
-      subtitle: Text(isRecording
-          ? context.l10n.loggingActive(recorder.entryCount)
-          : context.l10n.loggingDescription),
+      title: Text(
+        isRecording ? context.l10n.stopLogging : context.l10n.startLogging,
+      ),
+      subtitle: Text(
+        isRecording
+            ? context.l10n.loggingActive(recorder.entryCount)
+            : context.l10n.loggingDescription,
+      ),
       trailing: Switch(
         value: isRecording,
         onChanged: (_) => _toggleLogRecording(),

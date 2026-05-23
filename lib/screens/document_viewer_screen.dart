@@ -204,7 +204,9 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
   Future<void> _loadPageAnnotations() async {
     final spread = _getCurrentSpread();
     final stopwatch = Stopwatch()..start();
-    debugPrint('[Viewer] _loadPageAnnotations START for page ${spread.leftPage} (docId=${_document.id})');
+    debugPrint(
+      '[Viewer] _loadPageAnnotations START for page ${spread.leftPage} (docId=${_document.id})',
+    );
 
     // Load annotations from all visible layers for left page
     final leftAnnotations = await _annotationService.getAllPageAnnotations(
@@ -223,14 +225,18 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
 
     stopwatch.stop();
     final leftCounts = leftAnnotations.map((k, v) => MapEntry(k, v.length));
-    debugPrint('[Viewer] _loadPageAnnotations DONE in ${stopwatch.elapsedMilliseconds}ms: left=$leftCounts');
+    debugPrint(
+      '[Viewer] _loadPageAnnotations DONE in ${stopwatch.elapsedMilliseconds}ms: left=$leftCounts',
+    );
 
     // Detect stale layer IDs (e.g. after a sidecar reimport replaced layers).
     // _loadLayers re-fetches from DB and updates _selectedLayerId if stale.
     final oldSelectedLayer = _selectedLayerId;
     await _loadLayers();
     if (_selectedLayerId != oldSelectedLayer) {
-      debugPrint('[Viewer] _loadPageAnnotations: stale layer detected $oldSelectedLayer -> $_selectedLayerId');
+      debugPrint(
+        '[Viewer] _loadPageAnnotations: stale layer detected $oldSelectedLayer -> $_selectedLayerId',
+      );
     }
 
     setState(() {
@@ -437,9 +443,15 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
   }
 
   Future<void> _toggleAnnotationMode() async {
-    debugPrint('[Viewer] _toggleAnnotationMode: current=$_annotationMode -> ${!_annotationMode}, selectedLayer=$_selectedLayerId');
-    final currentAnnotationCounts = _pageAnnotations.map((k, v) => MapEntry(k, v.length));
-    debugPrint('[Viewer] _toggleAnnotationMode: current _pageAnnotations=$currentAnnotationCounts');
+    debugPrint(
+      '[Viewer] _toggleAnnotationMode: current=$_annotationMode -> ${!_annotationMode}, selectedLayer=$_selectedLayerId',
+    );
+    final currentAnnotationCounts = _pageAnnotations.map(
+      (k, v) => MapEntry(k, v.length),
+    );
+    debugPrint(
+      '[Viewer] _toggleAnnotationMode: current _pageAnnotations=$currentAnnotationCounts',
+    );
 
     if (!_annotationMode && _selectedLayerId != null) {
       // Entering annotation mode - ensure active layer is visible
@@ -995,7 +1007,9 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
         // Build annotation overlay if on current page with a selected layer
         Widget? annotationOverlay;
         if (isCurrentPage && _selectedLayerId != null) {
-          debugPrint('[Viewer] _buildSinglePageView: creating DrawingCanvas for page=$pageNumber layer=$_selectedLayerId enabled=$_annotationMode annotations=${_pageAnnotations.map((k, v) => MapEntry(k, v.length))}');
+          debugPrint(
+            '[Viewer] _buildSinglePageView: creating DrawingCanvas for page=$pageNumber layer=$_selectedLayerId enabled=$_annotationMode annotations=${_pageAnnotations.map((k, v) => MapEntry(k, v.length))}',
+          );
           annotationOverlay = DrawingCanvas(
             key: ValueKey('$_selectedLayerId-$pageNumber'),
             layerId: _selectedLayerId!,
