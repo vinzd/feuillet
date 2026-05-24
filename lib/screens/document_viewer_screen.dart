@@ -336,7 +336,8 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     if (key == LogicalKeyboardKey.home) {
       if (_currentPage != 1) {
         if (_viewMode == PdfViewMode.single) {
-          _singlePageController?.jumpToPage(0); // PageController uses 0-indexed
+          _singlePageController?.jumpToPage(0);
+          _onPageChanged(1);
         } else {
           _pdfController?.jumpToPage(1);
         }
@@ -349,9 +350,8 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
       final lastPage = _document.pageCount;
       if (_currentPage != lastPage) {
         if (_viewMode == PdfViewMode.single) {
-          _singlePageController?.jumpToPage(
-            lastPage - 1,
-          ); // PageController uses 0-indexed
+          _singlePageController?.jumpToPage(lastPage - 1);
+          _onPageChanged(lastPage);
         } else {
           _pdfController?.jumpToPage(lastPage);
         }
@@ -364,10 +364,14 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
 
   void _goToPreviousPage() {
     if (_viewMode == PdfViewMode.single) {
-      _singlePageController?.previousPage(
-        duration: ViewerConstants.pageAnimationDuration,
-        curve: ViewerConstants.pageAnimationCurve,
-      );
+      final prevPage = _currentPage - 1;
+      if (prevPage >= 1) {
+        _singlePageController?.previousPage(
+          duration: ViewerConstants.pageAnimationDuration,
+          curve: ViewerConstants.pageAnimationCurve,
+        );
+        _onPageChanged(prevPage);
+      }
     } else {
       // Two-page mode: navigate by spread
       final currentSpread = PageSpreadCalculator.getSpreadForPage(
@@ -393,10 +397,14 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
 
   void _goToNextPage() {
     if (_viewMode == PdfViewMode.single) {
-      _singlePageController?.nextPage(
-        duration: ViewerConstants.pageAnimationDuration,
-        curve: ViewerConstants.pageAnimationCurve,
-      );
+      final nextPage = _currentPage + 1;
+      if (nextPage <= _document.pageCount) {
+        _singlePageController?.nextPage(
+          duration: ViewerConstants.pageAnimationDuration,
+          curve: ViewerConstants.pageAnimationCurve,
+        );
+        _onPageChanged(nextPage);
+      }
     } else {
       // Two-page mode: navigate by spread
       final currentSpread = PageSpreadCalculator.getSpreadForPage(
@@ -999,7 +1007,6 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
       pageSnapping: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: _pdfDocument!.pagesCount,
-      onPageChanged: (index) => _onPageChanged(index + 1),
       itemBuilder: (context, index) {
         final pageNumber = index + 1;
         final isCurrentPage = pageNumber == _currentPage;
