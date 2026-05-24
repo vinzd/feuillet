@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 import 'package:pdfx/pdfx.dart';
 
 /// Cache key for a rendered PDF page
@@ -350,9 +351,38 @@ class PdfPageCacheService {
       _cache[key] = cachedImage;
       _evictOldPages(document.id);
 
+      await _predecodeImage(cachedImage.bytes);
+
       return cachedImage;
     } finally {
       await page.close();
+    }
+  }
+
+  /// Pre-decode JPEG bytes into Flutter's image cache so that Image.memory
+  /// can display them instantly without an async decode step.
+  Future<void> _predecodeImage(Uint8List bytes) async {
+    try {
+      final provider = MemoryImage(bytes);
+      final stream = provider.resolve(ImageConfiguration.empty);
+      final completer = Completer<void>();
+      late ImageStreamListener listener;
+      listener = ImageStreamListener(
+        (info, synchronousCall) {
+          stream.removeListener(listener);
+          if (!completer.isCompleted) completer.complete();
+        },
+        onError: (error, stackTrace) {
+          stream.removeListener(listener);
+          if (!completer.isCompleted) {
+            completer.completeError(error, stackTrace);
+          }
+        },
+      );
+      stream.addListener(listener);
+      await completer.future;
+    } catch (e) {
+      debugPrint('[PreRender] _predecodeImage failed: $e');
     }
   }
 
