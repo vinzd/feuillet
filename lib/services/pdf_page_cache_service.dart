@@ -94,6 +94,10 @@ class PdfPageCacheService {
     double scale = 2.0,
   }) async {
     final documentId = document.id;
+    debugPrint(
+      '[PreRender] preRenderPages called: docId=$documentId, '
+      'currentPage=$currentPage, totalPages=$totalPages, scale=$scale',
+    );
 
     // Calculate pages to pre-render (current page ± radius)
     final pagesToRender = <int>[];
@@ -107,17 +111,35 @@ class PdfPageCacheService {
       }
     }
 
+    debugPrint(
+      '[PreRender] pages to consider: $pagesToRender '
+      '(${pagesToRender.length} pages)',
+    );
+
     // Clear any stale queued non-priority requests for this document
+    final queueSizeBefore = _renderQueue.length;
     _renderQueue.removeWhere(
       (r) => r.documentId == documentId && r.completer == null,
     );
+    final staleRemoved = queueSizeBefore - _renderQueue.length;
+    if (staleRemoved > 0) {
+      debugPrint('[PreRender] cleared $staleRemoved stale queued requests');
+    }
 
     // Enqueue pages for sequential rendering (at the back)
+    int skippedCached = 0;
+    int skippedRendering = 0;
+    int enqueued = 0;
     for (final pageNumber in pagesToRender) {
       final key = PageCacheKey(documentId, pageNumber);
 
       // Skip if already cached or being rendered
-      if (_cache.containsKey(key) || _rendering.contains(key)) {
+      if (_cache.containsKey(key)) {
+        skippedCached++;
+        continue;
+      }
+      if (_rendering.contains(key)) {
+        skippedRendering++;
         continue;
       }
 
@@ -128,7 +150,13 @@ class PdfPageCacheService {
           scale: scale,
         ),
       );
+      enqueued++;
     }
+
+    debugPrint(
+      '[PreRender] enqueued=$enqueued, skippedCached=$skippedCached, '
+      'skippedRendering=$skippedRendering, queueSize=${_renderQueue.length}',
+    );
 
     // Start processing the queue if not already running
     _startProcessing();
@@ -144,6 +172,9 @@ class PdfPageCacheService {
 
     // Return cached version if available
     if (_cache.containsKey(key)) {
+      debugPrint(
+        '[PreRender] renderAndCachePage: page $pageNumber already cached',
+      );
       return _cache[key];
     }
 
@@ -152,9 +183,18 @@ class PdfPageCacheService {
       if (req.documentId == document.id &&
           req.pageNumber == pageNumber &&
           req.completer != null) {
+        debugPrint(
+          '[PreRender] renderAndCachePage: page $pageNumber already queued '
+          'with completer, reusing',
+        );
         return req.completer!.future;
       }
     }
+
+    debugPrint(
+      '[PreRender] renderAndCachePage: priority render for page $pageNumber '
+      '(docId=${document.id})',
+    );
 
     // Create a priority request with a completer so we can return the result
     final completer = Completer<CachedPageImage?>();
@@ -175,42 +215,93 @@ class PdfPageCacheService {
   }
 
   void _startProcessing() {
-    if (_isProcessingQueue || _renderQueue.isEmpty) return;
+    if (_isProcessingQueue) {
+      debugPrint(
+        '[PreRender] _startProcessing: already processing '
+        '(queue=${_renderQueue.length})',
+      );
+      return;
+    }
+    if (_renderQueue.isEmpty) {
+      debugPrint('[PreRender] _startProcessing: queue empty, nothing to do');
+      return;
+    }
+    debugPrint(
+      '[PreRender] _startProcessing: beginning queue processing '
+      '(${_renderQueue.length} items)',
+    );
     _isProcessingQueue = true;
     unawaited(_processQueue());
   }
 
   Future<void> _processQueue() async {
+    int rendered = 0;
+    int skipped = 0;
+    final stopwatch = Stopwatch()..start();
+
     while (_renderQueue.isNotEmpty) {
       final request = _renderQueue.removeFirst();
       final key = PageCacheKey(request.documentId, request.pageNumber);
+      final isPriority = request.completer != null;
 
       // Skip if already cached while waiting in queue
       if (_cache.containsKey(key)) {
         request.completer?.complete(_cache[key]);
+        skipped++;
         continue;
       }
 
       // Skip non-priority requests if already being rendered elsewhere
-      if (_rendering.contains(key) && request.completer == null) {
+      if (_rendering.contains(key) && !isPriority) {
+        skipped++;
         continue;
       }
 
       _rendering.add(key);
       try {
+        final pageStopwatch = Stopwatch()..start();
         final result = await _renderPage(
           document: request.document,
           pageNumber: request.pageNumber,
           scale: request.scale,
         );
+        pageStopwatch.stop();
+
+        if (result != null) {
+          debugPrint(
+            '[PreRender] rendered page ${request.pageNumber} '
+            '(${request.documentId}) in ${pageStopwatch.elapsedMilliseconds}ms '
+            '— ${result.width}x${result.height}, '
+            '${(result.bytes.length / 1024).toStringAsFixed(0)}KB'
+            '${isPriority ? " [PRIORITY]" : ""}',
+          );
+        } else {
+          debugPrint(
+            '[PreRender] page ${request.pageNumber} '
+            '(${request.documentId}) render returned null '
+            'after ${pageStopwatch.elapsedMilliseconds}ms',
+          );
+        }
+
+        rendered++;
         request.completer?.complete(result);
-      } catch (error) {
-        debugPrint('Error rendering page ${request.pageNumber}: $error');
+      } catch (error, stack) {
+        debugPrint(
+          '[PreRender] ERROR rendering page ${request.pageNumber} '
+          '(${request.documentId}): $error\n$stack',
+        );
         request.completer?.complete(null);
       } finally {
         _rendering.remove(key);
       }
     }
+
+    stopwatch.stop();
+    debugPrint(
+      '[PreRender] queue finished: rendered=$rendered, skipped=$skipped, '
+      'totalTime=${stopwatch.elapsedMilliseconds}ms, '
+      'cacheSize=${_cache.length}',
+    );
     _isProcessingQueue = false;
   }
 
@@ -220,7 +311,17 @@ class PdfPageCacheService {
     required int pageNumber,
     required double scale,
   }) async {
+    debugPrint(
+      '[PreRender] _renderPage: opening page $pageNumber '
+      '(docId=${document.id})',
+    );
     final page = await document.getPage(pageNumber);
+    debugPrint(
+      '[PreRender] _renderPage: page $pageNumber native size='
+      '${page.width}x${page.height}, '
+      'renderSize=${(page.width * scale).round()}x'
+      '${(page.height * scale).round()}',
+    );
 
     try {
       final image = await page.render(
@@ -231,7 +332,13 @@ class PdfPageCacheService {
         quality: 85,
       );
 
-      if (image == null) return null;
+      if (image == null) {
+        debugPrint(
+          '[PreRender] _renderPage: page.render() returned null '
+          'for page $pageNumber',
+        );
+        return null;
+      }
 
       final cachedImage = CachedPageImage(
         bytes: image.bytes,
