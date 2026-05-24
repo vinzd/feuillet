@@ -530,6 +530,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirm => 'Confirm';
 
   @override
+  String get mergeLayer => 'Merge into...';
+
+  @override
+  String get mergeLayerTitle => 'Merge Layer';
+
+  @override
+  String mergeLayerMessage(String source) {
+    return 'Merge \"$source\" into:';
+  }
+
+  @override
+  String get merge => 'Merge';
+
+  @override
+  String get noOtherLayers => 'No other layers to merge into';
+
+  @override
+  String get recolorLayer => 'Recolor strokes';
+
+  @override
+  String get recolorLayerTitle => 'Recolor Strokes';
+
+  @override
+  String recolorLayerMessage(String name) {
+    return 'Choose a color for all strokes in \"$name\":';
+  }
+
+  @override
   String get createNewSetList => 'Create new set list';
 
   @override

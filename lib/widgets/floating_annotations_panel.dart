@@ -122,6 +122,43 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
     }
   }
 
+  Future<void> _mergeLayer(AnnotationLayer layer) async {
+    final otherLayers = _layers.where((l) => l.id != layer.id).toList();
+    if (otherLayers.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.noOtherLayers)),
+      );
+      return;
+    }
+
+    final targetId = await LayerDialogs.showMergeDialog(
+      context: context,
+      sourceLayer: layer,
+      otherLayers: otherLayers,
+    );
+
+    if (targetId != null) {
+      await _annotationService.mergeLayers(layer.id, targetId);
+      await _loadLayers();
+      if (widget.selectedLayerId == layer.id) {
+        widget.onLayerSelected(targetId);
+      }
+      widget.onLayersChanged();
+    }
+  }
+
+  Future<void> _recolorLayer(AnnotationLayer layer) async {
+    final color = await LayerDialogs.showRecolorDialog(
+      context: context,
+      layerName: layer.name,
+    );
+
+    if (color != null) {
+      await _annotationService.recolorLayer(layer.id, color);
+      widget.onLayersChanged();
+    }
+  }
+
   Future<void> _deleteLayer(AnnotationLayer layer) async {
     final confirmed = await LayerDialogs.showConfirmationDialog(
       context: context,
@@ -227,37 +264,19 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
                 icon: Icons.edit,
                 tooltip: context.l10n.pen,
                 isSelected: widget.currentTool == AnnotationType.pen,
-                onPressed: () {
-                  widget.onToolChanged(AnnotationType.pen);
-                  // Set default pen thickness if current is too large
-                  if (widget.annotationThickness > 12) {
-                    widget.onThicknessChanged(3.0);
-                  }
-                },
+                onPressed: () => widget.onToolChanged(AnnotationType.pen),
               ),
               _ToolButton(
                 icon: Icons.highlight,
                 tooltip: context.l10n.highlighter,
                 isSelected: widget.currentTool == AnnotationType.highlighter,
-                onPressed: () {
-                  widget.onToolChanged(AnnotationType.highlighter);
-                  // Set default highlighter thickness
-                  if (widget.annotationThickness < 8) {
-                    widget.onThicknessChanged(12.0);
-                  }
-                },
+                onPressed: () => widget.onToolChanged(AnnotationType.highlighter),
               ),
               _ToolButton(
                 icon: Icons.auto_fix_high,
                 tooltip: context.l10n.eraser,
                 isSelected: widget.currentTool == AnnotationType.eraser,
-                onPressed: () {
-                  widget.onToolChanged(AnnotationType.eraser);
-                  // Set default eraser thickness (larger for easier erasing)
-                  if (widget.annotationThickness < 15) {
-                    widget.onThicknessChanged(20.0);
-                  }
-                },
+                onPressed: () => widget.onToolChanged(AnnotationType.eraser),
               ),
             ],
           ),
@@ -278,27 +297,31 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
           const SizedBox(height: 12),
 
           // Thickness slider
-          Row(
-            children: [
-              const Icon(Icons.line_weight, size: 16),
-              Expanded(
-                child: Slider(
-                  value: widget.annotationThickness,
-                  min: 1,
-                  max: 30,
-                  divisions: 29,
-                  onChanged: widget.onThicknessChanged,
+          Builder(builder: (context) {
+            final isEraser = widget.currentTool == AnnotationType.eraser;
+            final max = isEraser ? 80.0 : 30.0;
+            return Row(
+              children: [
+                const Icon(Icons.line_weight, size: 16),
+                Expanded(
+                  child: Slider(
+                    value: widget.annotationThickness,
+                    min: 1,
+                    max: max,
+                    divisions: max.round() - 1,
+                    onChanged: widget.onThicknessChanged,
+                  ),
                 ),
-              ),
-              SizedBox(
-                width: 24,
-                child: Text(
-                  '${widget.annotationThickness.round()}',
-                  style: const TextStyle(fontSize: 12),
+                SizedBox(
+                  width: 24,
+                  child: Text(
+                    '${widget.annotationThickness.round()}',
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          }),
         ],
       ),
     );
@@ -447,6 +470,8 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
                             padding: EdgeInsets.zero,
                             onSelected: (value) => switch (value) {
                               'rename' => _renameLayer(layer),
+                              'merge' => _mergeLayer(layer),
+                              'recolor' => _recolorLayer(layer),
                               'delete' => _deleteLayer(layer),
                               _ => null,
                             },
@@ -458,6 +483,26 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
                                     const Icon(Icons.edit, size: 18),
                                     const SizedBox(width: 8),
                                     Text(context.l10n.rename),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: 'merge',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.merge, size: 18),
+                                    const SizedBox(width: 8),
+                                    Text(context.l10n.mergeLayer),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: 'recolor',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.palette, size: 18),
+                                    const SizedBox(width: 8),
+                                    Text(context.l10n.recolorLayer),
                                   ],
                                 ),
                               ),

@@ -944,6 +944,54 @@ abstract class AppLocalizations {
   /// **'Confirm'**
   String get confirm;
 
+  /// No description provided for @mergeLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge into...'**
+  String get mergeLayer;
+
+  /// No description provided for @mergeLayerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge Layer'**
+  String get mergeLayerTitle;
+
+  /// No description provided for @mergeLayerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge \"{source}\" into:'**
+  String mergeLayerMessage(String source);
+
+  /// No description provided for @merge.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge'**
+  String get merge;
+
+  /// No description provided for @noOtherLayers.
+  ///
+  /// In en, this message translates to:
+  /// **'No other layers to merge into'**
+  String get noOtherLayers;
+
+  /// No description provided for @recolorLayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Recolor strokes'**
+  String get recolorLayer;
+
+  /// No description provided for @recolorLayerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recolor Strokes'**
+  String get recolorLayerTitle;
+
+  /// No description provided for @recolorLayerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a color for all strokes in \"{name}\":'**
+  String recolorLayerMessage(String name);
+
   /// No description provided for @createNewSetList.
   ///
   /// In en, this message translates to:

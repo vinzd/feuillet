@@ -242,6 +242,20 @@
   "renameLayer": "Rename Layer",
   "layerName": "Layer name",
   "confirm": "Confirm",
+  "mergeLayer": "Merge into...",
+  "mergeLayerTitle": "Merge Layer",
+  "mergeLayerMessage": "Merge \"{source}\" into:",
+  "@mergeLayerMessage": {
+    "placeholders": { "source": {"type": "String"} }
+  },
+  "merge": "Merge",
+  "noOtherLayers": "No other layers to merge into",
+  "recolorLayer": "Recolor strokes",
+  "recolorLayerTitle": "Recolor Strokes",
+  "recolorLayerMessage": "Choose a color for all strokes in \"{name}\":",
+  "@recolorLayerMessage": {
+    "placeholders": { "name": {"type": "String"} }
+  },
 
   "createNewSetList": "Create new set list",
   "noSetListsYetCreateAbove": "No set lists yet. Create one above.",

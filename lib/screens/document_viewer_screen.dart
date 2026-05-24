@@ -74,7 +74,19 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
   int? _selectedLayerId;
   AnnotationType _currentTool = AnnotationType.pen;
   Color _annotationColor = Colors.red;
-  double _annotationThickness = 3.0;
+  double _drawingThickness = 3.0;
+  double _eraserThickness = 20.0;
+
+  double get _activeThickness =>
+      _currentTool == AnnotationType.eraser ? _eraserThickness : _drawingThickness;
+  set _activeThickness(double value) {
+    if (_currentTool == AnnotationType.eraser) {
+      _eraserThickness = value;
+    } else {
+      _drawingThickness = value;
+    }
+  }
+
   Map<int, List<DrawingStroke>> _pageAnnotations = {};
   Map<int, List<DrawingStroke>> _rightPageAnnotations = {};
 
@@ -588,13 +600,13 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
                     onAnnotationModeToggle: _toggleAnnotationMode,
                     currentTool: _currentTool,
                     annotationColor: _annotationColor,
-                    annotationThickness: _annotationThickness,
+                    annotationThickness: _activeThickness,
                     onToolChanged: (tool) =>
                         setState(() => _currentTool = tool),
                     onColorChanged: (color) =>
                         setState(() => _annotationColor = color),
                     onThicknessChanged: (thickness) =>
-                        setState(() => _annotationThickness = thickness),
+                        setState(() => _activeThickness = thickness),
                     onLayerSelected: (layerId) {
                       setState(() => _selectedLayerId = layerId);
                       _loadPageAnnotations();
@@ -970,7 +982,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
         pageNumber: 0,
         toolType: _currentTool,
         color: _annotationColor,
-        thickness: _annotationThickness,
+        thickness: _activeThickness,
         layerAnnotations: _pageAnnotations,
         onStrokeCompleted: _onStrokeCompleted,
         isEnabled: _annotationMode,
@@ -1016,7 +1028,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
             pageNumber: pageNumber - 1,
             toolType: _currentTool,
             color: _annotationColor,
-            thickness: _annotationThickness,
+            thickness: _activeThickness,
             layerAnnotations: _pageAnnotations,
             onStrokeCompleted: _onStrokeCompleted,
             isEnabled: _annotationMode,
@@ -1050,7 +1062,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
       selectedLayerId: _selectedLayerId,
       currentTool: _currentTool,
       annotationColor: _annotationColor,
-      annotationThickness: _annotationThickness,
+      annotationThickness: _activeThickness,
       onStrokeCompleted: _onStrokeCompleted,
       backgroundDecoration: const BoxDecoration(color: Colors.black),
     );
