@@ -69,7 +69,12 @@ class _CachedPdfPageState extends State<CachedPdfPage> {
       '(docId=${widget.document.id})',
     );
 
-    // Check cache before setting loading state to avoid any blank frame
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    // Check cache first
     final cached = _cacheService.getCachedPage(
       widget.document.id,
       widget.pageNumber,
@@ -84,7 +89,6 @@ class _CachedPdfPageState extends State<CachedPdfPage> {
         setState(() {
           _pageImage = cached;
           _isLoading = false;
-          _error = null;
         });
         widget.onPageRendered?.call(widget.pageNumber);
       }
@@ -95,11 +99,6 @@ class _CachedPdfPageState extends State<CachedPdfPage> {
       '[PreRender] CachedPdfPage: page ${widget.pageNumber} not cached, '
       'requesting on-demand render',
     );
-
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
 
     // Render and cache the page
     try {
@@ -159,11 +158,7 @@ class _CachedPdfPageState extends State<CachedPdfPage> {
     }
 
     if (widget.annotationOverlay == null) {
-      return Image.memory(
-        _pageImage!.bytes,
-        fit: widget.fit,
-        gaplessPlayback: true,
-      );
+      return Image.memory(_pageImage!.bytes, fit: widget.fit);
     }
 
     // With annotation overlay: use FittedBox to scale PDF and annotations together
@@ -175,11 +170,7 @@ class _CachedPdfPageState extends State<CachedPdfPage> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.memory(
-              _pageImage!.bytes,
-              fit: BoxFit.fill,
-              gaplessPlayback: true,
-            ),
+            Image.memory(_pageImage!.bytes, fit: BoxFit.fill),
             widget.annotationOverlay!,
           ],
         ),

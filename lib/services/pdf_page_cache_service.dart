@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/painting.dart';
 import 'package:pdfx/pdfx.dart';
 
 /// Cache key for a rendered PDF page
@@ -63,6 +62,12 @@ class PdfPageCacheService {
 
   /// Number of pages to pre-render ahead and behind current page
   static const int preRenderRadius = 10;
+
+  /// Maximum pixel dimension (width or height) for rendered pages.
+  /// Pages whose native size already exceeds this at the requested scale
+  /// are downscaled to fit, avoiding needlessly large renders for
+  /// high-resolution source PDFs.
+  static const int maxRenderDimension = 3000;
 
   /// Get a cached page image
   CachedPageImage? getCachedPage(String documentId, int pageNumber) {
@@ -319,15 +324,30 @@ class PdfPageCacheService {
     final page = await document.getPage(pageNumber);
     debugPrint(
       '[PreRender] _renderPage: page $pageNumber native size='
-      '${page.width}x${page.height}, '
-      'renderSize=${(page.width * scale).round()}x'
-      '${(page.height * scale).round()}',
+      '${page.width}x${page.height}',
     );
 
     try {
+      var effectiveScale = scale;
+      final maxNative =
+          page.width > page.height ? page.width : page.height;
+      if (maxNative * scale > maxRenderDimension) {
+        effectiveScale = maxRenderDimension / maxNative;
+      }
+
+      final renderWidth = page.width * effectiveScale;
+      final renderHeight = page.height * effectiveScale;
+      if (effectiveScale != scale) {
+        debugPrint(
+          '[PreRender] _renderPage: capped scale ${scale}x → '
+          '${effectiveScale.toStringAsFixed(2)}x '
+          '(${renderWidth.round()}x${renderHeight.round()})',
+        );
+      }
+
       final image = await page.render(
-        width: page.width * scale,
-        height: page.height * scale,
+        width: renderWidth,
+        height: renderHeight,
         format: PdfPageImageFormat.jpeg,
         backgroundColor: '#ffffff',
         quality: 85,
@@ -343,46 +363,17 @@ class PdfPageCacheService {
 
       final cachedImage = CachedPageImage(
         bytes: image.bytes,
-        width: image.width ?? (page.width * scale).round(),
-        height: image.height ?? (page.height * scale).round(),
+        width: image.width ?? renderWidth.round(),
+        height: image.height ?? renderHeight.round(),
       );
 
       final key = PageCacheKey(document.id, pageNumber);
       _cache[key] = cachedImage;
       _evictOldPages(document.id);
 
-      await _predecodeImage(cachedImage.bytes);
-
       return cachedImage;
     } finally {
       await page.close();
-    }
-  }
-
-  /// Pre-decode JPEG bytes into Flutter's image cache so that Image.memory
-  /// can display them instantly without an async decode step.
-  Future<void> _predecodeImage(Uint8List bytes) async {
-    try {
-      final provider = MemoryImage(bytes);
-      final stream = provider.resolve(ImageConfiguration.empty);
-      final completer = Completer<void>();
-      late ImageStreamListener listener;
-      listener = ImageStreamListener(
-        (info, synchronousCall) {
-          stream.removeListener(listener);
-          if (!completer.isCompleted) completer.complete();
-        },
-        onError: (error, stackTrace) {
-          stream.removeListener(listener);
-          if (!completer.isCompleted) {
-            completer.completeError(error, stackTrace);
-          }
-        },
-      );
-      stream.addListener(listener);
-      await completer.future;
-    } catch (e) {
-      debugPrint('[PreRender] _predecodeImage failed: $e');
     }
   }
 
