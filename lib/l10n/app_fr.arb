@@ -77,6 +77,12 @@
   "loading": "Chargement...",
   "unknown": "Inconnu",
 
+  "debugSection": "Débogage",
+  "startLogging": "Démarrer les logs",
+  "stopLogging": "Arrêter les logs",
+  "loggingActive": "Enregistrement... ({count} entrées)",
+  "loggingDescription": "Enregistrer les logs pour le diagnostic",
+
   "newSetList": "Nouvelle liste",
   "name": "Nom",
   "descriptionOptional": "Description (facultatif)",

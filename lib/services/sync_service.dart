@@ -790,6 +790,20 @@ class SyncManager {
       return;
     }
 
+    // Only import if sidecar is newer than DB (same guard as reconcileOnStartup)
+    final latestDbModified = await _latestAnnotationModifiedAt(
+      db,
+      matchingDoc.id,
+    );
+    if (latestDbModified != null &&
+        !sidecar.modifiedAt.isAfter(latestDbModified)) {
+      debugPrint(
+        'SyncManager: skipping sidecar for ${matchingDoc.name} '
+        '(disk=${sidecar.modifiedAt}, db=$latestDbModified)',
+      );
+      return;
+    }
+
     await importAnnotationSidecar(db, matchingDoc.id, sidecar);
     debugPrint('SyncManager: imported sidecar for ${matchingDoc.name}');
   }

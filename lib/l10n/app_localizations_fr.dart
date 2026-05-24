@@ -290,6 +290,23 @@ class AppLocalizationsFr extends AppLocalizations {
   String get unknown => 'Inconnu';
 
   @override
+  String get debugSection => 'Débogage';
+
+  @override
+  String get startLogging => 'Démarrer les logs';
+
+  @override
+  String get stopLogging => 'Arrêter les logs';
+
+  @override
+  String loggingActive(int count) {
+    return 'Enregistrement... ($count entrées)';
+  }
+
+  @override
+  String get loggingDescription => 'Enregistrer les logs pour le diagnostic';
+
+  @override
   String get newSetList => 'Nouvelle liste';
 
   @override

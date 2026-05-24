@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +11,7 @@ import '../services/file_watcher_service.dart';
 import '../services/database_service.dart';
 import '../services/document_service.dart';
 import '../services/sync_service.dart';
+import '../services/log_recorder_service.dart';
 import '../services/version_service.dart';
 import '../utils/snackbar_extension.dart';
 import '../widgets/layer_dialogs.dart';
@@ -26,11 +28,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isLoading = false;
   String? _currentPath;
   bool _isCustomPath = false;
+  Timer? _logRefreshTimer;
 
   @override
   void initState() {
     super.initState();
     _loadCurrentSettings();
+    _startLogRefreshIfNeeded();
+  }
+
+  @override
+  void dispose() {
+    _logRefreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startLogRefreshIfNeeded() {
+    _logRefreshTimer?.cancel();
+    if (LogRecorderService.instance.isRecording) {
+      _logRefreshTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+        if (mounted) setState(() {});
+      });
+    }
   }
 
   Future<void> _loadCurrentSettings() async {
@@ -186,9 +205,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     error: (error, stack) => Text(context.l10n.unknown),
                   ),
                 ),
+
+                const Divider(),
+
+                // Debug Section
+                _buildSectionHeader(context.l10n.debugSection),
+                _buildLogRecorderTile(),
               ],
             ),
     );
+  }
+
+  Widget _buildLogRecorderTile() {
+    final recorder = LogRecorderService.instance;
+    final isRecording = recorder.isRecording;
+
+    return ListTile(
+      leading: Icon(
+        isRecording ? Icons.stop_circle : Icons.bug_report,
+        color: isRecording ? Colors.red : null,
+      ),
+      title: Text(
+        isRecording ? context.l10n.stopLogging : context.l10n.startLogging,
+      ),
+      subtitle: Text(
+        isRecording
+            ? context.l10n.loggingActive(recorder.entryCount)
+            : context.l10n.loggingDescription,
+      ),
+      trailing: Switch(
+        value: isRecording,
+        onChanged: (_) => _toggleLogRecording(),
+      ),
+      onTap: _toggleLogRecording,
+    );
+  }
+
+  Future<void> _toggleLogRecording() async {
+    final recorder = LogRecorderService.instance;
+    if (recorder.isRecording) {
+      await recorder.stopAndShare();
+    } else {
+      recorder.start();
+    }
+    _startLogRefreshIfNeeded();
+    setState(() {});
   }
 
   Widget _buildSectionHeader(String title) {
