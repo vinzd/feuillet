@@ -329,8 +329,7 @@ class PdfPageCacheService {
 
     try {
       var effectiveScale = scale;
-      final maxNative =
-          page.width > page.height ? page.width : page.height;
+      final maxNative = page.width > page.height ? page.width : page.height;
       if (maxNative * scale > maxRenderDimension) {
         effectiveScale = maxRenderDimension / maxNative;
       }
