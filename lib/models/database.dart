@@ -306,11 +306,12 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateAnnotationData(int id, String data) {
-    return (update(annotations)..where((a) => a.id.equals(id)))
-        .write(AnnotationsCompanion(
-          data: Value(data),
-          modifiedAt: Value(DateTime.now()),
-        ));
+    return (update(annotations)..where((a) => a.id.equals(id))).write(
+      AnnotationsCompanion(
+        data: Value(data),
+        modifiedAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   // Set list operations

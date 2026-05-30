@@ -77,8 +77,9 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
   double _drawingThickness = 3.0;
   double _eraserThickness = 20.0;
 
-  double get _activeThickness =>
-      _currentTool == AnnotationType.eraser ? _eraserThickness : _drawingThickness;
+  double get _activeThickness => _currentTool == AnnotationType.eraser
+      ? _eraserThickness
+      : _drawingThickness;
   set _activeThickness(double value) {
     if (_currentTool == AnnotationType.eraser) {
       _eraserThickness = value;

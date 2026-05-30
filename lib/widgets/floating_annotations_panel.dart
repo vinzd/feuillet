@@ -125,9 +125,9 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
   Future<void> _mergeLayer(AnnotationLayer layer) async {
     final otherLayers = _layers.where((l) => l.id != layer.id).toList();
     if (otherLayers.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.noOtherLayers)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.noOtherLayers)));
       return;
     }
 
@@ -270,7 +270,8 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
                 icon: Icons.highlight,
                 tooltip: context.l10n.highlighter,
                 isSelected: widget.currentTool == AnnotationType.highlighter,
-                onPressed: () => widget.onToolChanged(AnnotationType.highlighter),
+                onPressed: () =>
+                    widget.onToolChanged(AnnotationType.highlighter),
               ),
               _ToolButton(
                 icon: Icons.auto_fix_high,
@@ -297,31 +298,33 @@ class _FloatingAnnotationsPanelState extends State<FloatingAnnotationsPanel> {
           const SizedBox(height: 12),
 
           // Thickness slider
-          Builder(builder: (context) {
-            final isEraser = widget.currentTool == AnnotationType.eraser;
-            final max = isEraser ? 80.0 : 30.0;
-            return Row(
-              children: [
-                const Icon(Icons.line_weight, size: 16),
-                Expanded(
-                  child: Slider(
-                    value: widget.annotationThickness,
-                    min: 1,
-                    max: max,
-                    divisions: max.round() - 1,
-                    onChanged: widget.onThicknessChanged,
+          Builder(
+            builder: (context) {
+              final isEraser = widget.currentTool == AnnotationType.eraser;
+              final max = isEraser ? 80.0 : 30.0;
+              return Row(
+                children: [
+                  const Icon(Icons.line_weight, size: 16),
+                  Expanded(
+                    child: Slider(
+                      value: widget.annotationThickness,
+                      min: 1,
+                      max: max,
+                      divisions: max.round() - 1,
+                      onChanged: widget.onThicknessChanged,
+                    ),
                   ),
-                ),
-                SizedBox(
-                  width: 24,
-                  child: Text(
-                    '${widget.annotationThickness.round()}',
-                    style: const TextStyle(fontSize: 12),
+                  SizedBox(
+                    width: 24,
+                    child: Text(
+                      '${widget.annotationThickness.round()}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
                   ),
-                ),
-              ],
-            );
-          }),
+                ],
+              );
+            },
+          ),
         ],
       ),
     );

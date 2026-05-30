@@ -158,10 +158,7 @@ class AnnotationService {
       try {
         final data = jsonDecode(annotation.data) as Map<String, dynamic>;
         data['color'] = color.toARGB32();
-        await _database.updateAnnotationData(
-          annotation.id,
-          jsonEncode(data),
-        );
+        await _database.updateAnnotationData(annotation.id, jsonEncode(data));
       } catch (e) {
         debugPrint('Error recoloring annotation ${annotation.id}: $e');
       }
