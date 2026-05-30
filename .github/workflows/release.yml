@@ -58,7 +58,7 @@ jobs:
 
           - os: macos-latest
             platform: ios
-            build-cmd: flutter build ios --config-only --release --no-codesign && cd ios && xcodebuild build -workspace Runner.xcworkspace -scheme Runner -configuration Release -sdk iphoneos -arch arm64 CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" DEVELOPMENT_TEAM=""
+            build-cmd: flutter build ios --release --no-codesign
             artifact-path: Feuillet-iOS.zip
 
           - os: macos-latest
