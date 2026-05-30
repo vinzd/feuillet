@@ -13,6 +13,7 @@ Feuillet is a sheet music reader built with Flutter, supporting PDF, JPG, and PN
 make setup          # Setup project from scratch
 make run-web        # Fast development iteration (web)
 make run-macos      # Run on macOS
+make run-ios        # Run on iOS simulator
 make build-web      # Build for web deployment
 make test           # Run all tests
 make help           # See all available commands
@@ -28,6 +29,7 @@ make setup
 # Run on different platforms
 make run-web        # Chrome (fastest hot reload)
 make run-macos      # macOS native
+make run-ios        # iOS simulator
 make run-android    # Android emulator
 ```
 
@@ -95,6 +97,7 @@ make format         # Format all Dart code
 # Build for release
 make build-web          # Web
 make build-macos        # macOS
+make build-ios          # iOS (unsigned)
 make build-android      # Android APK
 make build-all          # All platforms
 
@@ -102,6 +105,7 @@ make build-all          # All platforms
 flutter analyze
 dart format lib/ test/
 flutter build apk --release
+flutter build ios --release --no-codesign
 flutter build macos --release
 ```
 
@@ -327,6 +331,7 @@ Annotations are **JSON-serialized** in the database. To add new annotation types
 ## Data Storage Locations
 
 - **macOS**: `~/Library/Application Support/com.feuillet.app/feuillet/`
+- **iOS**: App sandbox `Documents/feuillet/` (accessible via Files app)
 - **Android**: `/data/data/com.feuillet.feuillet/app_flutter/feuillet/` (default)
 
 The PDF directory is **user-configurable** (stored in `AppSettings` table via `AppSettingKeys.pdfDirectoryPath`).

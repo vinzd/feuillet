@@ -30,11 +30,13 @@ jobs:
 
             ### Downloads
             - **Android**: `app-release.apk`
+            - **iOS**: `Feuillet-iOS.zip`
             - **macOS**: `Feuillet-macOS.zip`
             - **Web**: `Feuillet-Web.zip`
 
             ### Installation
             - **Android**: Download and install the APK
+            - **iOS**: Install via Xcode or Apple Configurator (unsigned build)
             - **macOS**: Download, unzip, and drag to Applications
             - **Web**: Unzip and serve with any web server
 
@@ -53,6 +55,11 @@ jobs:
             platform: android
             build-cmd: flutter build apk --release
             artifact-path: build/app/outputs/flutter-apk/app-release.apk
+
+          - os: macos-latest
+            platform: ios
+            build-cmd: flutter build ios --config-only --release --no-codesign && cd ios && xcodebuild build -workspace Runner.xcworkspace -scheme Runner -configuration Release -sdk iphoneos -arch arm64 CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" DEVELOPMENT_TEAM=""
+            artifact-path: Feuillet-iOS.zip
 
           - os: macos-latest
             platform: macos
@@ -96,6 +103,12 @@ jobs:
 
       - name: Build ${{ matrix.platform }}
         run: ${{ matrix.build-cmd }}
+
+      - name: Prepare iOS artifact
+        if: matrix.platform == 'ios'
+        run: |
+          cd build/ios/iphoneos
+          zip -r "$GITHUB_WORKSPACE/Feuillet-iOS.zip" Runner.app
 
       - name: Prepare macOS artifact
         if: matrix.platform == 'macos'
