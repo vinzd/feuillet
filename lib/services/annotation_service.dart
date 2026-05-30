@@ -145,6 +145,26 @@ class AnnotationService {
     await _database.deleteAnnotation(annotationId);
   }
 
+  /// Merge a source layer into a target layer (moves all annotations, deletes source)
+  Future<void> mergeLayers(int sourceLayerId, int targetLayerId) async {
+    await _database.moveAnnotationsToLayer(sourceLayerId, targetLayerId);
+    await _database.deleteAnnotationLayer(sourceLayerId);
+  }
+
+  /// Recolor all strokes of a layer to a given color
+  Future<void> recolorLayer(int layerId, Color color) async {
+    final annotations = await _database.getAllAnnotationsForLayer(layerId);
+    for (final annotation in annotations) {
+      try {
+        final data = jsonDecode(annotation.data) as Map<String, dynamic>;
+        data['color'] = color.toARGB32();
+        await _database.updateAnnotationData(annotation.id, jsonEncode(data));
+      } catch (e) {
+        debugPrint('Error recoloring annotation ${annotation.id}: $e');
+      }
+    }
+  }
+
   /// Get all annotations for all layers on a specific page
   Future<Map<int, List<DrawingStroke>>> getAllPageAnnotations(
     int documentId,

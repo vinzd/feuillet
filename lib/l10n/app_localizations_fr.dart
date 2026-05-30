@@ -534,6 +534,34 @@ class AppLocalizationsFr extends AppLocalizations {
   String get confirm => 'Confirmer';
 
   @override
+  String get mergeLayer => 'Fusionner dans...';
+
+  @override
+  String get mergeLayerTitle => 'Fusionner le calque';
+
+  @override
+  String mergeLayerMessage(String source) {
+    return 'Fusionner « $source » dans :';
+  }
+
+  @override
+  String get merge => 'Fusionner';
+
+  @override
+  String get noOtherLayers => 'Aucun autre calque pour la fusion';
+
+  @override
+  String get recolorLayer => 'Recolorer les traits';
+
+  @override
+  String get recolorLayerTitle => 'Recolorer les traits';
+
+  @override
+  String recolorLayerMessage(String name) {
+    return 'Choisir une couleur pour tous les traits de « $name » :';
+  }
+
+  @override
   String get createNewSetList => 'Créer une nouvelle liste';
 
   @override

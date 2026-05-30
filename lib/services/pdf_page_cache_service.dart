@@ -324,7 +324,9 @@ class PdfPageCacheService {
     final page = await document.getPage(pageNumber);
     debugPrint(
       '[PreRender] _renderPage: page $pageNumber native size='
-      '${page.width}x${page.height}',
+      '${page.width}x${page.height}, '
+      'renderSize=${(page.width * scale).round()}x'
+      '${(page.height * scale).round()}',
     );
 
     try {

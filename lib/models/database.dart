@@ -296,6 +296,24 @@ class AppDatabase extends _$AppDatabase {
     return (delete(annotations)..where((a) => a.id.equals(id))).go();
   }
 
+  Future<List<Annotation>> getAllAnnotationsForLayer(int layerId) {
+    return (select(annotations)..where((a) => a.layerId.equals(layerId))).get();
+  }
+
+  Future<void> moveAnnotationsToLayer(int fromLayerId, int toLayerId) {
+    return (update(annotations)..where((a) => a.layerId.equals(fromLayerId)))
+        .write(AnnotationsCompanion(layerId: Value(toLayerId)));
+  }
+
+  Future<void> updateAnnotationData(int id, String data) {
+    return (update(annotations)..where((a) => a.id.equals(id))).write(
+      AnnotationsCompanion(
+        data: Value(data),
+        modifiedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
   // Set list operations
   Future<int> insertSetList(SetListsCompanion setList) {
     return into(setLists).insert(setList);
