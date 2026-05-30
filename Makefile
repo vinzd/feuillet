@@ -1,4 +1,4 @@
-.PHONY: help setup build test clean run-web run-macos run-android web-worker db-gen analyze format install-hooks
+.PHONY: help setup build test clean run-web run-macos run-ios run-android web-worker db-gen analyze format install-hooks
 
 # Git commit hash for version display
 GIT_HASH := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
@@ -16,12 +16,14 @@ help:
 	@echo "Build Commands:"
 	@echo "  make build-web       - Build for web (release)"
 	@echo "  make build-macos     - Build for macOS (release)"
+	@echo "  make build-ios       - Build for iOS (release)"
 	@echo "  make build-android   - Build for Android (release)"
 	@echo "  make build-all       - Build for all platforms"
 	@echo ""
 	@echo "Run Commands:"
 	@echo "  make run-web         - Run on Chrome (development)"
 	@echo "  make run-macos       - Run on macOS (development)"
+	@echo "  make run-ios         - Run on iOS simulator (development)"
 	@echo "  make run-android     - Run on Android emulator (development)"
 	@echo "  make serve-web       - Serve web build locally (port 8080)"
 	@echo ""
@@ -89,12 +91,17 @@ build-macos:
 	flutter build macos --release --dart-define=GIT_HASH=$(GIT_HASH)
 	@echo "✅ macOS build complete"
 
+build-ios:
+	@echo "📱 Building for iOS (release)..."
+	flutter build ios --release --no-codesign --dart-define=GIT_HASH=$(GIT_HASH)
+	@echo "✅ iOS build complete (unsigned)"
+
 build-android:
 	@echo "🤖 Building for Android (release)..."
 	flutter build apk --release --dart-define=GIT_HASH=$(GIT_HASH)
 	@echo "✅ Android APK: build/app/outputs/flutter-apk/app-release.apk"
 
-build-all: build-web build-macos build-android
+build-all: build-web build-macos build-ios build-android
 	@echo "✅ All platform builds complete"
 
 # Run targets
@@ -105,6 +112,10 @@ run-web: web-worker
 run-macos:
 	@echo "🖥️  Running on macOS..."
 	flutter run -d macos --dart-define=GIT_HASH=$(GIT_HASH)
+
+run-ios:
+	@echo "📱 Running on iOS simulator..."
+	flutter run -d iPhone --dart-define=GIT_HASH=$(GIT_HASH)
 
 run-android:
 	@echo "🤖 Running on Android..."

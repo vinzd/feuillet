@@ -64,11 +64,6 @@ class _CachedPdfPageState extends State<CachedPdfPage> {
   }
 
   Future<void> _loadPage() async {
-    debugPrint(
-      '[PreRender] CachedPdfPage._loadPage: page ${widget.pageNumber} '
-      '(docId=${widget.document.id})',
-    );
-
     setState(() {
       _isLoading = true;
       _error = null;
@@ -81,10 +76,6 @@ class _CachedPdfPageState extends State<CachedPdfPage> {
     );
 
     if (cached != null) {
-      debugPrint(
-        '[PreRender] CachedPdfPage: page ${widget.pageNumber} served '
-        'from cache (${(cached.bytes.length / 1024).toStringAsFixed(0)}KB)',
-      );
       if (mounted) {
         setState(() {
           _pageImage = cached;
@@ -95,24 +86,11 @@ class _CachedPdfPageState extends State<CachedPdfPage> {
       return;
     }
 
-    debugPrint(
-      '[PreRender] CachedPdfPage: page ${widget.pageNumber} not cached, '
-      'requesting on-demand render',
-    );
-
     // Render and cache the page
     try {
-      final stopwatch = Stopwatch()..start();
       final image = await _cacheService.renderAndCachePage(
         document: widget.document,
         pageNumber: widget.pageNumber,
-      );
-      stopwatch.stop();
-
-      debugPrint(
-        '[PreRender] CachedPdfPage: page ${widget.pageNumber} '
-        '${image != null ? "rendered" : "FAILED (null)"} '
-        'in ${stopwatch.elapsedMilliseconds}ms',
       );
 
       if (mounted) {
@@ -122,11 +100,7 @@ class _CachedPdfPageState extends State<CachedPdfPage> {
         });
         widget.onPageRendered?.call(widget.pageNumber);
       }
-    } catch (e, stack) {
-      debugPrint(
-        '[PreRender] CachedPdfPage: page ${widget.pageNumber} '
-        'ERROR: $e\n$stack',
-      );
+    } catch (e) {
       if (mounted) {
         setState(() {
           _error = e.toString();
