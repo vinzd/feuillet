@@ -38,15 +38,15 @@ dependencies:
   cupertino_icons: ^1.0.9
 
   # Database
-  drift: ^2.32.1
+  drift: ^2.34.0
   drift_flutter: ^0.3.0
 
   # PDF rendering
   pdfx: ^2.7.0
 
   # File system
-  path_provider: ^2.1.4
-  file_picker: ^11.0.2
+  path_provider: ^2.1.6
+  file_picker: ">=12.0.0-beta.3 <13.0.0"
   path: ^1.9.0
 
   # File watching for Syncthing support
@@ -54,13 +54,13 @@ dependencies:
 
   # Drag and drop support for desktop
   desktop_drop: ^0.7.1
-  cross_file: ^0.3.3+6
+  cross_file: ^0.3.5+2
 
   # State management
-  flutter_riverpod: ^3.3.1
+  flutter_riverpod: ^3.3.2
 
   # Routing
-  go_router: ^17.2.2
+  go_router: ^17.3.0
 
   # Web URL strategy
   flutter_web_plugins:
@@ -69,18 +69,18 @@ dependencies:
   # Utilities
   uuid: ^4.5.3
   intl: ^0.20.2
-  package_info_plus: ^9.0.1
+  package_info_plus: ^10.1.0
   fuzzy: ^0.5.1
 
   # PDF export
   pdf: ^3.12.0
-  share_plus: ^12.0.2
+  share_plus: ^13.1.0
 
   # Wake lock
-  wakelock_plus: ^1.5.1
+  wakelock_plus: ^1.6.1
 
   # Permissions
-  permission_handler: ^12.0.0
+  permission_handler: ^12.0.3
   macos_secure_bookmarks: ^0.2.1
 
   # Web platform interop (used by export_pdf_dialog_web.dart)
@@ -94,7 +94,7 @@ dev_dependencies:
     sdk: flutter
 
   # In-memory database for testing
-  sqlite3: ^3.3.1
+  sqlite3: ^3.3.3
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -104,8 +104,8 @@ dev_dependencies:
   flutter_lints: ^6.0.0
 
   # Code generation
-  drift_dev: ^2.32.1
-  build_runner: ^2.13.1
+  drift_dev: ^2.34.0
+  build_runner: ^2.15.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
