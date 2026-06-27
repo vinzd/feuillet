@@ -559,15 +559,12 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
               // PDF viewer - single or two-page mode
               // Annotations are handled internally for both modes
               Center(
-                child: ColorFiltered(
-                  colorFilter: zoomPanState.displaySettings.colorFilter,
-                  child: buildZoomPanTransform(
-                    child: _document.isImage
-                        ? _buildImageView()
-                        : _viewMode == PdfViewMode.single
-                        ? _buildSinglePageView()
-                        : _buildTwoPageView(),
-                  ),
+                child: buildZoomPanTransform(
+                  child: _document.isImage
+                      ? _buildImageView()
+                      : _viewMode == PdfViewMode.single
+                      ? _buildSinglePageView()
+                      : _buildTwoPageView(),
                 ),
               ),
 
@@ -993,7 +990,10 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.memory(_imageBytes!, fit: BoxFit.contain),
+        ColorFiltered(
+          colorFilter: zoomPanState.displaySettings.colorFilter,
+          child: Image.memory(_imageBytes!, fit: BoxFit.contain),
+        ),
         if (annotationOverlay != null) annotationOverlay,
       ],
     );
@@ -1041,6 +1041,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
           pageNumber: pageNumber,
           backgroundDecoration: const BoxDecoration(color: Colors.black),
           annotationOverlay: annotationOverlay,
+          colorFilter: zoomPanState.displaySettings.colorFilter,
         );
       },
     );
@@ -1066,12 +1067,14 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
       annotationThickness: _activeThickness,
       onStrokeCompleted: _onStrokeCompleted,
       backgroundDecoration: const BoxDecoration(color: Colors.black),
+      colorFilter: zoomPanState.displaySettings.colorFilter,
     );
   }
 
   void _showControlsPanel() {
     showModalBottomSheet(
       context: context,
+      barrierColor: Colors.transparent,
       backgroundColor: ViewerConstants.modalBackground,
       builder: (context) => DisplaySettingsPanel(
         brightness: zoomPanState.displaySettings.brightness,

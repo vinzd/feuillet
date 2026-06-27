@@ -23,6 +23,7 @@ class PerformanceDocumentView extends StatefulWidget {
     this.onReachedStart,
     this.onReachedEnd,
     this.onPageChanged,
+    this.colorFilter,
     super.key,
   });
 
@@ -46,6 +47,9 @@ class PerformanceDocumentView extends StatefulWidget {
 
   /// Called when the current page changes, with left page and optional right page
   final ValueChanged<({int left, int? right})>? onPageChanged;
+
+  /// Optional color filter applied to page content only (not the background).
+  final ColorFilter? colorFilter;
 
   @override
   State<PerformanceDocumentView> createState() =>
@@ -323,6 +327,7 @@ class PerformanceDocumentViewState extends State<PerformanceDocumentView> {
           pageNumber: pageNumber,
           backgroundDecoration: const BoxDecoration(color: Colors.black),
           annotationOverlay: annotationOverlay,
+          colorFilter: widget.colorFilter,
         );
       },
     );
@@ -340,6 +345,7 @@ class PerformanceDocumentViewState extends State<PerformanceDocumentView> {
       isAnnotationMode: false, // Read-only
       selectedLayerId: _layers.isNotEmpty ? _layers.first.id : null,
       backgroundDecoration: const BoxDecoration(color: Colors.black),
+      colorFilter: widget.colorFilter,
     );
   }
 }
