@@ -295,6 +295,8 @@
   "sortByFileSize": "File size",
   "sortByPageCount": "Page count",
   "orDragAndDropHint": "or drag and drop PDF files here",
+  "emptyLibraryChooseDirectory": "You can also choose a different folder (changeable in Settings)",
+  "chooseFolder": "Choose Folder",
 
   "manageLabels": "Manage Labels",
   "manageLabelsSubtitle": "Rename, recolor, or delete labels",
