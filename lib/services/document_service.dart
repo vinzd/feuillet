@@ -210,8 +210,6 @@ class DocumentService {
       final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: DocumentTypes.allExtensions,
-        allowMultiple: true,
-        withData: kIsWeb, // Load bytes on web
       );
 
       if (result == null || result.files.isEmpty) {
@@ -341,14 +339,8 @@ class DocumentService {
 
   /// Import a file using bytes (web platform)
   Future<DocumentImportResult> _importFileFromBytes(PlatformFile file) async {
-    if (file.bytes == null) {
-      return DocumentImportResult(
-        fileName: file.name,
-        success: false,
-        error: 'No bytes available',
-      );
-    }
-    final path = await _addDocumentFromBytes(file.name, file.bytes!);
+    final bytes = await file.readAsBytes();
+    final path = await _addDocumentFromBytes(file.name, bytes);
     return DocumentImportResult(
       fileName: file.name,
       success: path != null,
