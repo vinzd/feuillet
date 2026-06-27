@@ -628,6 +628,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orDragAndDropHint => 'or drag and drop PDF files here';
 
   @override
+  String get emptyLibraryChooseDirectory =>
+      'You can also choose a different folder (changeable in Settings)';
+
+  @override
+  String get chooseFolder => 'Choose Folder';
+
+  @override
   String get manageLabels => 'Manage Labels';
 
   @override

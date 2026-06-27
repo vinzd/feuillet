@@ -1112,6 +1112,18 @@ abstract class AppLocalizations {
   /// **'or drag and drop PDF files here'**
   String get orDragAndDropHint;
 
+  /// No description provided for @emptyLibraryChooseDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'You can also choose a different folder (changeable in Settings)'**
+  String get emptyLibraryChooseDirectory;
+
+  /// No description provided for @chooseFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Folder'**
+  String get chooseFolder;
+
   /// No description provided for @manageLabels.
   ///
   /// In en, this message translates to:

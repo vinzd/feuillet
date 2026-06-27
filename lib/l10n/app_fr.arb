@@ -190,6 +190,8 @@
   "sortByFileSize": "Taille du fichier",
   "sortByPageCount": "Nombre de pages",
   "orDragAndDropHint": "ou glissez-déposez des fichiers PDF ici",
+  "emptyLibraryChooseDirectory": "Vous pouvez aussi choisir un autre dossier (modifiable dans les Réglages)",
+  "chooseFolder": "Choisir un dossier",
 
   "manageLabels": "Gérer les étiquettes",
   "manageLabelsSubtitle": "Renommer, recolorer ou supprimer des étiquettes",

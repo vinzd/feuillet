@@ -10,8 +10,11 @@ import '../l10n/l10n_extension.dart';
 import '../models/database.dart';
 import '../router/app_router.dart';
 import '../services/annotation_service.dart';
+import '../services/app_settings_service.dart';
 import '../services/database_service.dart';
 import '../services/file_access_service.dart';
+import '../services/file_watcher_service.dart';
+import '../services/sync_service.dart';
 import '../services/document_export_service.dart';
 import '../services/document_service.dart';
 import '../services/label_service.dart';
@@ -85,6 +88,34 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     setState(() => _isLoading = true);
     await DocumentService.instance.scanAndSyncLibrary();
     setState(() => _isLoading = false);
+  }
+
+  Future<void> _changeDirectory() async {
+    final result = await FileAccessService.instance.pickDirectory();
+    if (result == null) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await AppSettingsService.instance.setPdfDirectoryPath(result);
+      await FileWatcherService.instance.updatePdfDirectoryPath();
+      await DocumentService.instance.scanAndSyncLibrary();
+      final pdfDir = await AppSettingsService.instance.getPdfDirectoryPath();
+      await SyncManager.instance.reconcileOnStartup(
+        db: DatabaseService.instance.database,
+        pdfDirectoryPath: pdfDir,
+      );
+
+      if (mounted) {
+        context.showSnackbar(context.l10n.pdfDirectoryUpdated(result));
+      }
+    } catch (e) {
+      if (mounted) {
+        context.showSnackbar(context.l10n.errorUpdatingDirectory(e.toString()));
+      }
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   void _onImportProgress(int current, int total, String fileName) {
@@ -796,6 +827,21 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
               ),
             ),
+            if (!kIsWeb) ...[
+              const SizedBox(height: 24),
+              Text(
+                context.l10n.emptyLibraryChooseDirectory,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
+                ),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: _changeDirectory,
+                icon: const Icon(Icons.folder_open),
+                label: Text(context.l10n.chooseFolder),
+              ),
+            ],
           ],
         ],
       ),
