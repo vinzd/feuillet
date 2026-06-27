@@ -15,6 +15,7 @@ class CachedPdfPage extends StatefulWidget {
     this.onPageRendered,
     this.fit = BoxFit.contain,
     this.annotationOverlay,
+    this.colorFilter,
     super.key,
   });
 
@@ -37,6 +38,9 @@ class CachedPdfPage extends StatefulWidget {
   /// When provided, both PDF and annotations are scaled together using FittedBox,
   /// ensuring consistent coordinate systems across different view modes.
   final Widget? annotationOverlay;
+
+  /// Optional color filter applied to the page content only (not the background).
+  final ColorFilter? colorFilter;
 
   @override
   State<CachedPdfPage> createState() => _CachedPdfPageState();
@@ -131,8 +135,16 @@ class _CachedPdfPageState extends State<CachedPdfPage> {
       return Text(context.l10n.failedToRenderPage);
     }
 
+    Widget image = Image.memory(
+      _pageImage!.bytes,
+      fit: widget.annotationOverlay == null ? widget.fit : BoxFit.fill,
+    );
+    if (widget.colorFilter != null) {
+      image = ColorFiltered(colorFilter: widget.colorFilter!, child: image);
+    }
+
     if (widget.annotationOverlay == null) {
-      return Image.memory(_pageImage!.bytes, fit: widget.fit);
+      return image;
     }
 
     // With annotation overlay: use FittedBox to scale PDF and annotations together
@@ -143,10 +155,7 @@ class _CachedPdfPageState extends State<CachedPdfPage> {
         height: _pageImage!.height.toDouble(),
         child: Stack(
           fit: StackFit.expand,
-          children: [
-            Image.memory(_pageImage!.bytes, fit: BoxFit.fill),
-            widget.annotationOverlay!,
-          ],
+          children: [image, widget.annotationOverlay!],
         ),
       ),
     );

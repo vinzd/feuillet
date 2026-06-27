@@ -22,6 +22,7 @@ class TwoPagePdfView extends StatelessWidget {
     this.annotationThickness = 3.0,
     this.onStrokeCompleted,
     this.backgroundDecoration,
+    this.colorFilter,
     super.key,
   });
 
@@ -61,6 +62,9 @@ class TwoPagePdfView extends StatelessWidget {
   /// Background decoration for page containers
   final BoxDecoration? backgroundDecoration;
 
+  /// Optional color filter applied to page content only (not the background).
+  final ColorFilter? colorFilter;
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -77,6 +81,7 @@ class TwoPagePdfView extends StatelessWidget {
             annotationThickness: annotationThickness,
             onStrokeCompleted: onStrokeCompleted,
             backgroundDecoration: backgroundDecoration,
+            colorFilter: colorFilter,
           ),
         ),
         Expanded(
@@ -92,6 +97,7 @@ class TwoPagePdfView extends StatelessWidget {
                   annotationThickness: annotationThickness,
                   onStrokeCompleted: onStrokeCompleted,
                   backgroundDecoration: backgroundDecoration,
+                  colorFilter: colorFilter,
                 )
               : Container(
                   decoration:
@@ -117,6 +123,7 @@ class _PageContainer extends StatelessWidget {
     required this.annotationThickness,
     this.onStrokeCompleted,
     this.backgroundDecoration,
+    this.colorFilter,
   });
 
   final PdfDocument document;
@@ -129,6 +136,7 @@ class _PageContainer extends StatelessWidget {
   final double annotationThickness;
   final VoidCallback? onStrokeCompleted;
   final BoxDecoration? backgroundDecoration;
+  final ColorFilter? colorFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -156,6 +164,7 @@ class _PageContainer extends StatelessWidget {
         pageNumber: pageNumber,
         backgroundDecoration: backgroundDecoration,
         annotationOverlay: annotationOverlay,
+        colorFilter: colorFilter,
       ),
     );
   }

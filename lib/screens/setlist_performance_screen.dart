@@ -357,6 +357,7 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
   void _showDisplaySettings() {
     showModalBottomSheet(
       context: context,
+      barrierColor: Colors.transparent,
       backgroundColor: ViewerConstants.modalBackground,
       builder: (context) => DisplaySettingsPanel(
         brightness: zoomPanState.displaySettings.brightness,
@@ -390,36 +391,32 @@ class _SetListPerformanceScreenState extends State<SetListPerformanceScreen>
         body: buildZoomPanGestureDetector(
           child: Stack(
             children: [
-              ColorFiltered(
-                colorFilter: zoomPanState.displaySettings.colorFilter,
-                child: buildZoomPanTransform(
-                  child: PageView.builder(
-                    controller: _documentPageController,
-                    itemCount: widget.documents.length,
-                    onPageChanged: _onDocumentChanged,
-                    physics:
-                        const NeverScrollableScrollPhysics(), // Disable swipe, use buttons only
-                    itemBuilder: (context, index) {
-                      final pdfDocument = _pdfDocuments[index];
-                      if (pdfDocument == null) {
-                        return const Center(
-                          child: CircularProgressIndicator(color: Colors.white),
-                        );
-                      }
-
-                      return PerformanceDocumentView(
-                        key: _documentViewKeys[index],
-                        document: widget.documents[index],
-                        pdfDocument: pdfDocument,
-                        viewMode: _viewMode,
-                        initialPage: _currentPages[index] ?? 1,
-                        onReachedStart: _onReachedDocumentStart,
-                        onReachedEnd: _onReachedDocumentEnd,
-                        onPageChanged: (spread) =>
-                            _onPageChanged(index, spread),
+              buildZoomPanTransform(
+                child: PageView.builder(
+                  controller: _documentPageController,
+                  itemCount: widget.documents.length,
+                  onPageChanged: _onDocumentChanged,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    final pdfDocument = _pdfDocuments[index];
+                    if (pdfDocument == null) {
+                      return const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
                       );
-                    },
-                  ),
+                    }
+
+                    return PerformanceDocumentView(
+                      key: _documentViewKeys[index],
+                      document: widget.documents[index],
+                      pdfDocument: pdfDocument,
+                      viewMode: _viewMode,
+                      initialPage: _currentPages[index] ?? 1,
+                      onReachedStart: _onReachedDocumentStart,
+                      onReachedEnd: _onReachedDocumentEnd,
+                      onPageChanged: (spread) => _onPageChanged(index, spread),
+                      colorFilter: zoomPanState.displaySettings.colorFilter,
+                    );
+                  },
                 ),
               ),
 
