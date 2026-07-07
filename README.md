@@ -9,6 +9,15 @@ A local-first sheet music reader built with Flutter. Reads PDF, JPG, and PNG fil
 
 **[Try the web demo](https://vinzd.github.io/feuillet/)** (limited — no file system access).
 
+## Why Feuillet?
+
+Most sheet music apps try to do everything — built-in pianos, tuners, metronomes, audio players. Feuillet does one thing well: **viewing, annotating, and organizing your sheet music**. If you need a tuner or a metronome, use a dedicated app that does it better.
+
+- **Dead simple** — just your files, your annotations, your set lists.
+- **Clean, modern interface** — no clutter, no upsells.
+- **Free and open source** — no subscriptions, no accounts.
+- **Sync with anything** — I use [Syncthing](https://syncthing.net/) and love it, but Dropbox, iCloud, Google Drive, or any folder-sync tool should work too.
+
 ## Not "cloud sync" — just files on disk
 
 Feuillet does **not** ship a cloud backend, account system, or proprietary sync protocol. It transparently sits on top of a regular folder on your filesystem:
@@ -18,6 +27,8 @@ Feuillet does **not** ship a cloud backend, account system, or proprietary sync 
 - Set lists are stored as `.setlist.json` files in a `setlists/` subfolder.
 
 The app watches the folder and reacts to whatever changes happen there — whether you renamed a file in Finder, dropped a new PDF in via SSH, or had Syncthing/Dropbox/iCloud/Google Drive deliver an update from another device. Pick any sync tool (or none); Feuillet doesn't care how the bytes get there.
+
+There is intentionally no conflict resolution or merge logic — the sync tool handles that. This keeps the app simple and predictable.
 
 The local SQLite database holds your shared content (documents, annotations, labels, set lists) as well as device-local state that doesn't sync — per-document viewing settings (zoom, brightness, contrast, last page) and app preferences like the configured library directory.
 
@@ -37,8 +48,9 @@ The local SQLite database holds your shared content (documents, annotations, lab
 |----------|---------------------------------------------------------|
 | macOS    | Full support                                            |
 | Android  | Full support (uses `MANAGE_EXTERNAL_STORAGE`)           |
+| iOS      | Built but not distributed (no App Store license yet)    |
 | Web      | Limited — IndexedDB storage, no file watching, dev only |
-| iOS / Windows / Linux | Not built — contributions welcome              |
+| Windows / Linux | Not built — contributions welcome                 |
 
 ## Quick start
 
@@ -51,8 +63,9 @@ make build-all
 
 See `make help` for the full list of targets.
 
-Default document directory (configurable in app settings):
+Default document directory (configurable in app settings — the app will suggest updating it on first run):
 - **macOS**: `~/Library/Application Support/com.feuillet.app/feuillet/pdfs/`
+- **iOS**: App sandbox `Documents/feuillet/pdfs/` (accessible via Files app)
 - **Android**: `/data/data/com.feuillet.feuillet/app_flutter/feuillet/pdfs/`
 
 ## Architecture
@@ -63,6 +76,16 @@ Default document directory (configurable in app settings):
 - **pdfx** for PDF rendering, **watcher** for file system events
 
 See [`CLAUDE.md`](CLAUDE.md) for a deeper architectural tour.
+
+## Install
+
+**Android** — grab the APK from the [latest GitHub release](https://github.com/vinzd/feuillet/releases/latest). For automatic updates, add Feuillet to [Obtainium](https://github.com/ImranR98/Obtainium).
+
+**iOS** — the app builds and runs on iOS, but there's no App Store listing yet (no Apple Developer license at the moment). I'd reconsider if the project gets enough traction — open an issue or star the repo if you'd like to see it happen.
+
+**macOS** — download the `.app` bundle from [GitHub releases](https://github.com/vinzd/feuillet/releases/latest).
+
+**Web** — **[try the demo](https://vinzd.github.io/feuillet/)** (limited — no file system access).
 
 ## Releases
 
