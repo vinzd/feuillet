@@ -131,7 +131,7 @@ void main() {
       final docId = await insertDoc('Bach.pdf');
 
       final mgr = SyncManager.instance;
-      await mgr.reconcileOnStartup(db: db, pdfDirectoryPath: tempDir.path);
+      await mgr.reconcileOnStartup(db: db, rootPaths: [tempDir.path]);
 
       // Verify annotations were imported.
       final layers = await db.getAnnotationLayers(docId);
@@ -160,7 +160,7 @@ void main() {
       );
 
       final mgr = SyncManager.instance;
-      await mgr.reconcileOnStartup(db: db, pdfDirectoryPath: tempDir.path);
+      await mgr.reconcileOnStartup(db: db, rootPaths: [tempDir.path]);
 
       // Verify set list was imported.
       final setLists = await db.getAllSetLists();
@@ -201,7 +201,7 @@ void main() {
         expect(await File(sidecarPath).exists(), isFalse);
 
         final mgr = SyncManager.instance;
-        await mgr.reconcileOnStartup(db: db, pdfDirectoryPath: tempDir.path);
+        await mgr.reconcileOnStartup(db: db, rootPaths: [tempDir.path]);
 
         // Verify sidecar was exported.
         expect(await File(sidecarPath).exists(), isTrue);
@@ -227,7 +227,7 @@ void main() {
 
       // Should not throw even though web:// path doesn't exist on disk.
       final mgr = SyncManager.instance;
-      await mgr.reconcileOnStartup(db: db, pdfDirectoryPath: tempDir.path);
+      await mgr.reconcileOnStartup(db: db, rootPaths: [tempDir.path]);
     });
   });
 }

@@ -302,14 +302,33 @@ String _relativePath(String fullPath, String basePath) {
   return p.basename(fullPath);
 }
 
+/// Returns the path of the root directory that contains [filePath], or
+/// `null` if none of [rootPaths] contains it. Prefer the longest matching
+/// prefix so nested roots win over their parents.
+String? _findContainingRoot(String filePath, List<String> rootPaths) {
+  String? best;
+  for (final root in rootPaths) {
+    final prefix = root.endsWith('/') ? root : '$root/';
+    if (filePath.startsWith(prefix) &&
+        (best == null || root.length > best.length)) {
+      best = root;
+    }
+  }
+  return best;
+}
+
 /// Reads a set list and its items from [db] and builds a [SetListFile] model,
-/// resolving document IDs to relative paths under [pdfDirectoryPath].
+/// resolving document IDs to relative paths under their owning root.
+///
+/// Each item's `documentPath` is computed relative to the first root in
+/// [rootPaths] that contains the document file. Documents not found under
+/// any root fall back to a bare basename.
 ///
 /// Returns `null` if the set list does not exist.
 Future<SetListFile?> buildSetListFile(
   AppDatabase db,
   int setListId,
-  String pdfDirectoryPath,
+  List<String> rootPaths,
 ) async {
   final setList = await db.getSetList(setListId);
   if (setList == null) return null;
@@ -321,9 +340,14 @@ Future<SetListFile?> buildSetListFile(
     final doc = await db.getDocument(item.documentId);
     if (doc == null) continue;
 
+    final owningRoot = _findContainingRoot(doc.filePath, rootPaths);
+    final relative = owningRoot == null
+        ? p.basename(doc.filePath)
+        : _relativePath(doc.filePath, owningRoot);
+
     fileItems.add(
       SetListFileItem(
-        documentPath: _relativePath(doc.filePath, pdfDirectoryPath),
+        documentPath: relative,
         orderIndex: item.orderIndex,
         notes: item.notes,
       ),
@@ -410,9 +434,10 @@ class SetListFile {
 /// Imports a [SetListFile] into the database, replacing any existing set list
 /// with the same name.
 ///
-/// Document references are resolved by prepending [pdfDirectoryPath] to each
-/// item's relative `documentPath` and matching against `filePath` in the
-/// database. Items whose documents are not found are silently skipped.
+/// Document references are resolved by prepending [rootPath] (the root the
+/// .setlist.json file lives in) to each item's relative `documentPath` and
+/// matching against `filePath` in the database. Items whose documents are
+/// not found are silently skipped.
 ///
 /// If a set list with the same name already exists, it is updated in-place
 /// (preserving its ID) rather than deleted and recreated.
@@ -421,7 +446,7 @@ class SetListFile {
 Future<int?> importSetListFile(
   AppDatabase db,
   SetListFile setListFile,
-  String pdfDirectoryPath,
+  String rootPath,
 ) async {
   try {
     // 1. Find existing set list with the same name, or create a new one.
@@ -455,7 +480,7 @@ Future<int?> importSetListFile(
     final allDocuments = await db.getAllDocuments();
     final docsByPath = {for (final d in allDocuments) d.filePath: d};
     for (final item in setListFile.items) {
-      final fullPath = p.join(pdfDirectoryPath, item.documentPath);
+      final fullPath = p.join(rootPath, item.documentPath);
       final matchingDoc = docsByPath[fullPath];
       if (matchingDoc == null) continue;
 
@@ -533,31 +558,48 @@ Future<AnnotationSidecar?> readAnnotationSidecarFromDisk(
 // ---------------------------------------------------------------------------
 
 /// Writes the set list identified by [setListId] to disk as
-/// `<pdfDirectoryPath>/setlists/<sanitized-name>.setlist.json`.
+/// `<root>/setlists/<sanitized-name>.setlist.json`.
 ///
-/// Creates the `setlists/` subdirectory if it does not exist. The file is
-/// written atomically (write to `.tmp`, then rename).
+/// Searches every root's `setlists/` folder for an existing file with the
+/// same name. If found, the file is overwritten in place (preserving the
+/// sync location — important for per-choir syncing). If not found, the
+/// file is written to the first (default) root's `setlists/` folder.
+///
+/// [rootPaths] should be ordered with the default root first; the first
+/// element is treated as the import target when no existing file is found.
 Future<void> writeSetListFileToDisk({
   required AppDatabase db,
   required int setListId,
-  required String pdfDirectoryPath,
+  required List<String> rootPaths,
 }) async {
-  final setListFile = await buildSetListFile(db, setListId, pdfDirectoryPath);
+  if (rootPaths.isEmpty) return;
+  final setListFile = await buildSetListFile(db, setListId, rootPaths);
   if (setListFile == null) return;
 
-  final setListsDir = Directory(p.join(pdfDirectoryPath, 'setlists'));
-  if (!await setListsDir.exists()) {
-    await setListsDir.create(recursive: true);
-  }
-
   final fileName = setListFileName(setListFile.name);
-  final filePath = p.join(setListsDir.path, fileName);
   final jsonStr = _prettyEncoder.convert(setListFile.toJson());
 
-  final tmpPath = '$filePath.tmp';
+  // Search for existing file across roots.
+  String? existingFilePath;
+  for (final root in rootPaths) {
+    final candidate = p.join(root, 'setlists', fileName);
+    if (await File(candidate).exists()) {
+      existingFilePath = candidate;
+      break;
+    }
+  }
+
+  final targetPath =
+      existingFilePath ?? p.join(rootPaths.first, 'setlists', fileName);
+  final targetDir = Directory(p.dirname(targetPath));
+  if (!await targetDir.exists()) {
+    await targetDir.create(recursive: true);
+  }
+
+  final tmpPath = '$targetPath.tmp';
   final tmpFile = File(tmpPath);
   await tmpFile.writeAsString(jsonStr);
-  await tmpFile.rename(filePath);
+  await tmpFile.rename(targetPath);
 }
 
 /// Reads and parses a [SetListFile] from [filePath].
@@ -576,19 +618,21 @@ Future<SetListFile?> readSetListFileFromDisk(String filePath) async {
   }
 }
 
-/// Deletes the set list file for [setListName] from
-/// `<pdfDirectoryPath>/setlists/`.
+/// Deletes the set list file for [setListName] from every root's
+/// `setlists/` subfolder.
 ///
-/// Does nothing if the file does not exist.
+/// Does nothing for files that do not exist.
 Future<void> deleteSetListFileFromDisk({
   required String setListName,
-  required String pdfDirectoryPath,
+  required List<String> rootPaths,
 }) async {
   final fileName = setListFileName(setListName);
-  final filePath = p.join(pdfDirectoryPath, 'setlists', fileName);
-  final file = File(filePath);
-  if (await file.exists()) {
-    await file.delete();
+  for (final root in rootPaths) {
+    final filePath = p.join(root, 'setlists', fileName);
+    final file = File(filePath);
+    if (await file.exists()) {
+      await file.delete();
+    }
   }
 }
 
@@ -681,12 +725,14 @@ class SyncManager {
   /// Schedules a debounced write of the set list file for [setListId].
   ///
   /// If a previous timer for the same set list is pending it is cancelled.
-  /// After [_debounceDuration] the file is written and the output path is
-  /// suppressed so the file watcher does not re-import it.
+  /// After [_debounceDuration] the file is written (searching for an
+  /// existing file across [rootPaths], else falling back to the first
+  /// root) and the output path is suppressed so the file watcher does not
+  /// re-import it.
   void scheduleSetListWrite({
     required AppDatabase db,
     required int setListId,
-    required String pdfDirectoryPath,
+    required List<String> rootPaths,
   }) {
     _setListDebounceTimers[setListId]?.cancel();
     _setListDebounceTimers[setListId] = Timer(_debounceDuration, () async {
@@ -694,14 +740,16 @@ class SyncManager {
         await writeSetListFileToDisk(
           db: db,
           setListId: setListId,
-          pdfDirectoryPath: pdfDirectoryPath,
+          rootPaths: rootPaths,
         );
         // Suppress the written file path.
         final setList = await db.getSetList(setListId);
         if (setList != null) {
           final fileName = setListFileName(setList.name);
-          final filePath = p.join(pdfDirectoryPath, 'setlists', fileName);
-          suppressPath(filePath);
+          for (final root in rootPaths) {
+            final filePath = p.join(root, 'setlists', fileName);
+            suppressPath(filePath);
+          }
         }
       } catch (e) {
         debugPrint('SyncManager: failed to write set list file: $e');
@@ -715,10 +763,14 @@ class SyncManager {
 
   /// Subscribes to [syncChanges] and processes incoming sidecar / set list
   /// file events, skipping any that are currently suppressed.
+  ///
+  /// [getAllPdfDirectoryPaths] returns the current list of root directory
+  /// paths. Set list files are resolved against the root whose `setlists/`
+  /// folder contains the file.
   void startListening({
     required Stream<dynamic> syncChanges,
     required AppDatabase db,
-    required Future<String> Function() getPdfDirectoryPath,
+    required Future<List<String>> Function() getAllPdfDirectoryPaths,
   }) {
     _syncChangesSubscription?.cancel();
     _syncChangesSubscription = syncChanges.listen((event) async {
@@ -746,8 +798,8 @@ class SyncManager {
               if (FileWatcherService.isSidecarFile(filePath)) {
                 await _handleIncomingSidecar(filePath, db);
               } else if (FileWatcherService.isSetListFile(filePath)) {
-                final pdfDir = await getPdfDirectoryPath();
-                await _handleIncomingSetList(filePath, db, pdfDir);
+                final rootPaths = await getAllPdfDirectoryPaths();
+                await _handleIncomingSetList(filePath, db, rootPaths);
               }
             } catch (e) {
               debugPrint('SyncManager: error handling sync event: $e');
@@ -811,12 +863,18 @@ class SyncManager {
   Future<void> _handleIncomingSetList(
     String filePath,
     AppDatabase db,
-    String pdfDirectoryPath,
+    List<String> rootPaths,
   ) async {
     final setListFile = await readSetListFileFromDisk(filePath);
     if (setListFile == null) return;
 
-    await importSetListFile(db, setListFile, pdfDirectoryPath);
+    // Resolve the owning root from the file's location, falling back to
+    // the first (default) root if none contains the file.
+    final owningRoot =
+        _findContainingRoot(filePath, rootPaths) ??
+        (rootPaths.isNotEmpty ? rootPaths.first : '');
+
+    await importSetListFile(db, setListFile, owningRoot);
     debugPrint('SyncManager: imported set list ${setListFile.name}');
   }
 
@@ -828,13 +886,14 @@ class SyncManager {
   ///
   /// 1. For each document in DB (skipping `web://` paths), imports the sidecar
   ///    from disk if it exists.
-  /// 2. Scans the `setlists/` directory for `.setlist.json` files and imports
-  ///    each one.
+  /// 2. Scans every root's `setlists/` directory for `.setlist.json` files
+  ///    and imports each one, resolving document paths against the root
+  ///    whose `setlists/` folder contains the file.
   /// 3. For documents that have annotations in DB but no sidecar on disk,
   ///    exports the sidecar.
   Future<void> reconcileOnStartup({
     required AppDatabase db,
-    required String pdfDirectoryPath,
+    required List<String> rootPaths,
   }) async {
     debugPrint('SyncManager: starting reconciliation');
 
@@ -863,25 +922,32 @@ class SyncManager {
       }
     }
 
-    // 2. Scan setlists/ directory.
-    final setListsDir = Directory(p.join(pdfDirectoryPath, 'setlists'));
-    if (await setListsDir.exists()) {
-      await for (final entity in setListsDir.list()) {
-        if (entity is File && FileWatcherService.isSetListFile(entity.path)) {
-          try {
-            final setListFile = await readSetListFileFromDisk(entity.path);
-            if (setListFile != null) {
-              await importSetListFile(db, setListFile, pdfDirectoryPath);
+    // 2. Scan every root's setlists/ directory.
+    for (final root in rootPaths) {
+      final setListsDir = Directory(p.join(root, 'setlists'));
+      if (!await setListsDir.exists()) continue;
+
+      try {
+        await for (final entity in setListsDir.list()) {
+          if (entity is File && FileWatcherService.isSetListFile(entity.path)) {
+            try {
+              final setListFile = await readSetListFileFromDisk(entity.path);
+              if (setListFile != null) {
+                await importSetListFile(db, setListFile, root);
+                debugPrint(
+                  'SyncManager: reconciled set list ${setListFile.name} '
+                  '(root: $root)',
+                );
+              }
+            } catch (e) {
               debugPrint(
-                'SyncManager: reconciled set list ${setListFile.name}',
+                'SyncManager: error importing set list ${entity.path}: $e',
               );
             }
-          } catch (e) {
-            debugPrint(
-              'SyncManager: error importing set list ${entity.path}: $e',
-            );
           }
         }
+      } catch (e) {
+        debugPrint('SyncManager: error scanning setlists/ in root $root: $e');
       }
     }
 

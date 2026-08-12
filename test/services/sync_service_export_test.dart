@@ -268,7 +268,7 @@ void main() {
         ),
       );
 
-      final result = await buildSetListFile(db, setListId, pdfDir);
+      final result = await buildSetListFile(db, setListId, [pdfDir]);
 
       expect(result, isNotNull);
       expect(result!.version, 1);
@@ -293,14 +293,14 @@ void main() {
         ),
       );
 
-      final result = await buildSetListFile(db, setListId, pdfDir);
+      final result = await buildSetListFile(db, setListId, [pdfDir]);
 
       expect(result, isNotNull);
       expect(result!.items[0].documentPath, 'Classical/Mozart/Sonata.pdf');
     });
 
     test('returns null for nonexistent set list', () async {
-      final result = await buildSetListFile(db, 9999, pdfDir);
+      final result = await buildSetListFile(db, 9999, [pdfDir]);
 
       expect(result, isNull);
     });
@@ -332,7 +332,7 @@ void main() {
       // If it cascades, the test still validates the happy path.
       await db.deleteDocument(docId2);
 
-      final result = await buildSetListFile(db, setListId, pdfDir);
+      final result = await buildSetListFile(db, setListId, [pdfDir]);
 
       expect(result, isNotNull);
       // Only the first document should remain (second was deleted).
