@@ -275,6 +275,42 @@ class AppLocalizationsEn extends AppLocalizations {
       'Custom PDF directory is not available on web.';
 
   @override
+  String get rootDirectoriesSubtitle =>
+      'Folders scanned for sheet music. The default folder is used as the destination for new imports.';
+
+  @override
+  String get addDirectory => 'Add directory';
+
+  @override
+  String get defaultDirectory => 'Default';
+
+  @override
+  String get setAsDefault => 'Set as default';
+
+  @override
+  String get removeDirectory => 'Remove directory';
+
+  @override
+  String get removeRootDirectoryTitle => 'Remove Root Directory';
+
+  @override
+  String removeRootDirectoryConfirm(String path) {
+    return 'Remove this directory from your library? Existing scores in this folder will become unavailable in the app. The folder itself will not be deleted.\n\n$path';
+  }
+
+  @override
+  String rootDirectoryAdded(String path) {
+    return 'Added directory: $path';
+  }
+
+  @override
+  String get rootDirectoryRemoved => 'Directory removed';
+
+  @override
+  String get noRootDirectories =>
+      'No root directories configured. Add one above.';
+
+  @override
   String get aboutSection => 'About';
 
   @override

@@ -482,6 +482,66 @@ abstract class AppLocalizations {
   /// **'Custom PDF directory is not available on web.'**
   String get customDirectoryNotAvailableOnWeb;
 
+  /// No description provided for @rootDirectoriesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders scanned for sheet music. The default folder is used as the destination for new imports.'**
+  String get rootDirectoriesSubtitle;
+
+  /// No description provided for @addDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Add directory'**
+  String get addDirectory;
+
+  /// No description provided for @defaultDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get defaultDirectory;
+
+  /// No description provided for @setAsDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Set as default'**
+  String get setAsDefault;
+
+  /// No description provided for @removeDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove directory'**
+  String get removeDirectory;
+
+  /// No description provided for @removeRootDirectoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Root Directory'**
+  String get removeRootDirectoryTitle;
+
+  /// No description provided for @removeRootDirectoryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this directory from your library? Existing scores in this folder will become unavailable in the app. The folder itself will not be deleted.\n\n{path}'**
+  String removeRootDirectoryConfirm(String path);
+
+  /// No description provided for @rootDirectoryAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added directory: {path}'**
+  String rootDirectoryAdded(String path);
+
+  /// No description provided for @rootDirectoryRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Directory removed'**
+  String get rootDirectoryRemoved;
+
+  /// No description provided for @noRootDirectories.
+  ///
+  /// In en, this message translates to:
+  /// **'No root directories configured. Add one above.'**
+  String get noRootDirectories;
+
   /// No description provided for @aboutSection.
   ///
   /// In en, this message translates to:
