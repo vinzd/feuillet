@@ -112,21 +112,40 @@ class DocumentService {
       await addDocumentToLibrary(filePath);
       debugPrint('DocumentService: Added new PDF from Syncthing: $filePath');
 
-      // Auto-label from subdirectory path
+      // Auto-label from subdirectory path — resolve which root contains
+      // this file and label relative to that root.
       final newDoc = await _database.getAllDocuments().then(
         (docs) => docs.where((d) => d.filePath == filePath).firstOrNull,
       );
       if (newDoc != null) {
-        final pdfDir = await FileWatcherService.instance.getPdfDirectoryPath();
-        await LabelService.instance.ensureLabelsFromPath(
-          newDoc.id,
-          newDoc.filePath,
-          pdfDir,
-        );
+        final matchingRoot = await _findMatchingRoot(filePath);
+        if (matchingRoot != null) {
+          await LabelService.instance.ensureLabelsFromPath(
+            newDoc.id,
+            newDoc.filePath,
+            matchingRoot,
+          );
+        }
       }
     } catch (e) {
       debugPrint('DocumentService: Error handling new PDF: $e');
     }
+  }
+
+  /// Returns the root directory path that contains [filePath], or null if
+  /// no configured root contains it.
+  Future<String?> _findMatchingRoot(String filePath) async {
+    final roots = await FileWatcherService.instance.getPdfDirectoryPaths();
+    // Prefer the longest matching prefix (handles nested roots).
+    String? best;
+    for (final root in roots) {
+      final prefix = root.endsWith('/') ? root : '$root/';
+      if (filePath.startsWith(prefix) &&
+          (best == null || root.length > best.length)) {
+        best = root;
+      }
+    }
+    return best;
   }
 
   /// Find a document by file path
@@ -535,44 +554,51 @@ class DocumentService {
 
   Future<void> _doScanAndSyncLibrary() async {
     try {
-      debugPrint('DocumentService: Scanning PDF directory...');
+      debugPrint('DocumentService: Scanning PDF roots...');
 
       final fileAccess = FileAccessService.instance;
-      final pdfDirPath = await FileWatcherService.instance
-          .getPdfDirectoryPath();
+      final rootPaths = await FileWatcherService.instance
+          .getPdfDirectoryPaths();
 
-      if (!await fileAccess.directoryExists(pdfDirPath)) {
-        debugPrint('DocumentService: PDF directory does not exist');
-        return;
+      // Aggregate document files from all roots.
+      final allFiles = <DocumentFileInfo>[];
+      for (final rootPath in rootPaths) {
+        if (!await fileAccess.directoryExists(rootPath)) {
+          debugPrint('DocumentService: Root does not exist: $rootPath');
+          continue;
+        }
+        final files = await fileAccess.listDocumentFiles(rootPath);
+        allFiles.addAll(files);
       }
-
-      // Get all document files in directory
-      final pdfFiles = await fileAccess.listDocumentFiles(pdfDirPath);
 
       // Get all documents in database
       final dbDocuments = await _database.getAllDocuments();
       final dbPaths = dbDocuments.map((d) => d.filePath).toSet();
 
       // Add new PDFs to database
-      for (final file in pdfFiles) {
+      for (final file in allFiles) {
         if (!dbPaths.contains(file.path)) {
           await addDocumentToLibrary(file.path);
-          // Auto-label from subdirectory path
+          // Auto-label from subdirectory path relative to the
+          // containing root.
           final newDoc = await _database.getAllDocuments().then(
             (docs) => docs.where((d) => d.filePath == file.path).firstOrNull,
           );
           if (newDoc != null) {
-            await LabelService.instance.ensureLabelsFromPath(
-              newDoc.id,
-              newDoc.filePath,
-              pdfDirPath,
-            );
+            final matchingRoot = await _findMatchingRoot(file.path);
+            if (matchingRoot != null) {
+              await LabelService.instance.ensureLabelsFromPath(
+                newDoc.id,
+                newDoc.filePath,
+                matchingRoot,
+              );
+            }
           }
         }
       }
 
       // Remove deleted PDFs from database
-      final filePaths = pdfFiles.map((f) => f.path).toSet();
+      final filePaths = allFiles.map((f) => f.path).toSet();
       for (final doc in dbDocuments) {
         // Skip web-stored PDFs (they don't have files on disk)
         if (doc.filePath.startsWith('web://')) continue;
@@ -647,7 +673,8 @@ class DocumentService {
       );
 
       // 4. Rewrite all set list JSON files that reference this document.
-      final pdfDir = await FileWatcherService.instance.getPdfDirectoryPath();
+      final rootPaths = await FileWatcherService.instance
+          .getPdfDirectoryPaths();
       final allSetLists = await _database.getAllSetLists();
       for (final setList in allSetLists) {
         final items = await _database.getSetListItems(setList.id);
@@ -655,7 +682,7 @@ class DocumentService {
           syncManager.scheduleSetListWrite(
             db: _database,
             setListId: setList.id,
-            pdfDirectoryPath: pdfDir,
+            rootPaths: rootPaths,
           );
         }
       }
