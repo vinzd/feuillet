@@ -155,6 +155,10 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
   }
 
   Future<void> _reorderDocuments(int oldIndex, int newIndex) async {
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+
     final item = _items.removeAt(oldIndex);
     _items.insert(newIndex, item);
 
@@ -266,7 +270,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
                 : ReorderableListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: _documents.length,
-                    onReorderItem: _reorderDocuments,
+                    onReorder: _reorderDocuments,
                     itemBuilder: (context, index) {
                       final doc = _documents[index];
                       final item = _items[index];
