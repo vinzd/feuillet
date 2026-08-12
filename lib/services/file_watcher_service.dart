@@ -8,14 +8,20 @@ import '../models/database.dart';
 import 'app_settings_service.dart';
 
 /// Service to monitor file system changes for Syncthing compatibility
-/// Watches the database and PDF directory for external modifications
+/// Watches the database and PDF directory for external modifications.
+///
+/// Supports multiple root library directories — one [DirectoryWatcher] is
+/// created per configured root (see [AppSettingsService.getRootDirectories]).
 class FileWatcherService {
   FileWatcherService._();
   static final FileWatcherService instance = FileWatcherService._();
 
-  DirectoryWatcher? _pdfDirectoryWatcher;
+  // Per-root watcher state. Indices are aligned across the three lists.
+  final List<DirectoryWatcher?> _pdfDirectoryWatchers = [];
+  final List<StreamSubscription?> _pdfWatcherSubscriptions = [];
+  final List<String> _pdfDirectoryPaths = [];
+
   FileWatcher? _databaseWatcher;
-  StreamSubscription? _pdfWatcherSubscription;
   StreamSubscription? _databaseWatcherSubscription;
 
   final _pdfChangesController = StreamController<WatchEvent>.broadcast();
@@ -23,16 +29,15 @@ class FileWatcherService {
   final _syncChangesController = StreamController<WatchEvent>.broadcast();
 
   bool _isWatching = false;
-  String? _pdfDirectoryPath;
   String? _databasePath;
 
-  /// Stream of PDF directory changes
+  /// Stream of PDF directory changes (aggregated across all roots).
   Stream<WatchEvent> get pdfChanges => _pdfChangesController.stream;
 
   /// Stream of database file changes
   Stream<WatchEvent> get databaseChanges => _databaseChangesController.stream;
 
-  /// Stream of sidecar and set list file changes
+  /// Stream of sidecar and set list file changes (aggregated across roots).
   Stream<WatchEvent> get syncChanges => _syncChangesController.stream;
 
   /// Check if a file is a sidecar metadata file
@@ -62,29 +67,30 @@ class FileWatcherService {
     }
 
     try {
-      // Get the PDF directory path from settings (may be custom)
-      _pdfDirectoryPath = await AppSettingsService.instance
-          .getPdfDirectoryPath();
+      // Get the configured root directories (lazily seeds default).
+      final roots = await AppSettingsService.instance.getRootDirectories();
+      final rootPaths = roots.map((r) => r.path).toList(growable: false);
+      _pdfDirectoryPaths.clear();
 
       // Database path always stays in app documents
       final appDocDir = await getApplicationDocumentsDirectory();
       _databasePath = p.join(appDocDir.path, 'feuillet', 'feuillet_db.sqlite');
 
-      // Create PDF directory if it doesn't exist
-      final pdfDir = Directory(_pdfDirectoryPath!);
-      if (!await pdfDir.exists()) {
-        await pdfDir.create(recursive: true);
+      // Start watcher for each root directory
+      for (final rootPath in rootPaths) {
+        final pdfDir = Directory(rootPath);
+        if (!await pdfDir.exists()) {
+          await pdfDir.create(recursive: true);
+        }
+        await _startPdfDirectoryWatcher(rootPath);
       }
-
-      // Start watching PDF directory
-      await _startPdfDirectoryWatcher();
 
       // Start watching database file (if it exists)
       await _startDatabaseWatcher();
 
       _isWatching = true;
       debugPrint('FileWatcherService: Started watching');
-      debugPrint('  PDF Directory: $_pdfDirectoryPath');
+      debugPrint('  Root directories: $_pdfDirectoryPaths');
       debugPrint('  Database: $_databasePath');
     } catch (e, stackTrace) {
       debugPrint('FileWatcherService: Error starting watchers: $e');
@@ -98,11 +104,15 @@ class FileWatcherService {
   Future<void> stopWatching() async {
     if (!_isWatching) return;
 
-    await _pdfWatcherSubscription?.cancel();
+    for (final sub in _pdfWatcherSubscriptions) {
+      await sub?.cancel();
+    }
     await _databaseWatcherSubscription?.cancel();
-    _pdfWatcherSubscription = null;
+
+    _pdfWatcherSubscriptions.clear();
+    _pdfDirectoryWatchers.clear();
+    _pdfDirectoryPaths.clear();
     _databaseWatcherSubscription = null;
-    _pdfDirectoryWatcher = null;
     _databaseWatcher = null;
 
     _isWatching = false;
@@ -116,14 +126,21 @@ class FileWatcherService {
     await startWatching();
   }
 
-  /// Start watching the PDF directory
-  Future<void> _startPdfDirectoryWatcher() async {
-    if (_pdfDirectoryPath == null) return;
+  /// Restart all watchers using the latest root directories from settings.
+  /// Call this after [AppSettingsService.addRootDirectory] /
+  /// [removeRootDirectory] / [setDefaultRootDirectory].
+  Future<void> updateRootDirectories() async {
+    AppSettingsService.instance.invalidateCache();
+    await restartWatching();
+  }
+
+  /// Start watching a single PDF root directory
+  Future<void> _startPdfDirectoryWatcher(String rootPath) async {
+    if (rootPath.isEmpty) return;
 
     try {
-      _pdfDirectoryWatcher = DirectoryWatcher(_pdfDirectoryPath!);
-
-      _pdfWatcherSubscription = _pdfDirectoryWatcher!.events.listen(
+      final watcher = DirectoryWatcher(rootPath);
+      final subscription = watcher.events.listen(
         (event) {
           debugPrint(
             'FileWatcherService: PDF directory event: ${event.type} - ${event.path}',
@@ -151,8 +168,16 @@ class FileWatcherService {
           debugPrint('FileWatcherService: PDF watcher error: $error');
         },
       );
+
+      _pdfDirectoryWatchers.add(watcher);
+      _pdfWatcherSubscriptions.add(subscription);
+      _pdfDirectoryPaths.add(rootPath);
     } catch (e) {
       debugPrint('FileWatcherService: Could not watch PDF directory: $e');
+      // Keep list lengths aligned even on failure.
+      _pdfDirectoryWatchers.add(null);
+      _pdfWatcherSubscriptions.add(null);
+      _pdfDirectoryPaths.add(rootPath);
     }
   }
 
@@ -199,44 +224,37 @@ class FileWatcherService {
         fileName.startsWith('.~');
   }
 
-  /// Get the PDF directory path (from settings or default)
+  /// Get the default PDF root directory path (from settings).
+  ///
+  /// Preserved for backward compatibility; new code should prefer
+  /// [getPdfDirectoryPaths] or [AppSettingsService.getDefaultRootDirectoryPath].
   Future<String> getPdfDirectoryPath() async {
-    // Return a placeholder path on web (for development iteration only)
-    if (kIsWeb) {
-      return '/web_placeholder/pdfs';
-    }
-
-    if (_pdfDirectoryPath != null) {
-      return _pdfDirectoryPath!;
-    }
-
-    // Delegate to AppSettingsService for configurable path
-    _pdfDirectoryPath = await AppSettingsService.instance.getPdfDirectoryPath();
-
-    // Create directory if it doesn't exist
-    final pdfDir = Directory(_pdfDirectoryPath!);
-    if (!await pdfDir.exists()) {
-      await pdfDir.create(recursive: true);
-    }
-
-    return _pdfDirectoryPath!;
+    if (kIsWeb) return '/web_placeholder/pdfs';
+    return AppSettingsService.instance.getDefaultRootDirectoryPath();
   }
 
-  /// Update the watched directory path and restart watching
-  /// Call this after changing the PDF directory in settings
+  /// Get all configured root directory paths (cached from startWatching).
+  ///
+  /// If watching is not active, falls back to reading from settings.
+  Future<List<String>> getPdfDirectoryPaths() async {
+    if (kIsWeb) return const ['/web_placeholder/pdfs'];
+    if (_pdfDirectoryPaths.isNotEmpty) {
+      return List.unmodifiable(_pdfDirectoryPaths);
+    }
+    final roots = await AppSettingsService.instance.getRootDirectories();
+    return roots.map((r) => r.path).toList(growable: false);
+  }
+
+  /// Update the watched directory list and restart watching.
+  /// @deprecated alias for [updateRootDirectories], kept for source
+  /// compatibility with existing callers (settings/library screens).
   Future<void> updatePdfDirectoryPath() async {
-    _pdfDirectoryPath = null; // Clear cached path
-    AppSettingsService.instance.invalidateCache();
-    await restartWatching();
+    await updateRootDirectories();
   }
 
   /// Get the database directory path (for Syncthing configuration)
   Future<String> getDatabaseDirectoryPath() async {
-    // Return a placeholder path on web (for development iteration only)
-    if (kIsWeb) {
-      return '/web_placeholder';
-    }
-
+    if (kIsWeb) return '/web_placeholder';
     final appDocDir = await getApplicationDocumentsDirectory();
     return p.join(appDocDir.path, 'feuillet');
   }
