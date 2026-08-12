@@ -146,6 +146,18 @@ class AppSettings extends Table {
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
+/// Root library directories — supports multiple synced folders (e.g. one
+/// per choir). Exactly one row has `isDefault = true`; that row is the
+/// destination for new imports.
+class RootDirectories extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get path => text().unique()();
+  TextColumn get bookmark => text().nullable()(); // macOS secure bookmark
+  BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
+  IntColumn get orderIndex => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
 // Database implementation
 @DriftDatabase(
   tables: [
@@ -158,6 +170,7 @@ class AppSettings extends Table {
     Labels,
     DocumentLabels,
     AppSettings,
+    RootDirectories,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -167,7 +180,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration {
@@ -195,6 +208,13 @@ class AppDatabase extends _$AppDatabase {
         if (from < 6) {
           await m.createTable(labels);
           await m.createTable(documentLabels);
+        }
+        if (from < 7) {
+          // Add RootDirectories table for multiple library roots.
+          await m.createTable(rootDirectories);
+          // Migrate legacy single-root settings (pdf_directory_path +
+          // optional pdf_directory_bookmark) into a single is_default row.
+          await _migrateLegacyPdfDirectoryToRootDirectories();
         }
       },
       beforeOpen: (details) async {
@@ -413,6 +433,93 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteAppSetting(String key) async {
     await (delete(appSettings)..where((s) => s.key.equals(key))).go();
+  }
+
+  // Root directory operations
+
+  /// Returns all root directories ordered by [orderIndex] ascending.
+  Future<List<RootDirectory>> getAllRootDirectories() {
+    return (select(
+      rootDirectories,
+    )..orderBy([(r) => OrderingTerm.asc(r.orderIndex)])).get();
+  }
+
+  /// Returns the root directory marked as default, or the first one by
+  /// orderIndex if none is marked, or null if there are no roots.
+  Future<RootDirectory?> getDefaultRootDirectory() async {
+    final roots = await getAllRootDirectories();
+    if (roots.isEmpty) return null;
+    return roots.firstWhere((r) => r.isDefault, orElse: () => roots.first);
+  }
+
+  /// Streams all root directories ordered by [orderIndex] ascending.
+  Stream<List<RootDirectory>> watchAllRootDirectories() {
+    return (select(
+      rootDirectories,
+    )..orderBy([(r) => OrderingTerm.asc(r.orderIndex)])).watch();
+  }
+
+  Future<int> insertRootDirectory(RootDirectoriesCompanion root) {
+    return into(rootDirectories).insert(root);
+  }
+
+  Future<void> updateRootDirectory(RootDirectory root) {
+    return update(rootDirectories).replace(root);
+  }
+
+  Future<void> deleteRootDirectory(int id) {
+    return (delete(rootDirectories)..where((r) => r.id.equals(id))).go();
+  }
+
+  /// Sets [id] as the default root directory; clears isDefault on all others.
+  Future<void> setDefaultRootDirectory(int id) async {
+    await transaction(() async {
+      await (update(
+        rootDirectories,
+      )).write(const RootDirectoriesCompanion(isDefault: Value(false)));
+      await (update(rootDirectories)..where((r) => r.id.equals(id))).write(
+        const RootDirectoriesCompanion(isDefault: Value(true)),
+      );
+    });
+  }
+
+  /// Migrates legacy single-root settings stored under AppSettings keys
+  /// `pdf_directory_path` and `pdf_directory_bookmark` into a single
+  /// row in [rootDirectories] with `isDefault = true`. Removes the legacy
+  /// keys afterwards. Idempotent — does nothing if the legacy path key
+  /// is absent or a root directory already exists.
+  Future<void> _migrateLegacyPdfDirectoryToRootDirectories() async {
+    final legacyPath = await getAppSetting('pdf_directory_path');
+    if (legacyPath == null || legacyPath.isEmpty) return;
+
+    // Avoid double-migration if a root for this path already exists.
+    final existing =
+        await (select(rootDirectories)
+              ..where((r) => r.path.equals(legacyPath))
+              ..limit(1))
+            .getSingleOrNull();
+    if (existing != null) {
+      // Ensure it is marked default and clean up stale keys.
+      if (!existing.isDefault) {
+        await setDefaultRootDirectory(existing.id);
+      }
+      await deleteAppSetting('pdf_directory_path');
+      await deleteAppSetting('pdf_directory_bookmark');
+      return;
+    }
+
+    final bookmark = await getAppSetting('pdf_directory_bookmark');
+    await into(rootDirectories).insert(
+      RootDirectoriesCompanion(
+        path: Value(legacyPath),
+        bookmark: bookmark == null ? const Value.absent() : Value(bookmark),
+        isDefault: const Value(true),
+        orderIndex: const Value(0),
+        createdAt: Value(DateTime.now()),
+      ),
+    );
+    await deleteAppSetting('pdf_directory_path');
+    await deleteAppSetting('pdf_directory_bookmark');
   }
 
   // Label operations

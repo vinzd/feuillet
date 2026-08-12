@@ -3430,6 +3430,405 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   }
 }
 
+class $RootDirectoriesTable extends RootDirectories
+    with TableInfo<$RootDirectoriesTable, RootDirectory> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RootDirectoriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _pathMeta = const VerificationMeta('path');
+  @override
+  late final GeneratedColumn<String> path = GeneratedColumn<String>(
+    'path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _bookmarkMeta = const VerificationMeta(
+    'bookmark',
+  );
+  @override
+  late final GeneratedColumn<String> bookmark = GeneratedColumn<String>(
+    'bookmark',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isDefaultMeta = const VerificationMeta(
+    'isDefault',
+  );
+  @override
+  late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
+    'is_default',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_default" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _orderIndexMeta = const VerificationMeta(
+    'orderIndex',
+  );
+  @override
+  late final GeneratedColumn<int> orderIndex = GeneratedColumn<int>(
+    'order_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    path,
+    bookmark,
+    isDefault,
+    orderIndex,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'root_directories';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RootDirectory> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('path')) {
+      context.handle(
+        _pathMeta,
+        path.isAcceptableOrUnknown(data['path']!, _pathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pathMeta);
+    }
+    if (data.containsKey('bookmark')) {
+      context.handle(
+        _bookmarkMeta,
+        bookmark.isAcceptableOrUnknown(data['bookmark']!, _bookmarkMeta),
+      );
+    }
+    if (data.containsKey('is_default')) {
+      context.handle(
+        _isDefaultMeta,
+        isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta),
+      );
+    }
+    if (data.containsKey('order_index')) {
+      context.handle(
+        _orderIndexMeta,
+        orderIndex.isAcceptableOrUnknown(data['order_index']!, _orderIndexMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RootDirectory map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RootDirectory(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      path: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}path'],
+      )!,
+      bookmark: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bookmark'],
+      ),
+      isDefault: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_default'],
+      )!,
+      orderIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}order_index'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RootDirectoriesTable createAlias(String alias) {
+    return $RootDirectoriesTable(attachedDatabase, alias);
+  }
+}
+
+class RootDirectory extends DataClass implements Insertable<RootDirectory> {
+  final int id;
+  final String path;
+  final String? bookmark;
+  final bool isDefault;
+  final int orderIndex;
+  final DateTime createdAt;
+  const RootDirectory({
+    required this.id,
+    required this.path,
+    this.bookmark,
+    required this.isDefault,
+    required this.orderIndex,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['path'] = Variable<String>(path);
+    if (!nullToAbsent || bookmark != null) {
+      map['bookmark'] = Variable<String>(bookmark);
+    }
+    map['is_default'] = Variable<bool>(isDefault);
+    map['order_index'] = Variable<int>(orderIndex);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  RootDirectoriesCompanion toCompanion(bool nullToAbsent) {
+    return RootDirectoriesCompanion(
+      id: Value(id),
+      path: Value(path),
+      bookmark: bookmark == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bookmark),
+      isDefault: Value(isDefault),
+      orderIndex: Value(orderIndex),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory RootDirectory.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RootDirectory(
+      id: serializer.fromJson<int>(json['id']),
+      path: serializer.fromJson<String>(json['path']),
+      bookmark: serializer.fromJson<String?>(json['bookmark']),
+      isDefault: serializer.fromJson<bool>(json['isDefault']),
+      orderIndex: serializer.fromJson<int>(json['orderIndex']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'path': serializer.toJson<String>(path),
+      'bookmark': serializer.toJson<String?>(bookmark),
+      'isDefault': serializer.toJson<bool>(isDefault),
+      'orderIndex': serializer.toJson<int>(orderIndex),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  RootDirectory copyWith({
+    int? id,
+    String? path,
+    Value<String?> bookmark = const Value.absent(),
+    bool? isDefault,
+    int? orderIndex,
+    DateTime? createdAt,
+  }) => RootDirectory(
+    id: id ?? this.id,
+    path: path ?? this.path,
+    bookmark: bookmark.present ? bookmark.value : this.bookmark,
+    isDefault: isDefault ?? this.isDefault,
+    orderIndex: orderIndex ?? this.orderIndex,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  RootDirectory copyWithCompanion(RootDirectoriesCompanion data) {
+    return RootDirectory(
+      id: data.id.present ? data.id.value : this.id,
+      path: data.path.present ? data.path.value : this.path,
+      bookmark: data.bookmark.present ? data.bookmark.value : this.bookmark,
+      isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
+      orderIndex: data.orderIndex.present
+          ? data.orderIndex.value
+          : this.orderIndex,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RootDirectory(')
+          ..write('id: $id, ')
+          ..write('path: $path, ')
+          ..write('bookmark: $bookmark, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('orderIndex: $orderIndex, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, path, bookmark, isDefault, orderIndex, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RootDirectory &&
+          other.id == this.id &&
+          other.path == this.path &&
+          other.bookmark == this.bookmark &&
+          other.isDefault == this.isDefault &&
+          other.orderIndex == this.orderIndex &&
+          other.createdAt == this.createdAt);
+}
+
+class RootDirectoriesCompanion extends UpdateCompanion<RootDirectory> {
+  final Value<int> id;
+  final Value<String> path;
+  final Value<String?> bookmark;
+  final Value<bool> isDefault;
+  final Value<int> orderIndex;
+  final Value<DateTime> createdAt;
+  const RootDirectoriesCompanion({
+    this.id = const Value.absent(),
+    this.path = const Value.absent(),
+    this.bookmark = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.orderIndex = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  RootDirectoriesCompanion.insert({
+    this.id = const Value.absent(),
+    required String path,
+    this.bookmark = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.orderIndex = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  }) : path = Value(path);
+  static Insertable<RootDirectory> custom({
+    Expression<int>? id,
+    Expression<String>? path,
+    Expression<String>? bookmark,
+    Expression<bool>? isDefault,
+    Expression<int>? orderIndex,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (path != null) 'path': path,
+      if (bookmark != null) 'bookmark': bookmark,
+      if (isDefault != null) 'is_default': isDefault,
+      if (orderIndex != null) 'order_index': orderIndex,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  RootDirectoriesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? path,
+    Value<String?>? bookmark,
+    Value<bool>? isDefault,
+    Value<int>? orderIndex,
+    Value<DateTime>? createdAt,
+  }) {
+    return RootDirectoriesCompanion(
+      id: id ?? this.id,
+      path: path ?? this.path,
+      bookmark: bookmark ?? this.bookmark,
+      isDefault: isDefault ?? this.isDefault,
+      orderIndex: orderIndex ?? this.orderIndex,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (path.present) {
+      map['path'] = Variable<String>(path.value);
+    }
+    if (bookmark.present) {
+      map['bookmark'] = Variable<String>(bookmark.value);
+    }
+    if (isDefault.present) {
+      map['is_default'] = Variable<bool>(isDefault.value);
+    }
+    if (orderIndex.present) {
+      map['order_index'] = Variable<int>(orderIndex.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RootDirectoriesCompanion(')
+          ..write('id: $id, ')
+          ..write('path: $path, ')
+          ..write('bookmark: $bookmark, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('orderIndex: $orderIndex, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   _$AppDatabase.connect(DatabaseConnection c) : super.connect(c);
@@ -3447,6 +3846,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $LabelsTable labels = $LabelsTable(this);
   late final $DocumentLabelsTable documentLabels = $DocumentLabelsTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
+  late final $RootDirectoriesTable rootDirectories = $RootDirectoriesTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3461,6 +3863,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     labels,
     documentLabels,
     appSettings,
+    rootDirectories,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -3553,10 +3956,7 @@ final class $$DocumentsTableReferences
   static MultiTypedResultKey<$DocumentSettingsTable, List<DocumentSetting>>
   _documentSettingsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.documentSettings,
-    aliasName: $_aliasNameGenerator(
-      db.documents.id,
-      db.documentSettings.documentId,
-    ),
+    aliasName: 'documents__id__document_settings__document_id',
   );
 
   $$DocumentSettingsTableProcessedTableManager get documentSettingsRefs {
@@ -3576,10 +3976,7 @@ final class $$DocumentsTableReferences
   static MultiTypedResultKey<$AnnotationLayersTable, List<AnnotationLayer>>
   _annotationLayersRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.annotationLayers,
-    aliasName: $_aliasNameGenerator(
-      db.documents.id,
-      db.annotationLayers.documentId,
-    ),
+    aliasName: 'documents__id__annotation_layers__document_id',
   );
 
   $$AnnotationLayersTableProcessedTableManager get annotationLayersRefs {
@@ -3599,10 +3996,7 @@ final class $$DocumentsTableReferences
   static MultiTypedResultKey<$SetListItemsTable, List<SetListItem>>
   _setListItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.setListItems,
-    aliasName: $_aliasNameGenerator(
-      db.documents.id,
-      db.setListItems.documentId,
-    ),
+    aliasName: 'documents__id__set_list_items__document_id',
   );
 
   $$SetListItemsTableProcessedTableManager get setListItemsRefs {
@@ -3620,10 +4014,7 @@ final class $$DocumentsTableReferences
   static MultiTypedResultKey<$DocumentLabelsTable, List<DocumentLabel>>
   _documentLabelsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.documentLabels,
-    aliasName: $_aliasNameGenerator(
-      db.documents.id,
-      db.documentLabels.documentId,
-    ),
+    aliasName: 'documents__id__document_labels__document_id',
   );
 
   $$DocumentLabelsTableProcessedTableManager get documentLabelsRefs {
@@ -4254,9 +4645,7 @@ final class $$DocumentSettingsTableReferences
   );
 
   static $DocumentsTable _documentIdTable(_$AppDatabase db) =>
-      db.documents.createAlias(
-        $_aliasNameGenerator(db.documentSettings.documentId, db.documents.id),
-      );
+      db.documents.createAlias('document_settings__document_id__documents__id');
 
   $$DocumentsTableProcessedTableManager get documentId {
     final $_column = $_itemColumn<int>('document_id')!;
@@ -4635,9 +5024,7 @@ final class $$AnnotationLayersTableReferences
   );
 
   static $DocumentsTable _documentIdTable(_$AppDatabase db) =>
-      db.documents.createAlias(
-        $_aliasNameGenerator(db.annotationLayers.documentId, db.documents.id),
-      );
+      db.documents.createAlias('annotation_layers__document_id__documents__id');
 
   $$DocumentsTableProcessedTableManager get documentId {
     final $_column = $_itemColumn<int>('document_id')!;
@@ -4656,10 +5043,7 @@ final class $$AnnotationLayersTableReferences
   static MultiTypedResultKey<$AnnotationsTable, List<Annotation>>
   _annotationsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.annotations,
-    aliasName: $_aliasNameGenerator(
-      db.annotationLayers.id,
-      db.annotations.layerId,
-    ),
+    aliasName: 'annotation_layers__id__annotations__layer_id',
   );
 
   $$AnnotationsTableProcessedTableManager get annotationsRefs {
@@ -5070,10 +5454,9 @@ final class $$AnnotationsTableReferences
     extends BaseReferences<_$AppDatabase, $AnnotationsTable, Annotation> {
   $$AnnotationsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $AnnotationLayersTable _layerIdTable(_$AppDatabase db) =>
-      db.annotationLayers.createAlias(
-        $_aliasNameGenerator(db.annotations.layerId, db.annotationLayers.id),
-      );
+  static $AnnotationLayersTable _layerIdTable(_$AppDatabase db) => db
+      .annotationLayers
+      .createAlias('annotations__layer_id__annotation_layers__id');
 
   $$AnnotationLayersTableProcessedTableManager get layerId {
     final $_column = $_itemColumn<int>('layer_id')!;
@@ -5424,7 +5807,7 @@ final class $$SetListsTableReferences
   static MultiTypedResultKey<$SetListItemsTable, List<SetListItem>>
   _setListItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.setListItems,
-    aliasName: $_aliasNameGenerator(db.setLists.id, db.setListItems.setListId),
+    aliasName: 'set_lists__id__set_list_items__set_list_id',
   );
 
   $$SetListItemsTableProcessedTableManager get setListItemsRefs {
@@ -5720,9 +6103,7 @@ final class $$SetListItemsTableReferences
   $$SetListItemsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $SetListsTable _setListIdTable(_$AppDatabase db) =>
-      db.setLists.createAlias(
-        $_aliasNameGenerator(db.setListItems.setListId, db.setLists.id),
-      );
+      db.setLists.createAlias('set_list_items__set_list_id__set_lists__id');
 
   $$SetListsTableProcessedTableManager get setListId {
     final $_column = $_itemColumn<int>('set_list_id')!;
@@ -5739,9 +6120,7 @@ final class $$SetListItemsTableReferences
   }
 
   static $DocumentsTable _documentIdTable(_$AppDatabase db) =>
-      db.documents.createAlias(
-        $_aliasNameGenerator(db.setListItems.documentId, db.documents.id),
-      );
+      db.documents.createAlias('set_list_items__document_id__documents__id');
 
   $$DocumentsTableProcessedTableManager get documentId {
     final $_column = $_itemColumn<int>('document_id')!;
@@ -6121,10 +6500,7 @@ final class $$LabelsTableReferences
   static MultiTypedResultKey<$DocumentLabelsTable, List<DocumentLabel>>
   _documentLabelsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.documentLabels,
-    aliasName: $_aliasNameGenerator(
-      db.labels.name,
-      db.documentLabels.labelName,
-    ),
+    aliasName: 'labels__name__document_labels__label_name',
   );
 
   $$DocumentLabelsTableProcessedTableManager get documentLabelsRefs {
@@ -6367,9 +6743,7 @@ final class $$DocumentLabelsTableReferences
   );
 
   static $DocumentsTable _documentIdTable(_$AppDatabase db) =>
-      db.documents.createAlias(
-        $_aliasNameGenerator(db.documentLabels.documentId, db.documents.id),
-      );
+      db.documents.createAlias('document_labels__document_id__documents__id');
 
   $$DocumentsTableProcessedTableManager get documentId {
     final $_column = $_itemColumn<int>('document_id')!;
@@ -6386,9 +6760,7 @@ final class $$DocumentLabelsTableReferences
   }
 
   static $LabelsTable _labelNameTable(_$AppDatabase db) =>
-      db.labels.createAlias(
-        $_aliasNameGenerator(db.documentLabels.labelName, db.labels.name),
-      );
+      db.labels.createAlias('document_labels__label_name__labels__name');
 
   $$LabelsTableProcessedTableManager get labelName {
     final $_column = $_itemColumn<String>('label_name')!;
@@ -6878,6 +7250,223 @@ typedef $$AppSettingsTableProcessedTableManager =
       AppSetting,
       PrefetchHooks Function()
     >;
+typedef $$RootDirectoriesTableCreateCompanionBuilder =
+    RootDirectoriesCompanion Function({
+      Value<int> id,
+      required String path,
+      Value<String?> bookmark,
+      Value<bool> isDefault,
+      Value<int> orderIndex,
+      Value<DateTime> createdAt,
+    });
+typedef $$RootDirectoriesTableUpdateCompanionBuilder =
+    RootDirectoriesCompanion Function({
+      Value<int> id,
+      Value<String> path,
+      Value<String?> bookmark,
+      Value<bool> isDefault,
+      Value<int> orderIndex,
+      Value<DateTime> createdAt,
+    });
+
+class $$RootDirectoriesTableFilterComposer
+    extends Composer<_$AppDatabase, $RootDirectoriesTable> {
+  $$RootDirectoriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get path => $composableBuilder(
+    column: $table.path,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bookmark => $composableBuilder(
+    column: $table.bookmark,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get orderIndex => $composableBuilder(
+    column: $table.orderIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RootDirectoriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $RootDirectoriesTable> {
+  $$RootDirectoriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get path => $composableBuilder(
+    column: $table.path,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get bookmark => $composableBuilder(
+    column: $table.bookmark,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDefault => $composableBuilder(
+    column: $table.isDefault,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get orderIndex => $composableBuilder(
+    column: $table.orderIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RootDirectoriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RootDirectoriesTable> {
+  $$RootDirectoriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get path =>
+      $composableBuilder(column: $table.path, builder: (column) => column);
+
+  GeneratedColumn<String> get bookmark =>
+      $composableBuilder(column: $table.bookmark, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDefault =>
+      $composableBuilder(column: $table.isDefault, builder: (column) => column);
+
+  GeneratedColumn<int> get orderIndex => $composableBuilder(
+    column: $table.orderIndex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$RootDirectoriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RootDirectoriesTable,
+          RootDirectory,
+          $$RootDirectoriesTableFilterComposer,
+          $$RootDirectoriesTableOrderingComposer,
+          $$RootDirectoriesTableAnnotationComposer,
+          $$RootDirectoriesTableCreateCompanionBuilder,
+          $$RootDirectoriesTableUpdateCompanionBuilder,
+          (
+            RootDirectory,
+            BaseReferences<_$AppDatabase, $RootDirectoriesTable, RootDirectory>,
+          ),
+          RootDirectory,
+          PrefetchHooks Function()
+        > {
+  $$RootDirectoriesTableTableManager(
+    _$AppDatabase db,
+    $RootDirectoriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RootDirectoriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RootDirectoriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RootDirectoriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> path = const Value.absent(),
+                Value<String?> bookmark = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                Value<int> orderIndex = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => RootDirectoriesCompanion(
+                id: id,
+                path: path,
+                bookmark: bookmark,
+                isDefault: isDefault,
+                orderIndex: orderIndex,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String path,
+                Value<String?> bookmark = const Value.absent(),
+                Value<bool> isDefault = const Value.absent(),
+                Value<int> orderIndex = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => RootDirectoriesCompanion.insert(
+                id: id,
+                path: path,
+                bookmark: bookmark,
+                isDefault: isDefault,
+                orderIndex: orderIndex,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RootDirectoriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RootDirectoriesTable,
+      RootDirectory,
+      $$RootDirectoriesTableFilterComposer,
+      $$RootDirectoriesTableOrderingComposer,
+      $$RootDirectoriesTableAnnotationComposer,
+      $$RootDirectoriesTableCreateCompanionBuilder,
+      $$RootDirectoriesTableUpdateCompanionBuilder,
+      (
+        RootDirectory,
+        BaseReferences<_$AppDatabase, $RootDirectoriesTable, RootDirectory>,
+      ),
+      RootDirectory,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6900,4 +7489,6 @@ class $AppDatabaseManager {
       $$DocumentLabelsTableTableManager(_db, _db.documentLabels);
   $$AppSettingsTableTableManager get appSettings =>
       $$AppSettingsTableTableManager(_db, _db.appSettings);
+  $$RootDirectoriesTableTableManager get rootDirectories =>
+      $$RootDirectoriesTableTableManager(_db, _db.rootDirectories);
 }
