@@ -31,16 +31,16 @@ void main() async {
     DocumentService.instance;
 
     // Initialize sync manager for Syncthing annotation/setlist sync
-    final pdfDir = await FileWatcherService.instance.getPdfDirectoryPath();
+    final rootPaths = await FileWatcherService.instance.getPdfDirectoryPaths();
     SyncManager.instance.startListening(
       syncChanges: FileWatcherService.instance.syncChanges,
       db: DatabaseService.instance.database,
-      getPdfDirectoryPath: () =>
-          FileWatcherService.instance.getPdfDirectoryPath(),
+      getAllPdfDirectoryPaths: () =>
+          FileWatcherService.instance.getPdfDirectoryPaths(),
     );
     await SyncManager.instance.reconcileOnStartup(
       db: DatabaseService.instance.database,
-      pdfDirectoryPath: pdfDir,
+      rootPaths: rootPaths,
     );
   }
 
