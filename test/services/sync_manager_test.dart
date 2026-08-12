@@ -236,7 +236,7 @@ void main() {
       await writeSetListFileToDisk(
         db: db,
         setListId: setListId,
-        pdfDirectoryPath: pdfDir,
+        rootPaths: [pdfDir],
       );
 
       final expectedPath = '${tempDir.path}/setlists/Concert.setlist.json';
@@ -317,7 +317,7 @@ void main() {
 
       await deleteSetListFileFromDisk(
         setListName: 'Concert',
-        pdfDirectoryPath: tempDir.path,
+        rootPaths: [tempDir.path],
       );
 
       expect(await File(filePath).exists(), isFalse);
@@ -327,7 +327,7 @@ void main() {
       // Should not throw.
       await deleteSetListFileFromDisk(
         setListName: 'NonExistent',
-        pdfDirectoryPath: tempDir.path,
+        rootPaths: [tempDir.path],
       );
     });
   });

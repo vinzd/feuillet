@@ -77,7 +77,7 @@ void main() {
       );
 
       // Build the set list file and verify the relative path uses the new name.
-      final setListFile = await buildSetListFile(db, setListId, tempDir.path);
+      final setListFile = await buildSetListFile(db, setListId, [tempDir.path]);
       expect(setListFile, isNotNull);
       expect(setListFile!.items.first.documentPath, 'New Name.pdf');
     });
