@@ -97,17 +97,19 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await AppSettingsService.instance.setPdfDirectoryPath(result);
-      await FileWatcherService.instance.updatePdfDirectoryPath();
+      // Add a new root directory rather than replacing the existing one.
+      await AppSettingsService.instance.addRootDirectory(result);
+      await FileWatcherService.instance.updateRootDirectories();
       await DocumentService.instance.scanAndSyncLibrary();
-      final pdfDir = await AppSettingsService.instance.getPdfDirectoryPath();
+      final rootPaths = await FileWatcherService.instance
+          .getPdfDirectoryPaths();
       await SyncManager.instance.reconcileOnStartup(
         db: DatabaseService.instance.database,
-        pdfDirectoryPath: pdfDir,
+        rootPaths: rootPaths,
       );
 
       if (mounted) {
-        context.showSnackbar(context.l10n.pdfDirectoryUpdated(result));
+        context.showSnackbar(context.l10n.rootDirectoryAdded(result));
       }
     } catch (e) {
       if (mounted) {

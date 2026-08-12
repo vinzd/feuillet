@@ -278,6 +278,42 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le dossier PDF personnalisé n\'est pas disponible sur le web.';
 
   @override
+  String get rootDirectoriesSubtitle =>
+      'Dossiers surveillés pour vos partitions. Le dossier par défaut est utilisé comme destination pour les nouveaux imports.';
+
+  @override
+  String get addDirectory => 'Ajouter un dossier';
+
+  @override
+  String get defaultDirectory => 'Par défaut';
+
+  @override
+  String get setAsDefault => 'Définir comme défaut';
+
+  @override
+  String get removeDirectory => 'Retirer le dossier';
+
+  @override
+  String get removeRootDirectoryTitle => 'Retirer le dossier racine';
+
+  @override
+  String removeRootDirectoryConfirm(String path) {
+    return 'Retirer ce dossier de la bibliothèque ? Les partitions qu\'il contient ne seront plus disponibles dans l\'application. Le dossier lui-même ne sera pas supprimé.\n\n$path';
+  }
+
+  @override
+  String rootDirectoryAdded(String path) {
+    return 'Dossier ajouté : $path';
+  }
+
+  @override
+  String get rootDirectoryRemoved => 'Dossier retiré';
+
+  @override
+  String get noRootDirectories =>
+      'Aucun dossier racine configuré. Ajoutez-en un ci-dessus.';
+
+  @override
   String get aboutSection => 'À propos';
 
   @override

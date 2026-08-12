@@ -26,8 +26,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isLoading = false;
-  String? _currentPath;
-  bool _isCustomPath = false;
+  List<RootDirectory> _roots = const [];
   Timer? _logRefreshTimer;
 
   @override
@@ -54,34 +53,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _loadCurrentSettings() async {
     setState(() => _isLoading = true);
-
-    _currentPath = await AppSettingsService.instance.getPdfDirectoryPath();
-    _isCustomPath = await AppSettingsService.instance
-        .isUsingCustomPdfDirectory();
-
+    _roots = await AppSettingsService.instance.getRootDirectories();
     setState(() => _isLoading = false);
   }
 
-  Future<void> _selectDirectory() async {
+  Future<void> _addRootDirectory() async {
     final result = await FileAccessService.instance.pickDirectory();
     if (result == null) return;
 
     setState(() => _isLoading = true);
-
     try {
-      await AppSettingsService.instance.setPdfDirectoryPath(result);
-      await FileWatcherService.instance.updatePdfDirectoryPath();
+      await AppSettingsService.instance.addRootDirectory(result);
+      await FileWatcherService.instance.updateRootDirectories();
       await DocumentService.instance.scanAndSyncLibrary();
-      // Reconcile set lists from the new directory's setlists/ folder.
-      final pdfDir = await AppSettingsService.instance.getPdfDirectoryPath();
+      final rootPaths = await FileWatcherService.instance
+          .getPdfDirectoryPaths();
       await SyncManager.instance.reconcileOnStartup(
         db: DatabaseService.instance.database,
-        pdfDirectoryPath: pdfDir,
+        rootPaths: rootPaths,
       );
       await _loadCurrentSettings();
 
       if (mounted) {
-        context.showSnackbar(context.l10n.pdfDirectoryUpdated(result));
+        context.showSnackbar(context.l10n.rootDirectoryAdded(result));
       }
     } catch (e) {
       setState(() => _isLoading = false);
@@ -91,26 +85,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _resetToDefault() async {
+  Future<void> _removeRootDirectory(int id, String path) async {
     final confirmed = await LayerDialogs.showConfirmationDialog(
       context: context,
-      title: context.l10n.resetToDefaultTitle,
-      message: context.l10n.resetToDefaultMessage,
-      confirmText: context.l10n.reset,
+      title: context.l10n.removeRootDirectoryTitle,
+      message: context.l10n.removeRootDirectoryConfirm(path),
+      confirmText: context.l10n.remove,
     );
-
     if (confirmed != true) return;
 
     setState(() => _isLoading = true);
-
     try {
-      await AppSettingsService.instance.clearPdfDirectoryPath();
-      await FileWatcherService.instance.updatePdfDirectoryPath();
+      await AppSettingsService.instance.removeRootDirectory(id);
+      await FileWatcherService.instance.updateRootDirectories();
       await DocumentService.instance.scanAndSyncLibrary();
       await _loadCurrentSettings();
 
       if (mounted) {
-        context.showSnackbar(context.l10n.resetToDefaultPdfDirectory);
+        context.showSnackbar(context.l10n.rootDirectoryRemoved);
       }
     } catch (e) {
       setState(() => _isLoading = false);
@@ -119,6 +111,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           context.l10n.errorResettingDirectory(e.toString()),
         );
       }
+    }
+  }
+
+  Future<void> _setDefault(int id) async {
+    setState(() => _isLoading = true);
+    try {
+      await AppSettingsService.instance.setDefaultRootDirectory(id);
+      await _loadCurrentSettings();
+    } catch (e) {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -132,47 +134,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               children: [
-                // PDF Directory Section
+                // Root directories section
                 _buildSectionHeader(context.l10n.librarySection),
-                ListTile(
-                  leading: const Icon(Icons.folder),
-                  title: Text(context.l10n.pdfDirectory),
-                  subtitle: Text(
-                    _currentPath ?? context.l10n.loading,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Text(
+                    context.l10n.rootDirectoriesSubtitle,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 12,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_isCustomPath && !kIsWeb)
-                        IconButton(
-                          icon: const Icon(Icons.restore),
-                          tooltip: context.l10n.resetToDefault,
-                          onPressed: _resetToDefault,
-                        ),
-                      if (!kIsWeb)
-                        IconButton(
-                          icon: const Icon(Icons.folder_open),
-                          tooltip: context.l10n.changeDirectory,
-                          onPressed: _selectDirectory,
-                        ),
-                    ],
                   ),
                 ),
-                if (_isCustomPath)
+                if (!kIsWeb)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Chip(
-                      label: Text(context.l10n.customDirectory),
-                      avatar: const Icon(Icons.check, size: 18),
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: _addRootDirectory,
+                        icon: const Icon(Icons.add),
+                        label: Text(context.l10n.addDirectory),
+                      ),
+                    ),
+                  ),
+                for (final root in _roots) _buildRootTile(root),
+                if (_roots.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      context.l10n.noRootDirectories,
+                      style: const TextStyle(fontStyle: FontStyle.italic),
                     ),
                   ),
                 if (kIsWeb)
@@ -213,6 +205,60 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 _buildLogRecorderTile(),
               ],
             ),
+    );
+  }
+
+  Widget _buildRootTile(RootDirectory root) {
+    final isDefault =
+        root.isDefault ||
+        (_roots.isNotEmpty &&
+            _roots
+                    .firstWhere((r) => r.isDefault, orElse: () => _roots.first)
+                    .id ==
+                root.id);
+    return ListTile(
+      leading: Icon(isDefault ? Icons.star : Icons.folder),
+      title: Row(
+        children: [
+          Flexible(
+            child: Text(
+              root.path,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 12,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (isDefault) ...[
+            const SizedBox(width: 8),
+            Chip(
+              label: Text(context.l10n.defaultDirectory),
+              avatar: const Icon(Icons.check, size: 18),
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              visualDensity: VisualDensity.compact,
+            ),
+          ],
+        ],
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!isDefault && !kIsWeb)
+            IconButton(
+              icon: const Icon(Icons.star_border),
+              tooltip: context.l10n.setAsDefault,
+              onPressed: () => _setDefault(root.id),
+            ),
+          if (!kIsWeb)
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              tooltip: context.l10n.removeDirectory,
+              onPressed: () => _removeRootDirectory(root.id, root.path),
+            ),
+        ],
+      ),
     );
   }
 

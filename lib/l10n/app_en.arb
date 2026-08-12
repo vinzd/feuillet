@@ -123,6 +123,23 @@
     "placeholders": { "error": {"type": "String"} }
   },
   "customDirectoryNotAvailableOnWeb": "Custom PDF directory is not available on web.",
+
+  "rootDirectoriesSubtitle": "Folders scanned for sheet music. The default folder is used as the destination for new imports.",
+  "addDirectory": "Add directory",
+  "defaultDirectory": "Default",
+  "setAsDefault": "Set as default",
+  "removeDirectory": "Remove directory",
+  "removeRootDirectoryTitle": "Remove Root Directory",
+  "removeRootDirectoryConfirm": "Remove this directory from your library? Existing scores in this folder will become unavailable in the app. The folder itself will not be deleted.\n\n{path}",
+  "@removeRootDirectoryConfirm": {
+    "placeholders": { "path": {"type": "String"} }
+  },
+  "rootDirectoryAdded": "Added directory: {path}",
+  "@rootDirectoryAdded": {
+    "placeholders": { "path": {"type": "String"} }
+  },
+  "rootDirectoryRemoved": "Directory removed",
+  "noRootDirectories": "No root directories configured. Add one above.",
   "aboutSection": "About",
   "version": "Version",
   "loading": "Loading...",
