@@ -14,11 +14,12 @@ class SetListService {
 
   void _scheduleSyncWrite(int setListId) {
     if (kIsWeb) return;
-    FileWatcherService.instance.getPdfDirectoryPath().then((pdfDir) {
+    FileWatcherService.instance.getPdfDirectoryPaths().then((rootPaths) {
+      if (rootPaths.isEmpty) return;
       SyncManager.instance.scheduleSetListWrite(
         db: _database,
         setListId: setListId,
-        pdfDirectoryPath: pdfDir,
+        rootPaths: rootPaths,
       );
     });
   }
@@ -56,10 +57,11 @@ class SetListService {
     final setList = await getSetList(id);
     await _database.deleteSetList(id);
     if (setList != null && !kIsWeb) {
-      final pdfDir = await FileWatcherService.instance.getPdfDirectoryPath();
+      final rootPaths = await FileWatcherService.instance
+          .getPdfDirectoryPaths();
       await deleteSetListFileFromDisk(
         setListName: setList.name,
-        pdfDirectoryPath: pdfDir,
+        rootPaths: rootPaths,
       );
     }
   }
