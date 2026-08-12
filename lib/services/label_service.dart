@@ -114,6 +114,21 @@ class LabelService {
 
   // Auto-labeling from directory path
 
+  /// Ensures the document is labeled with its containing root directory's
+  /// basename plus every subdirectory segment between the root and the
+  /// file.
+  ///
+  /// Typical result for a file at `/Users/x/ChoirA/Bach/Sonata.pdf` with
+  /// `pdfDirectoryPath = /Users/x/ChoirA`:
+  /// `{'ChoirA', 'Bach'}`.
+  ///
+  /// Files directly at the root still receive one label: the root
+  /// directory's basename. This is what makes the multi-choir use case
+  /// work — each document is labeled with its owning choir folder name
+  /// so it can be filtered by choir in the library.
+  ///
+  /// No labels are created when [filePath] is not under
+  /// [pdfDirectoryPath].
   Future<void> ensureLabelsFromPath(
     int documentId,
     String filePath,
@@ -124,13 +139,22 @@ class LabelService {
         : '$pdfDirectoryPath/';
     if (!filePath.startsWith(prefix)) return;
 
+    // Root directory basename e.g. "ChoirA" for "/Users/x/ChoirA".
+    final rootName = p.basename(p.normalize(pdfDirectoryPath));
+
     final relativePath = filePath.substring(prefix.length);
-    final segments = p.split(p.dirname(relativePath));
+    final subdirSegments = p.split(p.dirname(relativePath));
 
-    if (segments.length == 1 && segments.first == '.') return;
+    // Combined segment list: root first, then subdirectory segments.
+    final segments = <String>[
+      if (rootName.isNotEmpty && rootName != '.') rootName,
+      ...subdirSegments,
+    ];
 
+    final seen = <String>{};
     for (final segment in segments) {
       if (segment == '.' || segment.isEmpty) continue;
+      if (!seen.add(segment)) continue;
       await createLabel(segment);
       // Call database directly to avoid triggering sidecar writes during scan
       await _database.addLabelToDocument(documentId, segment);

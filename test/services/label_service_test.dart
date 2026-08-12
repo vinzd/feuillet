@@ -146,33 +146,40 @@ void main() {
   });
 
   group('ensureLabelsFromPath', () {
-    test('creates labels from subdirectory segments', () async {
-      final docId = await insertDoc(
-        'Bach Suite',
-        '/music/pdfs/Classical/Bach/Suite.pdf',
-      );
-      await service.ensureLabelsFromPath(
-        docId,
-        '/music/pdfs/Classical/Bach/Suite.pdf',
-        '/music/pdfs',
-      );
+    test(
+      'creates labels from root directory and subdirectory segments',
+      () async {
+        final docId = await insertDoc(
+          'Bach Suite',
+          '/music/pdfs/Classical/Bach/Suite.pdf',
+        );
+        await service.ensureLabelsFromPath(
+          docId,
+          '/music/pdfs/Classical/Bach/Suite.pdf',
+          '/music/pdfs',
+        );
 
-      final labels = await service.getLabelsForDocument(docId);
-      final names = labels.map((l) => l.name).toSet();
-      expect(names, {'Bach', 'Classical'});
-    });
+        final labels = await service.getLabelsForDocument(docId);
+        final names = labels.map((l) => l.name).toSet();
+        expect(names, {'pdfs', 'Classical', 'Bach'});
+      },
+    );
 
-    test('no labels for files at root', () async {
-      final docId = await insertDoc('Suite', '/music/pdfs/Suite.pdf');
-      await service.ensureLabelsFromPath(
-        docId,
-        '/music/pdfs/Suite.pdf',
-        '/music/pdfs',
-      );
+    test(
+      'always labels with root directory basename even when at root',
+      () async {
+        final docId = await insertDoc('Suite', '/music/pdfs/Suite.pdf');
+        await service.ensureLabelsFromPath(
+          docId,
+          '/music/pdfs/Suite.pdf',
+          '/music/pdfs',
+        );
 
-      final labels = await service.getLabelsForDocument(docId);
-      expect(labels, isEmpty);
-    });
+        final labels = await service.getLabelsForDocument(docId);
+        final names = labels.map((l) => l.name).toSet();
+        expect(names, {'pdfs'});
+      },
+    );
 
     test('handles trailing slash on pdfDir', () async {
       final docId = await insertDoc(
@@ -186,8 +193,56 @@ void main() {
       );
 
       final labels = await service.getLabelsForDocument(docId);
-      expect(labels.length, 1);
-      expect(labels.first.name, 'Classical');
+      final names = labels.map((l) => l.name).toSet();
+      expect(names, {'pdfs', 'Classical'});
+    });
+
+    test('labels with choir folder name (multi-root use case)', () async {
+      final docId = await insertDoc(
+        'Sonata',
+        '/Users/x/ChoirA/Bach/Sonata.pdf',
+      );
+      await service.ensureLabelsFromPath(
+        docId,
+        '/Users/x/ChoirA/Bach/Sonata.pdf',
+        '/Users/x/ChoirA',
+      );
+
+      final labels = await service.getLabelsForDocument(docId);
+      final names = labels.map((l) => l.name).toSet();
+      expect(names, {'ChoirA', 'Bach'});
+    });
+
+    test('no duplicate root label across two documents in same root', () async {
+      final id1 = await insertDoc('A', '/Users/x/ChoirA/A.pdf');
+      final id2 = await insertDoc('B', '/Users/x/ChoirA/B.pdf');
+      await service.ensureLabelsFromPath(
+        id1,
+        '/Users/x/ChoirA/A.pdf',
+        '/Users/x/ChoirA',
+      );
+      await service.ensureLabelsFromPath(
+        id2,
+        '/Users/x/ChoirA/B.pdf',
+        '/Users/x/ChoirA',
+      );
+
+      final labels = await service.getAllLabels();
+      // Only one 'ChoirA' label row exists even after two calls.
+      final choirLabels = labels.where((l) => l.name == 'ChoirA').toList();
+      expect(choirLabels.length, 1);
+    });
+
+    test('does nothing when filePath is not under pdfDir', () async {
+      final docId = await insertDoc('Suite', '/other/Suite.pdf');
+      await service.ensureLabelsFromPath(
+        docId,
+        '/other/Suite.pdf',
+        '/music/pdfs',
+      );
+
+      final labels = await service.getLabelsForDocument(docId);
+      expect(labels, isEmpty);
     });
   });
 }
