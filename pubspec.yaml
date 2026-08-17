@@ -73,7 +73,7 @@ dependencies:
   fuzzy: ^0.5.1
 
   # PDF export
-  pdf: ^3.12.0
+  pdf: ^3.13.0
   share_plus: ^13.1.0
 
   # Wake lock
