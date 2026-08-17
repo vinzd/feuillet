@@ -24,6 +24,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gridView => 'Vue en grille';
 
   @override
+  String get treeView => 'Vue en arborescence';
+
+  @override
+  String get changeView => 'Changer de vue';
+
+  @override
+  String get treeItems => 'éléments';
+
+  @override
   String get sortOrder => 'Ordre de tri';
 
   @override
