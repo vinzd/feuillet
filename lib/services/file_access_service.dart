@@ -37,7 +37,8 @@ class FileAccessService {
   Future<String?> pickDirectory() async {
     return FilePicker.getDirectoryPath(
       dialogTitle: 'Select PDF Directory',
-      lockParentWindow: true,
+      windowsOptions: const WindowsOptions(lockParentWindow: true),
+      linuxOptions: const LinuxOptions(lockParentWindow: true),
     );
   }
 

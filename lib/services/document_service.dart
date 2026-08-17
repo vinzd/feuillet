@@ -231,15 +231,15 @@ class DocumentService {
         allowedExtensions: DocumentTypes.allExtensions,
       );
 
-      if (result == null || result.files.isEmpty) {
+      if (result.isEmpty) {
         return null;
       }
 
       final results = <DocumentImportResult>[];
-      final total = result.files.length;
+      final total = result.length;
 
-      for (var i = 0; i < result.files.length; i++) {
-        final file = result.files[i];
+      for (var i = 0; i < result.length; i++) {
+        final file = result[i];
         onProgress?.call(i + 1, total, file.name);
         results.add(await _importSingleFile(file));
       }
