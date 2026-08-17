@@ -26,6 +26,7 @@ import '../utils/document_rename_dialog.dart';
 import '../utils/fuzzy_search.dart';
 import '../utils/snackbar_extension.dart';
 import '../widgets/document_card.dart';
+import '../widgets/file_tree_view.dart';
 import '../widgets/setlist_picker_dialog.dart';
 import '../widgets/export_pdf_dialog_web.dart'
     if (dart.library.io) '../widgets/export_pdf_dialog_native.dart'
@@ -41,8 +42,10 @@ class LibraryScreen extends ConsumerStatefulWidget {
 
 enum LibrarySortField { dateAdded, name, fileSize, pageCount }
 
+enum LibraryViewMode { grid, list, tree }
+
 class _LibraryScreenState extends ConsumerState<LibraryScreen> {
-  bool _isGridView = true;
+  LibraryViewMode _viewMode = LibraryViewMode.grid;
   String _searchQuery = '';
   bool _isLoading = false;
   String? _importProgress;
@@ -896,7 +899,18 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   }
 
   Widget _buildDocumentList(List<Document> documents) {
-    if (_isGridView) {
+    if (_viewMode == LibraryViewMode.tree) {
+      return FileTreeView(
+        documents: documents,
+        onDocumentTap: _handleDocumentTap,
+        isSelectionMode: _isSelectionMode,
+        selectedDocumentIds: _selectedDocumentIds,
+        onDocumentCheckboxTap: _handleCheckboxTap,
+        onDocumentLongPress: _enterSelectionMode,
+      );
+    }
+
+    if (_viewMode == LibraryViewMode.grid) {
       return Listener(
         key: _gridKey,
         onPointerDown: (event) => _onPointerDown(event, documents),
@@ -1037,12 +1051,40 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         ],
       ),
       actions: [
-        IconButton(
-          icon: Icon(_isGridView ? Icons.view_list : Icons.grid_view),
-          onPressed: () {
-            setState(() => _isGridView = !_isGridView);
-          },
-          tooltip: _isGridView ? context.l10n.listView : context.l10n.gridView,
+        PopupMenuButton<LibraryViewMode>(
+          icon: Icon(switch (_viewMode) {
+            LibraryViewMode.grid => Icons.grid_view,
+            LibraryViewMode.list => Icons.view_list,
+            LibraryViewMode.tree => Icons.account_tree_outlined,
+          }),
+          tooltip: context.l10n.changeView,
+          onSelected: (mode) => setState(() => _viewMode = mode),
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: LibraryViewMode.grid,
+              child: _buildViewMenuItem(
+                Icons.grid_view,
+                context.l10n.gridView,
+                LibraryViewMode.grid,
+              ),
+            ),
+            PopupMenuItem(
+              value: LibraryViewMode.list,
+              child: _buildViewMenuItem(
+                Icons.view_list,
+                context.l10n.listView,
+                LibraryViewMode.list,
+              ),
+            ),
+            PopupMenuItem(
+              value: LibraryViewMode.tree,
+              child: _buildViewMenuItem(
+                Icons.account_tree_outlined,
+                context.l10n.treeView,
+                LibraryViewMode.tree,
+              ),
+            ),
+          ],
         ),
         PopupMenuButton<LibrarySortField>(
           icon: const Icon(Icons.sort),
@@ -1133,6 +1175,17 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           },
           tooltip: context.l10n.settings,
         ),
+      ],
+    );
+  }
+
+  Widget _buildViewMenuItem(IconData icon, String label, LibraryViewMode mode) {
+    return Row(
+      children: [
+        Icon(icon),
+        const SizedBox(width: 12),
+        Expanded(child: Text(label)),
+        if (_viewMode == mode) const Icon(Icons.check, size: 18),
       ],
     );
   }
