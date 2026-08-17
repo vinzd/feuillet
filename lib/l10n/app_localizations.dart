@@ -128,6 +128,24 @@ abstract class AppLocalizations {
   /// **'Grid view'**
   String get gridView;
 
+  /// No description provided for @treeView.
+  ///
+  /// In en, this message translates to:
+  /// **'Tree view'**
+  String get treeView;
+
+  /// No description provided for @changeView.
+  ///
+  /// In en, this message translates to:
+  /// **'Change view'**
+  String get changeView;
+
+  /// No description provided for @treeItems.
+  ///
+  /// In en, this message translates to:
+  /// **'items'**
+  String get treeItems;
+
   /// No description provided for @sortOrder.
   ///
   /// In en, this message translates to:

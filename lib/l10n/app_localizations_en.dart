@@ -24,6 +24,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gridView => 'Grid view';
 
   @override
+  String get treeView => 'Tree view';
+
+  @override
+  String get changeView => 'Change view';
+
+  @override
+  String get treeItems => 'items';
+
+  @override
   String get sortOrder => 'Sort order';
 
   @override
