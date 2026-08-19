@@ -80,7 +80,7 @@ dependencies:
   wakelock_plus: ^1.6.1
 
   # Permissions
-  permission_handler: ^12.0.3
+  permission_handler: ^13.0.1
   macos_secure_bookmarks: ^0.2.1
 
   # Web platform interop (used by export_pdf_dialog_web.dart)
