@@ -42,7 +42,7 @@ dependencies:
   drift_flutter: ^0.3.0
 
   # PDF rendering
-  pdfx: ^2.7.0
+  pdfx: ^2.11.0
 
   # File system
   path_provider: ^2.1.6
