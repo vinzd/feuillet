@@ -139,7 +139,7 @@ void main() {
       expect(layers[0].name, 'Layer 1');
     });
 
-    test('imports set list files from disk on reconciliation', () async {
+    test('legacy single-directory argument imports set lists', () async {
       // Create a document for the set list to reference.
       await insertDoc('Bach.pdf');
 
@@ -160,7 +160,7 @@ void main() {
       );
 
       final mgr = SyncManager.instance;
-      await mgr.reconcileOnStartup(db: db, rootPaths: [tempDir.path]);
+      await mgr.reconcileOnStartup(db: db, pdfDirectoryPath: tempDir.path);
 
       // Verify set list was imported.
       final setLists = await db.getAllSetLists();

@@ -893,8 +893,16 @@ class SyncManager {
   ///    exports the sidecar.
   Future<void> reconcileOnStartup({
     required AppDatabase db,
-    required List<String> rootPaths,
+    List<String>? rootPaths,
+    // Legacy single-directory argument retained for callers using the
+    // pre-multi-root settings flow.
+    String? pdfDirectoryPath,
   }) async {
+    assert(rootPaths != null || pdfDirectoryPath != null);
+    final roots =
+        rootPaths ??
+        (pdfDirectoryPath == null ? const <String>[] : [pdfDirectoryPath]);
+
     debugPrint('SyncManager: starting reconciliation');
 
     final allDocs = await db.getAllDocuments();
@@ -923,7 +931,7 @@ class SyncManager {
     }
 
     // 2. Scan every root's setlists/ directory.
-    for (final root in rootPaths) {
+    for (final root in roots) {
       final setListsDir = Directory(p.join(root, 'setlists'));
       if (!await setListsDir.exists()) continue;
 
