@@ -4478,7 +4478,7 @@ class $$DocumentsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$DocumentsTable, Document>(table),
                   $$DocumentsTableReferences(db, table, e),
                 ),
               )
@@ -4502,10 +4502,11 @@ class $$DocumentsTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (documentSettingsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Document,
                           $DocumentsTable,
-                          DocumentSetting
+                          DocumentSetting,
+                          $DocumentSettingsTable
                         >(
                           currentTable: table,
                           referencedTable: $$DocumentsTableReferences
@@ -4516,17 +4517,16 @@ class $$DocumentsTableTableManager
                                 table,
                                 p0,
                               ).documentSettingsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.documentId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'document_id',
                           typedResults: items,
                         ),
                       if (annotationLayersRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Document,
                           $DocumentsTable,
-                          AnnotationLayer
+                          AnnotationLayer,
+                          $AnnotationLayersTable
                         >(
                           currentTable: table,
                           referencedTable: $$DocumentsTableReferences
@@ -4537,17 +4537,16 @@ class $$DocumentsTableTableManager
                                 table,
                                 p0,
                               ).annotationLayersRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.documentId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'document_id',
                           typedResults: items,
                         ),
                       if (setListItemsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Document,
                           $DocumentsTable,
-                          SetListItem
+                          SetListItem,
+                          $SetListItemsTable
                         >(
                           currentTable: table,
                           referencedTable: $$DocumentsTableReferences
@@ -4558,17 +4557,16 @@ class $$DocumentsTableTableManager
                                 table,
                                 p0,
                               ).setListItemsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.documentId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'document_id',
                           typedResults: items,
                         ),
                       if (documentLabelsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Document,
                           $DocumentsTable,
-                          DocumentLabel
+                          DocumentLabel,
+                          $DocumentLabelsTable
                         >(
                           currentTable: table,
                           referencedTable: $$DocumentsTableReferences
@@ -4579,10 +4577,8 @@ class $$DocumentsTableTableManager
                                 table,
                                 p0,
                               ).documentLabelsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.documentId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'document_id',
                           typedResults: items,
                         ),
                     ];
@@ -4929,7 +4925,7 @@ class $$DocumentSettingsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$DocumentSettingsTable, DocumentSetting>(table),
                   $$DocumentSettingsTableReferences(db, table, e),
                 ),
               )
@@ -5338,7 +5334,7 @@ class $$AnnotationLayersTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$AnnotationLayersTable, AnnotationLayer>(table),
                   $$AnnotationLayersTableReferences(db, table, e),
                 ),
               )
@@ -5387,10 +5383,11 @@ class $$AnnotationLayersTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (annotationsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           AnnotationLayer,
                           $AnnotationLayersTable,
-                          Annotation
+                          Annotation,
+                          $AnnotationsTable
                         >(
                           currentTable: table,
                           referencedTable: $$AnnotationLayersTableReferences
@@ -5401,10 +5398,8 @@ class $$AnnotationLayersTableTableManager
                                 table,
                                 p0,
                               ).annotationsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.layerId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'layer_id',
                           typedResults: items,
                         ),
                     ];
@@ -5719,7 +5714,7 @@ class $$AnnotationsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$AnnotationsTable, Annotation>(table),
                   $$AnnotationsTableReferences(db, table, e),
                 ),
               )
@@ -6029,7 +6024,7 @@ class $$SetListsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$SetListsTable, SetList>(table),
                   $$SetListsTableReferences(db, table, e),
                 ),
               )
@@ -6042,10 +6037,11 @@ class $$SetListsTableTableManager
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (setListItemsRefs)
-                    await $_getPrefetchedData<
+                    await $_getPrefetchedDataByColumns<
                       SetList,
                       $SetListsTable,
-                      SetListItem
+                      SetListItem,
+                      $SetListItemsTable
                     >(
                       currentTable: table,
                       referencedTable: $$SetListsTableReferences
@@ -6055,8 +6051,8 @@ class $$SetListsTableTableManager
                         table,
                         p0,
                       ).setListItemsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.setListId == item.id),
+                      currentColumn: 'id',
+                      referencedColumn: 'set_list_id',
                       typedResults: items,
                     ),
                 ];
@@ -6403,7 +6399,7 @@ class $$SetListItemsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$SetListItemsTable, SetListItem>(table),
                   $$SetListItemsTableReferences(db, table, e),
                 ),
               )
@@ -6666,8 +6662,10 @@ class $$LabelsTableTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) =>
-                    (e.readTable(table), $$LabelsTableReferences(db, table, e)),
+                (e) => (
+                  e.readTable<$LabelsTable, Label>(table),
+                  $$LabelsTableReferences(db, table, e),
+                ),
               )
               .toList(),
           prefetchHooksCallback: ({documentLabelsRefs = false}) {
@@ -6680,10 +6678,11 @@ class $$LabelsTableTableManager
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (documentLabelsRefs)
-                    await $_getPrefetchedData<
+                    await $_getPrefetchedDataByColumns<
                       Label,
                       $LabelsTable,
-                      DocumentLabel
+                      DocumentLabel,
+                      $DocumentLabelsTable
                     >(
                       currentTable: table,
                       referencedTable: $$LabelsTableReferences
@@ -6693,10 +6692,8 @@ class $$LabelsTableTableManager
                         table,
                         p0,
                       ).documentLabelsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where(
-                            (e) => e.labelName == item.name,
-                          ),
+                      currentColumn: 'name',
+                      referencedColumn: 'label_name',
                       typedResults: items,
                     ),
                 ];
@@ -6996,7 +6993,7 @@ class $$DocumentLabelsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$DocumentLabelsTable, DocumentLabel>(table),
                   $$DocumentLabelsTableReferences(db, table, e),
                 ),
               )
@@ -7226,7 +7223,16 @@ class $$AppSettingsTableTableManager
                 updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$AppSettingsTable, AppSetting>(table),
+                  BaseReferences<_$AppDatabase, $AppSettingsTable, AppSetting>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -7443,7 +7449,16 @@ class $$RootDirectoriesTableTableManager
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$RootDirectoriesTable, RootDirectory>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $RootDirectoriesTable,
+                    RootDirectory
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
