@@ -270,6 +270,7 @@ class _SetListDetailScreenState extends State<SetListDetailScreen> {
                 : ReorderableListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: _documents.length,
+                    // ignore: deprecated_member_use
                     onReorder: _reorderDocuments,
                     itemBuilder: (context, index) {
                       final doc = _documents[index];
