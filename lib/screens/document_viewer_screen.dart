@@ -711,7 +711,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
           onPressed: () => _showAddLabelDialog(_document.id),
           tooltip: context.l10n.labels,
         ),
-        if (viewModeButton != null) viewModeButton,
+        ?viewModeButton,
         annotationsButton,
         IconButton(
           icon: const Icon(Icons.tune),
@@ -730,7 +730,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
     }
 
     return [
-      if (viewModeButton != null) viewModeButton,
+      ?viewModeButton,
       annotationsButton,
       PopupMenuButton<_OverflowAction>(
         icon: const Icon(Icons.more_vert),
@@ -994,7 +994,7 @@ class _DocumentViewerScreenState extends ConsumerState<DocumentViewerScreen>
           colorFilter: zoomPanState.displaySettings.colorFilter,
           child: Image.memory(_imageBytes!, fit: BoxFit.contain),
         ),
-        if (annotationOverlay != null) annotationOverlay,
+        ?annotationOverlay,
       ],
     );
   }
