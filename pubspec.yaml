@@ -81,7 +81,7 @@ dependencies:
 
   # Permissions
   permission_handler: ^13.0.2
-  macos_secure_bookmarks: ^0.2.1
+  macos_secure_bookmarks: ^0.3.0
 
   # Web platform interop (used by export_pdf_dialog_web.dart)
   web: ^1.1.0
